@@ -319,6 +319,9 @@ npm run data-stats        # View data summary statistics
 - Station-specific acoustic signatures
 - Year-over-year ecosystem changes
 
+## Development Notes
+- Don't run `npm run dev` for me - I will do that in a separate terminal window. Just tell me when I'm ready to run.
+
 ---
 
 *Last updated: $(date)*

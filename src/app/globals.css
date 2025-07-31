@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+@layer components {
+  .chart-container {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 p-4;
+  }
+  
+  .filter-panel {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 p-4 space-y-4;
+  }
+  
+  .metrics-card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 p-6 text-center;
+  }
+}
