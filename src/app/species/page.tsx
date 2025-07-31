@@ -2,8 +2,8 @@ export default function SpeciesPage() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="mb-4">Species Analysis</h1>
-        <p className="text-xl text-slate-600">
+        <h1 className="section-heading">Species Analysis</h1>
+        <p className="section-description">
           Explore species detection patterns, diversity, and behavioral insights across the monitoring network.
         </p>
       </div>

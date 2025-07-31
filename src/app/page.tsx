@@ -20,18 +20,18 @@ export default function DashboardPage() {
     <div className="page-container">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl lg:text-5xl font-display font-bold text-slate-900 mb-4">
+        <h1 className="section-heading text-5xl">
           Marine Biodiversity
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 to-coral-500"> Observatory</span>
         </h1>
-        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+        <p className="section-description">
           Explore acoustic monitoring data from the OSA MBON project. Discover species patterns, 
           temporal trends, and environmental correlations across marine ecosystems.
         </p>
       </div>
           
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="card-grid gap-6 mb-12">
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-ocean-600 mb-2">
             {metadata?.data_summary.total_detections.toLocaleString() || '-'}
@@ -74,7 +74,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Preview Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div className="card-grid lg:grid-cols-2 gap-8 mb-12">
         <div className="chart-container group">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
       )}
 
       {/* Quick Navigation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="card-grid gap-4">
         <a href="/species" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
           <div className="text-2xl mb-2">🐟</div>
           <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Species Analysis</h3>

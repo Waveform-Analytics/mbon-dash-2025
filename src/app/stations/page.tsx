@@ -2,8 +2,8 @@ export default function StationsPage() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="mb-4">Station Comparison</h1>
-        <p className="text-xl text-slate-600">
+        <h1 className="section-heading">Station Comparison</h1>
+        <p className="section-description">
           Compare monitoring stations across geographic locations, environmental conditions, and species activity.
         </p>
       </div>

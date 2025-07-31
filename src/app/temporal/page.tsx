@@ -2,8 +2,8 @@ export default function TemporalPage() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="mb-4">Temporal Patterns</h1>
-        <p className="text-xl text-slate-600">
+        <h1 className="section-heading">Temporal Patterns</h1>
+        <p className="section-description">
           Discover seasonal trends, daily patterns, and long-term changes in marine ecosystem activity.
         </p>
       </div>

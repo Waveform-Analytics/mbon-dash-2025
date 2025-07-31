@@ -84,4 +84,16 @@
   .coming-soon {
     @apply flex items-center justify-center min-h-96 text-center;
   }
+  
+  .section-heading {
+    @apply mb-4 text-3xl lg:text-4xl font-display font-bold text-slate-900 text-center;
+  }
+  
+  .section-description {
+    @apply text-xl text-slate-600 max-w-3xl mx-auto;
+  }
+  
+  .card-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
 }

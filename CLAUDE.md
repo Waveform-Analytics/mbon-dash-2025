@@ -61,7 +61,7 @@ npm run build
 ### 3. Environment Variables
 Create `.env.local`:
 ```
-NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token_here
+NEXT_PUBLIC_MAPBOX_TOKEN=mapbox_token_here
 ```
 
 ## Data Processing Workflow
@@ -69,6 +69,7 @@ NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token_here
 ### Current Data Structure
 ```
 data/
+├── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx  # Deployment metadata across years
 ├── 2018/
 │   ├── Master_Manual_[STATION]_2h_2018.xlsx    # Species detections
 │   ├── Master_[STATION]_Temp_2018.xlsx         # Temperature data
@@ -79,7 +80,7 @@ data/
 ```
 
 ### Data Processing Script (`scripts/process_data.py`)
-**Using Python for data processing (RECOMMENDED)** - builds on your existing `examples.py`:
+**Using Python for data processing (RECOMMENDED)** - builds on the existing `examples.py`:
 
 1. **Combine Detection Files**: Merge all Manual_*_2h files into single dataset
 2. **Add Environmental Data**: Join temperature and depth measurements  
@@ -102,6 +103,21 @@ python scripts/process_data.py
 - Better Excel file handling and data validation
 - Existing codebase in `examples.py` can be extended
 - Standard practice in research data pipelines
+
+### Deployment Metadata File
+The `1_Montie Lab_metadata_deployments_2017 to 2022.xlsx` file contains important metadata about the hydrophone deployments across multiple years (2017-2022). This includes:
+
+- Deployment dates and durations
+- Station locations and characteristics
+- Equipment specifications and configurations
+- Environmental conditions during deployments
+- Data collection parameters
+
+This metadata provides crucial context for interpreting the detection, environmental, and acoustic data. It can be used to:
+- Validate station information
+- Cross-reference deployment periods with detection data
+- Understand equipment changes between deployments
+- Account for environmental factors in data analysis
 
 ## Development Commands
 
@@ -207,7 +223,7 @@ Uses `data/det_column_names.csv` for short/long name conversion:
 - etc.
 
 ### File Processing Pattern
-Following your `examples.py` approach:
+Following the `examples.py` approach:
 1. Read Excel files (sheet_name=1)
 2. Apply column name mapping
 3. Extract year/station from filename
@@ -228,7 +244,7 @@ Following your `examples.py` approach:
 git init
 git add .
 git commit -m "Initial MBON dashboard"
-git remote add origin https://github.com/yourusername/mbon-dashboard
+git remote add origin https://github.com/username/mbon-dashboard
 git push -u origin main
 
 # Deploy via Vercel CLI

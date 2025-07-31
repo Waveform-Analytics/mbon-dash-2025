@@ -2,8 +2,8 @@ export default function ExplorerPage() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="mb-4">Data Explorer</h1>
-        <p className="text-xl text-slate-600">
+        <h1 className="section-heading">Data Explorer</h1>
+        <p className="section-description">
           Filter, search, and export the complete marine biodiversity dataset with advanced query tools.
         </p>
       </div>
