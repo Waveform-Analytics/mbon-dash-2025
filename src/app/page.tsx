@@ -17,73 +17,149 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="px-4 py-6 sm:px-0">
-      <div className="border-4 border-dashed border-slate-200 rounded-lg p-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            Marine Biodiversity Dashboard
-          </h2>
-          <p className="text-lg text-slate-600 mb-8">
-            Explore acoustic monitoring data from the OSA MBON project
-          </p>
+    <div className="page-container">
+      {/* Hero Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl lg:text-5xl font-display font-bold text-slate-900 mb-4">
+          Marine Biodiversity
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 to-coral-500"> Observatory</span>
+        </h1>
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          Explore acoustic monitoring data from the OSA MBON project. Discover species patterns, 
+          temporal trends, and environmental correlations across marine ecosystems.
+        </p>
+      </div>
           
-          {/* Metrics Cards Placeholder */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="metrics-card">
-              <div className="text-2xl font-bold text-ocean-600">
-                {metadata?.data_summary.total_detections.toLocaleString() || '-'}
-              </div>
-              <div className="text-sm text-slate-600">Total Detections</div>
-            </div>
-            <div className="metrics-card">
-              <div className="text-2xl font-bold text-ocean-600">
-                {species?.length || '-'}
-              </div>
-              <div className="text-sm text-slate-600">Species Count</div>
-            </div>
-            <div className="metrics-card">
-              <div className="text-2xl font-bold text-ocean-600">
-                {stations?.length || '-'}
-              </div>
-              <div className="text-sm text-slate-600">Active Stations</div>
-            </div>
-            <div className="metrics-card">
-              <div className="text-2xl font-bold text-ocean-600">
-                {metadata ? `${metadata.data_summary.date_range.start.substring(0,4)}-${metadata.data_summary.date_range.end.substring(0,4)}` : '2018-2021'}
-              </div>
-              <div className="text-sm text-slate-600">Date Range</div>
-            </div>
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="metrics-card group">
+          <div className="text-3xl font-bold text-ocean-600 mb-2">
+            {metadata?.data_summary.total_detections.toLocaleString() || '-'}
           </div>
-
-          {/* Chart Placeholders */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="chart-container h-64 flex items-center justify-center">
-              <div className="text-slate-400">Species Detection Timeline</div>
-            </div>
-            <div className="chart-container h-64 flex items-center justify-center">
-              <div className="text-slate-400">Station Activity Map</div>
-            </div>
+          <div className="text-sm font-medium text-slate-600 mb-1">Total Detections</div>
+          <div className="w-full bg-slate-100 rounded-full h-2">
+            <div className="bg-gradient-to-r from-ocean-500 to-ocean-600 h-2 rounded-full w-full"></div>
           </div>
-
-          {error && (
-            <div className="mt-8 p-4 bg-red-50 rounded-lg">
-              <p className="text-red-800">
-                ❌ Error loading data: {error.message}
-              </p>
-              <p className="text-red-600 text-sm mt-2">
-                Make sure your data is uploaded to Cloudflare R2 and NEXT_PUBLIC_DATA_URL is configured.
-              </p>
-            </div>
-          )}
-          
-          {!error && metadata && (
-            <div className="mt-8 p-4 bg-green-50 rounded-lg">
-              <p className="text-green-800">
-                ✅ Successfully connected to data! Last updated: {new Date(metadata.generated_at).toLocaleDateString()}
-              </p>
-            </div>
-          )}
         </div>
+        
+        <div className="metrics-card group">
+          <div className="text-3xl font-bold text-coral-500 mb-2">
+            {species?.length || '-'}
+          </div>
+          <div className="text-sm font-medium text-slate-600 mb-1">Species Tracked</div>
+          <div className="w-full bg-slate-100 rounded-full h-2">
+            <div className="bg-gradient-to-r from-coral-400 to-coral-500 h-2 rounded-full w-3/4"></div>
+          </div>
+        </div>
+        
+        <div className="metrics-card group">
+          <div className="text-3xl font-bold text-ocean-600 mb-2">
+            {stations?.length || '-'}
+          </div>
+          <div className="text-sm font-medium text-slate-600 mb-1">Monitoring Stations</div>
+          <div className="w-full bg-slate-100 rounded-full h-2">
+            <div className="bg-gradient-to-r from-ocean-500 to-coral-500 h-2 rounded-full w-2/3"></div>
+          </div>
+        </div>
+        
+        <div className="metrics-card group">
+          <div className="text-3xl font-bold text-slate-700 mb-2">
+            {metadata ? `${metadata.data_summary.date_range.start.substring(0,4)}-${metadata.data_summary.date_range.end.substring(0,4)}` : '2018-2021'}
+          </div>
+          <div className="text-sm font-medium text-slate-600 mb-1">Study Period</div>
+          <div className="w-full bg-slate-100 rounded-full h-2">
+            <div className="bg-gradient-to-r from-slate-400 to-slate-500 h-2 rounded-full w-1/2"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="chart-container group">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
+            <span className="badge badge-ocean">Coming Soon</span>
+          </div>
+          <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+            <div className="text-center">
+              <div className="text-4xl mb-2">📊</div>
+              <div className="text-slate-500 font-medium">Interactive time series visualization</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="chart-container group">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">Station Distribution Map</h3>
+            <span className="badge badge-coral">Coming Soon</span>
+          </div>
+          <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🗺️</div>
+              <div className="text-slate-500 font-medium">Geographic station locations & activity</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Messages */}
+      {error && (
+        <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-center">
+            <div className="text-red-500 text-xl mr-3">⚠️</div>
+            <div>
+              <p className="text-red-800 font-medium">
+                Unable to connect to data source
+              </p>
+              <p className="text-red-600 text-sm mt-1">
+                {error.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {!error && metadata && (
+        <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl">
+          <div className="flex items-center">
+            <div className="text-green-500 text-xl mr-3">✅</div>
+            <div>
+              <p className="text-green-800 font-medium">
+                Data connection successful
+              </p>
+              <p className="text-green-600 text-sm mt-1">
+                Last updated: {new Date(metadata.generated_at).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="/species" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
+          <div className="text-2xl mb-2">🐟</div>
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Species Analysis</h3>
+          <p className="text-sm text-slate-600 mt-1">Explore detection patterns and species diversity</p>
+        </a>
+        
+        <a href="/stations" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
+          <div className="text-2xl mb-2">📍</div>
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Station Comparison</h3>
+          <p className="text-sm text-slate-600 mt-1">Compare activity across monitoring locations</p>
+        </a>
+        
+        <a href="/temporal" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
+          <div className="text-2xl mb-2">📊</div>
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Temporal Patterns</h3>
+          <p className="text-sm text-slate-600 mt-1">Discover trends over time and seasons</p>
+        </a>
+        
+        <a href="/explorer" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
+          <div className="text-2xl mb-2">🔍</div>
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Data Explorer</h3>
+          <p className="text-sm text-slate-600 mt-1">Filter and explore the full dataset</p>
+        </a>
       </div>
     </div>
   )
