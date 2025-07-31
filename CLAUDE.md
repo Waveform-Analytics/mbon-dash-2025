@@ -47,10 +47,14 @@ uv run scripts/process_data.py
 # OR via npm script:
 npm run build-data
 
-# Development with fresh data
-npm run dev
+# Development options:
+npm run dev          # Start dev server (uses existing data)
+npm run dev:fresh    # Process data first, then start dev server
 
-# Production build
+# Check if data processing is needed
+uv run scripts/check_data_freshness.py
+
+# Production build (always processes fresh data)
 npm run build
 ```
 
@@ -105,6 +109,7 @@ python scripts/process_data.py
 ```bash
 # Direct uv commands (recommended)
 uv run scripts/process_data.py      # Process Excel files to JSON
+uv run scripts/check_data_freshness.py  # Check if data needs reprocessing
 uv run scripts/validate_data.py     # Check data integrity  
 uv run scripts/data_stats.py        # Generate data summary
 
@@ -114,10 +119,17 @@ npm run validate-data               # Runs: uv run scripts/validate_data.py
 npm run data-stats                  # Runs: uv run scripts/data_stats.py
 ```
 
+### Smart Data Processing Workflow
+- **First time setup**: Run `npm run dev:fresh` to process data and start
+- **Daily development**: Just use `npm run dev` (skips data processing)
+- **After updating Excel files**: Run `npm run build-data` then `npm run dev`
+- **Check if data is stale**: Run `uv run scripts/check_data_freshness.py`
+
 ### Development
 ```bash
-npm run dev                 # Start dev server (includes data processing)
-npm run build              # Production build
+npm run dev                 # Start dev server (uses existing data)
+npm run dev:fresh          # Process data + start dev server
+npm run build              # Production build (with data processing)
 npm run start              # Start production server
 npm run lint               # ESLint check
 npm run type-check         # TypeScript check
