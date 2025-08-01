@@ -3,13 +3,67 @@
  */
 
 import { useState, useEffect } from 'react';
-import DataLoader, { Detection, Station, Species, Metadata } from '../data/dataLoader';
+
+const DATA_URL = process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data';
+
+export interface Detection {
+  id: string;
+  file: string;
+  date: string;
+  time: string;
+  year: string;
+  station: string;
+  [key: string]: any;
+}
+
+export interface Station {
+  id: string;
+  name: string;
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  years: string[];
+  data_types: string[];
+}
+
+export interface Species {
+  short_name: string;
+  long_name: string;
+  total_detections: number;
+  category: string;
+}
+
+export interface Metadata {
+  generated_at: string;
+  column_mapping: Record<string, string>;
+  data_summary: {
+    total_detections: number;
+    total_environmental_records: number;
+    total_acoustic_records: number;
+    stations_count: number;
+    species_count: number;
+    date_range: {
+      start: string;
+      end: string;
+    };
+  };
+}
 
 interface UseDataResult<T> {
   data: T | null;
   loading: boolean;
   error: Error | null;
   refetch: () => void;
+}
+
+// Simple fetch wrapper
+async function fetchData<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${DATA_URL}/${endpoint}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
+  }
+  return response.json();
 }
 
 /**
@@ -20,11 +74,11 @@ export function useMetadata(): UseDataResult<Metadata> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async () => {
+  const fetchMetadata = async () => {
     try {
       setLoading(true);
       setError(null);
-      const metadata = await DataLoader.loadMetadata();
+      const metadata = await fetchData<Metadata>('metadata.json');
       setData(metadata);
     } catch (err) {
       setError(err as Error);
@@ -34,10 +88,10 @@ export function useMetadata(): UseDataResult<Metadata> {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchMetadata();
   }, []);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: fetchMetadata };
 }
 
 /**
@@ -48,11 +102,11 @@ export function useStations(): UseDataResult<Station[]> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async () => {
+  const fetchStations = async () => {
     try {
       setLoading(true);
       setError(null);
-      const stations = await DataLoader.loadStations();
+      const stations = await fetchData<Station[]>('stations.json');
       setData(stations);
     } catch (err) {
       setError(err as Error);
@@ -62,10 +116,10 @@ export function useStations(): UseDataResult<Station[]> {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchStations();
   }, []);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: fetchStations };
 }
 
 /**
@@ -76,11 +130,11 @@ export function useSpecies(): UseDataResult<Species[]> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async () => {
+  const fetchSpecies = async () => {
     try {
       setLoading(true);
       setError(null);
-      const species = await DataLoader.loadSpecies();
+      const species = await fetchData<Species[]>('species.json');
       setData(species);
     } catch (err) {
       setError(err as Error);
@@ -90,38 +144,10 @@ export function useSpecies(): UseDataResult<Species[]> {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchSpecies();
   }, []);
 
-  return { data, loading, error, refetch: fetchData };
-}
-
-/**
- * Hook to load detections (large dataset)
- */
-export function useDetections(): UseDataResult<Detection[]> {
-  const [data, setData] = useState<Detection[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const detections = await DataLoader.loadDetections();
-      setData(detections);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: fetchSpecies };
 }
 
 /**
@@ -140,12 +166,18 @@ export function useCoreData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async () => {
+  const fetchCoreData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const coreData = await DataLoader.loadCoreData();
-      setData(coreData);
+      
+      const [metadata, stations, species] = await Promise.all([
+        fetchData<Metadata>('metadata.json'),
+        fetchData<Station[]>('stations.json'),
+        fetchData<Species[]>('species.json')
+      ]);
+      
+      setData({ metadata, stations, species });
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -154,8 +186,8 @@ export function useCoreData() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchCoreData();
   }, []);
 
-  return { ...data, loading, error, refetch: fetchData };
+  return { ...data, loading, error, refetch: fetchCoreData };
 }
