@@ -20,6 +20,9 @@ Interactive web dashboard for exploring marine acoustic monitoring data from the
 ## Principles and Best Practices
 - Always use best practices and aim for tidiness and good documentation
 
+## Development Guidelines
+- Don't write commit messages for me, or commit or push. 
+
 ## Quick Start
 
 ### 1. Project Setup

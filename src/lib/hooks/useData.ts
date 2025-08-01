@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import DataLoader, { Detection, Station, Species, Metadata } from '@/lib/data/dataLoader';
+import DataLoader, { Detection, Station, Species, Metadata } from '../data/dataLoader';
 
 interface UseDataResult<T> {
   data: T | null;
