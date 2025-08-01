@@ -57,7 +57,7 @@ def process_detection_files():
     
     # Find all detection files
     detection_files = []
-    for year in ["2018", "2021"]:
+    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
         year_dir = DATA_DIR / year
         if year_dir.exists():
             detection_files.extend(year_dir.glob("Master_Manual_*_2h_*.xlsx"))
@@ -108,7 +108,7 @@ def process_environmental_files():
     
     environmental_data = []
     
-    for year in ["2018", "2021"]:
+    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
         year_dir = DATA_DIR / year
         if not year_dir.exists():
             continue
@@ -157,7 +157,7 @@ def process_acoustic_files():
     
     acoustic_data = []
     
-    for year in ["2018", "2021"]:
+    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
         year_dir = DATA_DIR / year
         if not year_dir.exists():
             continue
@@ -183,7 +183,30 @@ def process_acoustic_files():
         print("⚠️  No acoustic data files found")
         return pd.DataFrame()
 
-def generate_station_metadata(detections_df, environmental_df, acoustic_df):
+def process_deployment_metadata():
+    """Process deployment metadata Excel file."""
+    print("📋 Processing deployment metadata...")
+    
+    metadata_file = DATA_DIR / "1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
+    if not metadata_file.exists():
+        print(f"⚠️  Metadata file not found: {metadata_file}")
+        return pd.DataFrame()
+    
+    try:
+        # Read the metadata Excel file
+        # Note: You may need to adjust sheet_name based on the actual structure
+        metadata_df = pd.read_excel(metadata_file, sheet_name=0)
+        
+        # Clean up column names (remove spaces, lowercase)
+        metadata_df.columns = [col.strip().lower().replace(' ', '_') for col in metadata_df.columns]
+        
+        print(f"✅ Processed metadata with {len(metadata_df)} records")
+        return metadata_df
+    except Exception as e:
+        print(f"❌ Error processing metadata file: {e}")
+        return pd.DataFrame()
+
+def generate_station_metadata(detections_df, environmental_df, acoustic_df, deployment_metadata_df):
     """Generate station metadata including coordinates and data availability."""
     print("📍 Generating station metadata...")
     
@@ -201,7 +224,8 @@ def generate_station_metadata(detections_df, environmental_df, acoustic_df):
             'name': f'Station {station}',
             'coordinates': get_station_coordinates(station),  # TODO: Add real coordinates
             'years': [],
-            'data_types': []
+            'data_types': [],
+            'metadata': {}  # New field for additional metadata
         }
         
         # Check data availability
@@ -219,6 +243,25 @@ def generate_station_metadata(detections_df, environmental_df, acoustic_df):
             station_info['data_types'].append('acoustic')
             years = acoustic_df[acoustic_df['station'] == station]['year'].unique()
             station_info['years'].extend(years)
+        
+        # Add deployment metadata if available
+        if not deployment_metadata_df.empty:
+            # Assuming the metadata has a 'station' or similar column
+            # You may need to adjust the column name based on the actual structure
+            station_column = next((col for col in deployment_metadata_df.columns 
+                                if 'station' in col.lower()), None)
+            
+            if station_column:
+                station_metadata = deployment_metadata_df[
+                    deployment_metadata_df[station_column].astype(str).str.strip() == station
+                ]
+                
+                if not station_metadata.empty:
+                    # Convert metadata to dictionary, excluding NaN values
+                    for _, row in station_metadata.iterrows():
+                        for col in station_metadata.columns:
+                            if pd.notna(row[col]):
+                                station_info['metadata'][col] = row[col]
         
         station_info['years'] = sorted(list(set(station_info['years'])))
         stations.append(station_info)
@@ -291,7 +334,7 @@ def categorize_species(species_name):
     else:
         return 'other'
 
-def save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup):
+def save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup, deployment_metadata_df):
     """Save all processed data as JSON files."""
     print("💾 Saving JSON files...")
     
@@ -318,6 +361,7 @@ def save_json_files(detections_df, environmental_df, acoustic_df, stations, spec
         'detections.json': clean_for_json(detections_df),
         'environmental.json': clean_for_json(environmental_df),
         'acoustic.json': clean_for_json(acoustic_df),
+        'deployment_metadata.json': clean_for_json(deployment_metadata_df),  # New file
         'stations.json': stations,
         'species.json': species,
         'metadata.json': {
@@ -327,6 +371,7 @@ def save_json_files(detections_df, environmental_df, acoustic_df, stations, spec
                 'total_detections': len(detections_df),
                 'total_environmental_records': len(environmental_df),
                 'total_acoustic_records': len(acoustic_df),
+                'total_deployment_metadata_records': len(deployment_metadata_df),  # New line
                 'stations_count': len(stations),
                 'species_count': len(species),
                 'date_range': {
@@ -361,18 +406,22 @@ def main():
         # Process acoustic data
         acoustic_df = process_acoustic_files()
         
+        # Process deployment metadata (new)
+        deployment_metadata_df = process_deployment_metadata()
+        
         # Generate metadata
-        stations = generate_station_metadata(detections_df, environmental_df, acoustic_df)
+        stations = generate_station_metadata(detections_df, environmental_df, acoustic_df, deployment_metadata_df)
         species = generate_species_metadata(detections_df, column_lookup)
         
         # Save all data as JSON
-        save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup)
+        save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup, deployment_metadata_df)
         
         print("\n🎉 Data processing completed successfully!")
         print(f"📊 Summary:")
         print(f"   • {len(detections_df):,} detection records")
         print(f"   • {len(environmental_df):,} environmental records")  
         print(f"   • {len(acoustic_df):,} acoustic records")
+        print(f"   • {len(deployment_metadata_df):,} deployment metadata records")  # New line
         print(f"   • {len(stations)} stations")
         print(f"   • {len(species)} species")
         print(f"\n💡 Next step: Run 'npm run dev' to start the dashboard!")

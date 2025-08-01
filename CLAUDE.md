@@ -54,7 +54,7 @@ npm run dev:fresh    # Process data first, then start dev server
 # Check if data processing is needed
 uv run scripts/check_data_freshness.py
 
-# Production build (always processes fresh data)
+# Production build (Next.js only, no data processing)
 npm run build
 ```
 
@@ -145,8 +145,8 @@ npm run data-stats                  # Runs: uv run scripts/data_stats.py
 ```bash
 npm run dev                 # Start dev server (uses existing data)
 npm run dev:fresh          # Process data + start dev server
-npm run build              # Production build (with data processing)
-npm run start              # Start production server
+npm run build              # Production build (no data processing)
+npm run start              # Start production server  
 npm run lint               # ESLint check
 npm run type-check         # TypeScript check
 ```
@@ -238,19 +238,40 @@ Following the `examples.py` approach:
 
 ## Deployment
 
-### Vercel Deployment
-```bash
-# Connect to GitHub
-git init
-git add .
-git commit -m "Initial MBON dashboard"
-git remote add origin https://github.com/username/mbon-dashboard
-git push -u origin main
+### Production Deployment Workflow
 
-# Deploy via Vercel CLI
-npm install -g vercel
-vercel --prod
-```
+**Important**: Data processing happens locally, not during deployment.
+
+1. **Process Data Locally**:
+   ```bash
+   uv run scripts/process_data.py  # Generate JSON files
+   ```
+
+2. **Upload Data to Cloudflare R2**:
+   - Upload all files from `public/data/` to R2 bucket
+   - Files should be accessible at `https://bucket-name.r2.dev/filename.json`
+
+3. **Configure Environment**:
+   ```bash
+   # Set in Vercel dashboard or .env.local
+   NEXT_PUBLIC_DATA_URL=https://pub-your-id.r2.dev
+   ```
+
+4. **Deploy to Vercel**:
+   ```bash
+   # Connect to GitHub
+   git init
+   git add .
+   git commit -m "Initial MBON dashboard"
+   git remote add origin https://github.com/username/mbon-dashboard
+   git push -u origin main
+
+   # Deploy via Vercel CLI or dashboard
+   npm install -g vercel
+   vercel --prod
+   ```
+
+**Note**: The Vercel build process does NOT run Python data processing. All data is served from Cloudflare R2 CDN.
 
 ### Build Configuration
 
@@ -261,8 +282,9 @@ vercel --prod
     "build-data": "uv run scripts/process_data.py",
     "validate-data": "uv run scripts/validate_data.py", 
     "data-stats": "uv run scripts/data_stats.py",
-    "build": "npm run build-data && next build",
-    "dev": "npm run build-data && next dev"
+    "build": "next build",
+    "dev": "next dev",
+    "dev:fresh": "npm run build-data && next dev"
   }
 }
 ```

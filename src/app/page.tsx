@@ -36,40 +36,28 @@ export default function DashboardPage() {
           <div className="text-3xl font-bold text-ocean-600 mb-2">
             {metadata?.data_summary.total_detections.toLocaleString() || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600 mb-1">Total Detections</div>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-gradient-to-r from-ocean-500 to-ocean-600 h-2 rounded-full w-full"></div>
-          </div>
+          <div className="text-sm font-medium text-slate-600">Total Detections</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-coral-500 mb-2">
             {species?.length || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600 mb-1">Species Tracked</div>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-gradient-to-r from-coral-400 to-coral-500 h-2 rounded-full w-3/4"></div>
-          </div>
+          <div className="text-sm font-medium text-slate-600">Species Tracked</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-ocean-600 mb-2">
             {stations?.length || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600 mb-1">Monitoring Stations</div>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-gradient-to-r from-ocean-500 to-coral-500 h-2 rounded-full w-2/3"></div>
-          </div>
+          <div className="text-sm font-medium text-slate-600">Monitoring Stations</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-slate-700 mb-2">
-            {metadata ? `${metadata.data_summary.date_range.start.substring(0,4)}-${metadata.data_summary.date_range.end.substring(0,4)}` : '2018-2021'}
+            2018-2021
           </div>
-          <div className="text-sm font-medium text-slate-600 mb-1">Study Period</div>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-gradient-to-r from-slate-400 to-slate-500 h-2 rounded-full w-1/2"></div>
-          </div>
+          <div className="text-sm font-medium text-slate-600">Study Period</div>
         </div>
       </div>
 
