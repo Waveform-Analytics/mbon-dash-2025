@@ -3,8 +3,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['plotly.js']
   },
-  // Ensure CSS is properly processed
-  cssModules: true,
   poweredByHeader: false,
   reactStrictMode: true,
   webpack: (config) => {

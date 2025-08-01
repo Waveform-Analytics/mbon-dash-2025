@@ -1,6 +1,6 @@
 'use client'
 
-import { useCoreData } from '@/hooks/useData'
+import { useCoreData } from '@/lib/hooks/useData'
 
 export default function DashboardPage() {
   const { metadata, stations, species, loading, error } = useCoreData()
