@@ -191,3 +191,46 @@ export function useCoreData() {
 
   return { ...data, loading, error, refetch: fetchCoreData };
 }
+
+// Tell typescript what to expect in each deployement record
+export interface DeploymentMetadata {
+  object_id: number;
+  station: string;      // e.g., "9M", "14M", "37M"
+  year: number;
+  gps_lat:number;
+  gps_long: number;
+  start_date: string;
+  end_date: string;
+  depth_m: number;
+  deployment_id: string;
+  platform_type?: string;
+  salinity_ppt?: number;
+  temperature_c?: number;
+}
+
+// Hook to load deployment metadata
+export function useDeploymentMetadata(): UseDataResult<DeploymentMetadata[]> {
+  const [data, setData] = useState<DeploymentMetadata[] | null>(null); // The actual data
+  const [loading, setLoading] = useState(true);                         // Loading indicator
+  const [error, setError] = useState<Error | null>(null);               // Any errors
+
+  // data-fetching function
+  const fetchDeploymentMetadata = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const deployments = await fetchData<DeploymentMetadata[]>('deployments.json');
+      setData(deployments);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDeploymentMetadata();
+  }, []);
+
+  return { data, loading, error, refetch: fetchDeploymentMetadata };
+}

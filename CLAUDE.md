@@ -12,10 +12,10 @@ Interactive web dashboard for exploring marine acoustic monitoring data from the
 
 ## Technology Stack
 - **Frontend**: Next.js 14 with TypeScript, Tailwind CSS
-- **Visualization**: Plotly.js, Mapbox GL JS
+- **Visualization**: Plotly.js, Mapbox GL JS, Observable plot/d3
 - **State Management**: Zustand
-- **Data Processing**: Client-side with static JSON files
-- **Deployment**: Vercel (single deployment)
+- **Data Processing**: Python (uv) for local processing, Cloudflare R2 CDN for storage
+- **Deployment**: Vercel (frontend only)
 
 ## Principles and Best Practices
 - Always use best practices and aim for tidiness and good documentation
@@ -64,6 +64,7 @@ npm run build
 ### 3. Environment Variables
 Create `.env.local`:
 ```
+NEXT_PUBLIC_DATA_URL=https://pub-71436b8d94864ba1ace2ef29fa28f0f1.r2.dev
 NEXT_PUBLIC_MAPBOX_TOKEN=mapbox_token_here
 ```
 
@@ -92,13 +93,14 @@ data/
 5. **Output JSON Files**: Optimized for client-side loading
 
 ```bash
-python scripts/process_data.py
+uv run scripts/process_data.py
 # Creates:
 # - public/data/detections.json (~5MB combined dataset)
 # - public/data/stations.json (station metadata)
 # - public/data/species.json (species lookup)
 # - public/data/environmental.json (temp/depth data)
 # - public/data/acoustic.json (rmsSPL indices)
+# - public/data/metadata.json (data summary and metadata)
 ```
 
 **Why Python over Node.js for data processing:**
@@ -179,14 +181,13 @@ mbon-dashboard/
 │   │   ├── export/             # Data export tools
 │   │   └── ui/                 # Reusable components
 │   ├── lib/
-│   │   ├── data/               # Data loading/processing
-│   │   ├── hooks/              # Custom React hooks
+│   │   ├── hooks/              # Custom React hooks (includes useData.ts)
 │   │   └── utils/              # Utility functions
 │   └── store/                  # Zustand state management
 ├── public/
-│   └── data/                   # Processed JSON files
+│   └── data/                   # Processed JSON files (uploaded to R2)
 ├── scripts/
-│   └── processData.js          # Data processing script
+│   └── process_data.py         # Python data processing script
 └── data/                       # Raw Excel files (not in build)
 ```
 
@@ -216,7 +217,16 @@ mbon-dashboard/
 - Bulk data packages with metadata
 - Custom query results
 
-## Data Processing Details
+## Data Architecture
+
+### Data Loading (Frontend)
+All data loading is consolidated in `/src/lib/hooks/useData.ts`:
+- `useMetadata()` - Loads metadata.json with data summary
+- `useStations()` - Loads stations.json with station information
+- `useSpecies()` - Loads species.json with species list
+- `useCoreData()` - Loads all core data simultaneously
+
+Data is fetched from Cloudflare R2 CDN using the `NEXT_PUBLIC_DATA_URL` environment variable.
 
 ### Column Mapping
 Uses `data/det_column_names.csv` for short/long name conversion:
@@ -231,7 +241,7 @@ Following the `examples.py` approach:
 2. Apply column name mapping
 3. Extract year/station from filename
 4. Combine with environmental and acoustic data
-5. Export as optimized JSON
+5. Export as optimized JSON for CDN upload
 
 ### Data Validation
 - Date/time consistency checks
@@ -287,7 +297,10 @@ Following the `examples.py` approach:
     "data-stats": "uv run scripts/data_stats.py",
     "build": "next build",
     "dev": "next dev",
-    "dev:fresh": "npm run build-data && next dev"
+    "dev:fresh": "npm run build-data && next dev",
+    "lint": "next lint",
+    "clean": "rm -rf .next out",
+    "clean:data": "rm -rf public/data/*"
   }
 }
 ```
@@ -361,7 +374,21 @@ npm run data-stats        # View data summary statistics
 - Year-over-year ecosystem changes
 
 ## Development Notes
-- Don't run `npm run dev` for me - I will do that in a separate terminal window. Just tell me when I'm ready to run.
+- Don't run `npm run dev` - the user will do that in a separate terminal window. Just tell them when they're ready to run.
+- Don't write commit messages or commit/push code - the user handles version control.
+- CLAUDE.md should not use conversational language like "you" or "your".
+
+## Current Implementation Status
+- ✅ Next.js 14 with TypeScript and Tailwind CSS setup
+- ✅ Python data processing with uv dependency management
+- ✅ Cloudflare R2 CDN integration for data storage
+- ✅ Consolidated data loading hooks in `useData.ts`
+- ✅ Modern ocean-themed design with Google Fonts
+- ✅ Navigation system across all pages
+- ✅ Vercel deployment (frontend only, no Python dependencies)
+- 🚧 Visualization components (placeholder implementation)
+- 🚧 Data filtering and export functionality
+- 🚧 Interactive charts and maps
 
 ---
 
