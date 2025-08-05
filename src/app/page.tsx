@@ -2,6 +2,20 @@
 
 import { useCoreData } from '@/lib/hooks/useData'
 
+// Define what processed station data will look like
+interface ProcessedStation {
+  name: string;
+  lat: number;
+  lng: number;
+  deploymentCount: number;
+  years: number[];
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  // Add summary fields later as needed
+}
+
 export default function DashboardPage() {
   const { metadata, stations, species, loading, error } = useCoreData()
 
