@@ -16,6 +16,52 @@ interface ProcessedStation {
   // Add summary fields later as needed
 }
 
+// function to process the raw deployment data into station summaries
+function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStation[] {
+  const stationMap = new Map<string, ProcessedStation>();
+
+  deployments.forEach(deployment => {
+    const stationName = deployment.station;
+
+    // if we haven't seen this station before, create a new entry
+    if (!stationMap.has(stationName)) {
+      stationMap.set(stationName, {
+        name: stationName,
+        lat: deployment.gps_lat,
+        lng: deployment.gps_long,
+        deploymentCount: 0,
+        years: [],
+        dateRange: {
+          start: deployment.start_date,
+          end: deployment.end_date
+        }
+      });
+    }
+
+    // get the existing station data
+    const station = stationMap.get(stationName)!;
+
+    // Update the station's aggregate data
+    station.deploymentCount += 1;
+
+    // Add year if we haven't seen it before
+    if (!station.years.includes(deployment.year)) {
+      station.years.push(deployment.year);
+    }
+
+    // Update date range (keep earliest start and latest end)
+    if (deployment.start_date < station.dateRange.start) {
+      station.dateRange.start = deployment.start_date;
+    }
+    if (deployment.end_date > station.dateRange.end) {
+      station.dateRange.end = deployment.end_date;
+    }
+  });
+
+  // Convert the Map back to an array and sort by station name
+  return Array.from(stationMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export default function DashboardPage() {
   const { metadata, stations, species, loading, error } = useCoreData()
 
