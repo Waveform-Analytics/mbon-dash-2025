@@ -1,6 +1,6 @@
 'use client'
 
-import { useCoreData } from '@/lib/hooks/useData'
+import {DeploymentMetadata, useCoreData} from '@/lib/hooks/useData'
 
 // Define what processed station data will look like
 interface ProcessedStation {
