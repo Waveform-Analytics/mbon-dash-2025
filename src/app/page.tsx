@@ -119,8 +119,8 @@ export default function DashboardPage() {
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 to-coral-500"> Observatory</span>
         </h1>
         <p className="section-description">
-          Explore acoustic monitoring data from the OSA MBON project. Discover species patterns, 
-          temporal trends, and environmental correlations across marine ecosystems.
+          Exploring relationships between computed acoustic indices and species presence using data collected at three
+          stations in May River, South Carolina.
         </p>
       </div>
           

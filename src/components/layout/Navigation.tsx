@@ -28,9 +28,9 @@ export default function Navigation() {
               </div>
               <div>
                 <h1 className="font-display font-bold text-ocean-900 text-lg">
-                  MBON Dashboard
+                  MBON Biosound : May River, SC
                 </h1>
-                <p className="text-xs text-slate-500 -mt-1">Marine Biodiversity Observatory</p>
+                <p className="text-xs text-slate-500 -mt-1">Acoustic indices and marine biodiversity</p>
               </div>
             </Link>
           </div>
