@@ -1,7 +1,9 @@
 # Marine Biodiversity Dashboard (MBON-USC-2025)
 
 ## Project Overview
-Interactive web dashboard for exploring marine acoustic monitoring data from the OSA MBON project. Visualizes species detections, temporal patterns, station comparisons, and acoustic indices to understand relationships between acoustic environment and species presence.
+Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as cost-effective proxies for complex biodiversity monitoring. The core research question: "Can computed acoustic indices help us understand and predict marine biodiversity patterns as an alternative to expensive, labor-intensive manual species detection methods?"
+
+**Research Focus**: Analyzing relationships between 60+ acoustic indices and species presence across 3 stations in May River, South Carolina, with emphasis on identifying the most informative indices for biodiversity assessment and understanding environmental confounding factors.
 
 ## Data Structure
 
@@ -398,22 +400,44 @@ npm run data-stats        # View data summary statistics
 
 ## Research Questions to Address
 
-### **Primary Analysis (Detection-Focused)**
-- Species detection patterns across the 3 stations (9M, 14M, 37M)
-- Temporal patterns in species presence between 2018 and 2021
-- Station-specific species diversity and detection frequency
-- Seasonal and daily patterns in species activity
+### **🎯 Primary Research Questions (Phase 1)**
+1. **Acoustic Indices as Biodiversity Proxies**
+   - Which acoustic indices best predict species presence and soundscape biodiversity?
+   - Can indices differentiate between biological vs anthropogenic sounds (vessel, chain, etc.)?
+   - What is the performance ranking of indices for biodiversity prediction?
+   - PCA analysis: Which indices cluster with species detections?
 
-### **Secondary Analysis (Correlation-Focused)**
-- Correlation between acoustic indices (rmsSPL) and species detections
-- Environmental drivers of species presence (temperature, depth effects)
-- How environmental conditions relate to detection success
-- Multi-year changes in ecosystem composition (2018 vs 2021)
+2. **Environmental Confounding Factors**
+   - Do temperature and depth significantly affect acoustic indices?
+   - Should indices be environmentally corrected for better biodiversity prediction?
+   - Are indices driven by environmental conditions or biological activity?
 
-### **Methodological Questions**
-- Data quality and detection consistency across stations
-- Temporal coverage and sampling effectiveness
-- Relationships between different data types (manual vs automated)
+### **🔍 Secondary Research Questions (Phase 2)**
+3. **Seasonal and Temporal Patterns**
+   - Are there seasonal fluctuations in acoustic indices?
+   - How do seasonal patterns relate to species activity vs environmental cycles?
+   - Multi-year changes in soundscape biodiversity (2018 vs 2021)
+
+4. **Anthropogenic Impact Assessment**
+   - How does proximity to marinas/shipping routes affect indices?
+   - Can we separate anthropogenic noise from biological sounds using indices?
+   - Station-specific anthropogenic signatures
+
+### **🔮 Future Research Questions (Phase 3)**
+5. **Spatial Gradients and Site Characteristics**
+   - Does distance from river mouth affect acoustic indices and biodiversity?
+   - Station-specific environmental and biological profiles
+   - Scaling patterns across different estuarine locations
+
+6. **Advanced Acoustic Analysis (with 60 indices at 5-min resolution)**
+   - Fine-temporal resolution patterns in soundscape biodiversity
+   - Machine learning models for biodiversity prediction
+   - Real-time monitoring applications
+
+### **🎓 Science Communication Goals**
+- Make acoustic indices accessible to non-acoustics researchers
+- Demonstrate cost-effectiveness of acoustic monitoring for biodiversity assessment
+- Provide actionable recommendations for marine monitoring programs
 
 ## Development Notes
 - Don't run `npm run dev` - the user will do that in a separate terminal window. Just tell them when they're ready to run.
@@ -453,13 +477,15 @@ npm run data-stats        # View data summary statistics
 - Species detection analysis tools
 - Environmental correlation features
 
-### 🎯 **Current Priority**
-1. ✅ **Data processing fixed** - 3 stations, 2018/2021 scope confirmed
-2. ✅ **JSON files regenerated** and uploaded to CDN
-3. ✅ **Dashboard verified** - showing 3 stations correctly
-4. ✅ **Species activity timeline** - Interactive heatmap completed with Observable Plot
-5. **Build basic versions of remaining pages** (species, temporal, explorer)
-6. **Polish and refinements** (see `docs/future-improvements.md`)
+### 🎯 **Current Priority: Site Restructuring**
+1. ✅ **Foundation Complete** - Data processing, Observable Plot integration, working dashboard
+2. ✅ **Research focus refined** - Soundscape biodiversity and acoustic indices as proxies
+3. **NEXT: Implement restructured pages** following `docs/site-restructuring-plan.md`:
+   - `/acoustic-biodiversity` - Primary analysis (PCA, correlations, rankings)
+   - `/environmental-factors` - Temperature/depth confounders
+   - `/acoustic-glossary` - Index education and science communication
+   - Enhanced `/stations` - Spatial context and deployment details
+4. **Phase 1 Goal**: Answer core question "Which acoustic indices best predict soundscape biodiversity?"
 
 ---
 
