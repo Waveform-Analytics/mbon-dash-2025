@@ -1,9 +1,19 @@
 'use client'
 
-import { useMemo } from 'react';  // Add this import
+import { useMemo } from 'react';
 import { useCoreData, useDeploymentMetadata, useTimelineData, DeploymentMetadata } from '@/lib/hooks/useData'
-import { StationMap } from '@/components/maps/StationMap';  // Add this import
+import { StationMap } from '@/components/maps/StationMap';
 import { SpeciesActivityHeatmap } from '@/components/charts/SpeciesActivityHeatmap';
+import { 
+  MusicalNoteIcon, 
+  SunIcon, 
+  BookOpenIcon, 
+  MapPinIcon, 
+  MagnifyingGlassIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ChartBarIcon
+} from '@heroicons/react/24/outline'
 
 // Define what processed station data will look like
 // Export it so other files can import and use it
@@ -188,7 +198,7 @@ export default function DashboardPage() {
               </div>
               <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">📊</div>
+                  <ChartBarIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
                   <div className="text-slate-500 font-medium">No detection data available</div>
                 </div>
               </div>
@@ -220,7 +230,7 @@ export default function DashboardPage() {
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
               <div className="text-center">
-                <div className="text-4xl mb-2">📍</div>
+                <MapPinIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
                 <div className="text-slate-500 font-medium">No station data available</div>
               </div>
             </div>
@@ -232,7 +242,7 @@ export default function DashboardPage() {
       {error && (
         <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-xl">
           <div className="flex items-center">
-            <div className="text-red-500 text-xl mr-3">⚠️</div>
+            <ExclamationTriangleIcon className="w-6 h-6 text-red-500 mr-3" />
             <div>
               <p className="text-red-800 font-medium">
                 Unable to connect to data source
@@ -248,7 +258,7 @@ export default function DashboardPage() {
       {!error && metadata && (
         <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl">
           <div className="flex items-center">
-            <div className="text-green-500 text-xl mr-3">✅</div>
+            <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3" />
             <div>
               <p className="text-green-800 font-medium">
                 Data connection successful
@@ -263,27 +273,33 @@ export default function DashboardPage() {
 
       {/* Quick Navigation */}
       <div className="card-grid gap-4">
-        <a href="/species" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
-          <div className="text-2xl mb-2">🐟</div>
-          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Species Analysis</h3>
-          <p className="text-sm text-slate-600 mt-1">Explore detection patterns and species diversity</p>
+        <a href="/acoustic-biodiversity" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
+          <MusicalNoteIcon className="w-8 h-8 text-ocean-500 mb-2" />
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Acoustic Analysis</h3>
+          <p className="text-sm text-slate-600 mt-1">Which acoustic indices best predict marine biodiversity?</p>
+        </a>
+        
+        <a href="/environmental-factors" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
+          <SunIcon className="w-8 h-8 text-coral-500 mb-2" />
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Environmental Factors</h3>
+          <p className="text-sm text-slate-600 mt-1">How do temperature, depth, and seasonality affect indices?</p>
+        </a>
+        
+        <a href="/acoustic-glossary" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
+          <BookOpenIcon className="w-8 h-8 text-ocean-500 mb-2" />
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Index Guide</h3>
+          <p className="text-sm text-slate-600 mt-1">Understanding acoustic indices and their biological meaning</p>
         </a>
         
         <a href="/stations" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
-          <div className="text-2xl mb-2">📍</div>
-          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Station Comparison</h3>
-          <p className="text-sm text-slate-600 mt-1">Compare activity across monitoring locations</p>
+          <MapPinIcon className="w-8 h-8 text-coral-500 mb-2" />
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Station Profiles</h3>
+          <p className="text-sm text-slate-600 mt-1">Spatial context and deployment details for 9M, 14M, 37M</p>
         </a>
         
-        <a href="/temporal" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
-          <div className="text-2xl mb-2">📊</div>
-          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Temporal Patterns</h3>
-          <p className="text-sm text-slate-600 mt-1">Discover trends over time and seasons</p>
-        </a>
-        
-        <a href="/explorer" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
-          <div className="text-2xl mb-2">🔍</div>
-          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Data Explorer</h3>
+        <a href="/explorer" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
+          <MagnifyingGlassIcon className="w-8 h-8 text-ocean-500 mb-2" />
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Data Explorer</h3>
           <p className="text-sm text-slate-600 mt-1">Filter and explore the full dataset</p>
         </a>
       </div>

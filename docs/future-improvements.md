@@ -15,3 +15,4 @@ These are things that are not critical to functionality but that I want to addre
 ## General
 - there are way more deployment entries than what we have data for. I want to only use/include deployement metadata for the years for which we have temp/depth/detection data (so should be ~2018 and ~2021 - based on the files in )
 - throughout the site we refer to the detections as species. they mostly are species but not all - there are also annotations for different, non-biological sounds like static, chain, waves, rain. So I need to update wording to be more flexible
+- Liz requested that we add station C even though it's only available during 2021

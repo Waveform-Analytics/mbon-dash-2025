@@ -1,3 +1,5 @@
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+
 export default function ExplorerPage() {
   return (
     <div className="page-container">
@@ -10,7 +12,7 @@ export default function ExplorerPage() {
 
       <div className="coming-soon">
         <div>
-          <div className="text-6xl mb-4">🔍</div>
+          <MagnifyingGlassIcon className="w-24 h-24 text-slate-400 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-slate-700 mb-2">Data Explorer Coming Soon</h2>
           <p className="text-slate-500 max-w-md mx-auto">
             This section will feature advanced filtering tools, data table views, 

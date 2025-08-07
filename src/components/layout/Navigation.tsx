@@ -3,18 +3,50 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { 
+  HomeIcon, 
+  ChartBarIcon, 
+  BeakerIcon, 
+  BookOpenIcon, 
+  MapPinIcon, 
+  MagnifyingGlassIcon,
+  MusicalNoteIcon,
+  SunIcon,
+  ChevronDownIcon,
+  Bars3Icon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
 
 const navigation = [
-  { name: 'Overview', href: '/', icon: '🏠' },
-  { name: 'Species', href: '/species', icon: '🐟' },
-  { name: 'Stations', href: '/stations', icon: '📍' },
-  { name: 'Temporal', href: '/temporal', icon: '📊' },
-  { name: 'Explorer', href: '/explorer', icon: '🔍' },
+  { name: 'Overview', href: '/', icon: HomeIcon },
+  {
+    name: 'Analysis',
+    icon: ChartBarIcon,
+    children: [
+      { name: 'Acoustic Indices', href: '/acoustic-biodiversity', icon: MusicalNoteIcon, description: 'Which indices predict biodiversity?' },
+      { name: 'Environmental Factors', href: '/environmental-factors', icon: SunIcon, description: 'Temperature, depth & seasonal effects' },
+    ]
+  },
+  {
+    name: 'Resources',
+    icon: BookOpenIcon,
+    children: [
+      { name: 'Index Guide', href: '/acoustic-glossary', icon: BeakerIcon, description: 'Understanding acoustic indices' },
+      { name: 'Station Profiles', href: '/stations', icon: MapPinIcon, description: 'Study sites & spatial context' },
+    ]
+  },
+  { name: 'Explorer', href: '/explorer', icon: MagnifyingGlassIcon },
 ]
 
 export default function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+
+  // Helper function to check if a dropdown should be active
+  const isDropdownActive = (children: any[]) => {
+    return children.some((child: any) => pathname === child.href)
+  }
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -36,23 +68,83 @@ export default function Navigation() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-2">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-ocean-50 text-ocean-700 border border-ocean-200'
-                      : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="text-base">{item.icon}</span>
-                  <span>{item.name}</span>
-                </Link>
-              )
+              // Single page items
+              if (item.href) {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-ocean-50 text-ocean-700 border border-ocean-200'
+                        : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </Link>
+                )
+              }
+
+              // Dropdown items
+              if (item.children) {
+                const isActive = isDropdownActive(item.children)
+                return (
+                  <div
+                    key={item.name}
+                    className="relative"
+                    onMouseEnter={() => setActiveDropdown(item.name)}
+                    onMouseLeave={() => setActiveDropdown(null)}
+                  >
+                    <button
+                      className={`inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors ${
+                        activeDropdown === item.name
+                          ? 'bg-ocean-50 text-ocean-700 border border-ocean-200 rounded-t-lg rounded-b-none'
+                          : isActive
+                          ? 'bg-ocean-50 text-ocean-700 border border-ocean-200 rounded-lg'
+                          : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50 rounded-lg'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                      <ChevronDownIcon className="w-4 h-4 ml-1" />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {activeDropdown === item.name && (
+                      <div className="absolute top-full left-0 w-72 bg-white border border-slate-200 border-t-0 rounded-b-lg rounded-tr-lg shadow-lg py-2 z-50">
+                        {item.children.map((child: any) => {
+                          const childIsActive = pathname === child.href
+                          return (
+                            <Link
+                              key={child.name}
+                              href={child.href}
+                              className={`flex items-start space-x-3 px-4 py-3 hover:bg-slate-50 transition-colors ${
+                                childIsActive ? 'bg-ocean-50 border-r-2 border-ocean-500' : ''
+                              }`}
+                            >
+                              <child.icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className={`font-medium ${childIsActive ? 'text-ocean-700' : 'text-slate-900'}`}>
+                                  {child.name}
+                                </div>
+                                <div className="text-sm text-slate-500 mt-0.5">
+                                  {child.description}
+                                </div>
+                              </div>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              return null
             })}
           </nav>
 
@@ -64,19 +156,11 @@ export default function Navigation() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"}
-                />
-              </svg>
+              {mobileMenuOpen ? (
+                <XMarkIcon className="w-6 h-6" />
+              ) : (
+                <Bars3Icon className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -84,24 +168,61 @@ export default function Navigation() {
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 py-4">
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {navigation.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center space-x-3 px-3 py-2 text-base font-medium rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-ocean-50 text-ocean-700 border border-ocean-200'
-                        : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <span>{item.name}</span>
-                  </Link>
-                )
+                // Single page items
+                if (item.href) {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-3 py-2 text-base font-medium rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-ocean-50 text-ocean-700 border border-ocean-200'
+                          : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  )
+                }
+
+                // Dropdown items - show as expanded sections
+                if (item.children) {
+                  return (
+                    <div key={item.name} className="space-y-1">
+                      <div className="px-3 py-2 text-base font-semibold text-slate-700 flex items-center space-x-3">
+                        <item.icon className="w-5 h-5" />
+                        <span>{item.name}</span>
+                      </div>
+                      <div className="ml-6 space-y-1">
+                        {item.children.map((child: any) => {
+                          const childIsActive = pathname === child.href
+                          return (
+                            <Link
+                              key={child.name}
+                              href={child.href}
+                              className={`flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                                childIsActive
+                                  ? 'bg-ocean-50 text-ocean-700 border border-ocean-200'
+                                  : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
+                              }`}
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <child.icon className="w-4 h-4" />
+                              <span>{child.name}</span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                }
+
+                return null
               })}
             </nav>
           </div>
