@@ -219,7 +219,7 @@ export function useDeploymentMetadata(): UseDataResult<DeploymentMetadata[]> {
     try {
       setLoading(true);
       setError(null);
-      const deployments = await fetchData<DeploymentMetadata[]>('deployments.json');
+      const deployments = await fetchData<DeploymentMetadata[]>('deployment_metadata.json');
       setData(deployments);
     } catch (err) {
       setError(err as Error);
@@ -233,4 +233,50 @@ export function useDeploymentMetadata(): UseDataResult<DeploymentMetadata[]> {
   }, []);
 
   return { data, loading, error, refetch: fetchDeploymentMetadata };
+}
+
+/**
+ * Hook to load detection data for timeline heatmap
+ */
+export function useTimelineData() {
+  const [data, setData] = useState<{
+    detections: Detection[] | null;
+    speciesMapping: Record<string, string>;
+    deploymentMetadata: DeploymentMetadata[] | null;
+  }>({
+    detections: null,
+    speciesMapping: {},
+    deploymentMetadata: null
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchTimelineData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [detections, metadata, deployments] = await Promise.all([
+        fetchData<Detection[]>('detections.json'),
+        fetchData<Metadata>('metadata.json'),
+        fetchData<DeploymentMetadata[]>('deployment_metadata.json')
+      ]);
+      
+      setData({ 
+        detections, 
+        speciesMapping: metadata.column_mapping,
+        deploymentMetadata: deployments
+      });
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTimelineData();
+  }, []);
+
+  return { ...data, loading, error, refetch: fetchTimelineData };
 }

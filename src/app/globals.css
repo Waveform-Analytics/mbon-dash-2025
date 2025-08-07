@@ -81,6 +81,10 @@
     @apply bg-coral-100 text-coral-800;
   }
   
+  .badge-red {
+    @apply bg-red-100 text-red-800;
+  }
+  
   .coming-soon {
     @apply flex items-center justify-center min-h-96 text-center;
   }

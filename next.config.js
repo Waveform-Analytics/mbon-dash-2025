@@ -1,17 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    optimizePackageImports: ['plotly.js']
+    optimizePackageImports: ['@observablehq/plot', 'd3']
   },
   poweredByHeader: false,
   reactStrictMode: true,
   webpack: (config) => {
-    // Handle plotly.js
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'plotly.js': 'plotly.js/dist/plotly.min.js'
-    }
-    
     // Ensure CSS is properly processed
     const rules = config.module.rules
       .find((rule) => typeof rule.oneOf === 'object')

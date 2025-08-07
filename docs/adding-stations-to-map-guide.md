@@ -12,12 +12,15 @@
 
 ## Overview
 
-This guide walks through adding an interactive map to the Marine Biodiversity Dashboard that displays all monitoring stations. The implementation uses:
+This guide walks through adding an interactive map to the Marine Biodiversity Dashboard that displays the 3 primary monitoring stations. The implementation uses:
 
-- **Data Source**: `deployment_metadata.json` from Cloudflare R2
-- **Map Library**: Mapbox GL JS (already in the project)
+- **Data Source**: `deployment_metadata.json` from Cloudflare R2 (filtered to relevant data)
+- **Map Library**: Mapbox GL JS (already in the project)  
 - **Framework**: Next.js with TypeScript
-- **Goal**: Display station locations with popup information
+- **Scope**: 3 stations (9M, 14M, 37M) for years 2018, 2021 only
+- **Goal**: Display focused station locations with deployment information
+
+**Important**: This guide assumes the data has been correctly filtered. See `docs/data-restructuring-plan.md` if the current data includes more than 3 stations.
 
 ### Key Concepts Covered
 - How React hooks work to fetch data
@@ -132,7 +135,8 @@ Add this to the main page file (`/src/app/page.tsx`) after the imports:
 
 ```typescript
 // This interface defines what our processed station data will look like
-interface ProcessedStation {
+// Export it so other files can import and use it
+export interface ProcessedStation {
   name: string;              // Station name (e.g., "9M")
   lat: number;               // Latitude
   lng: number;               // Longitude (note: we rename from "long" to "lng")
@@ -225,25 +229,15 @@ import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';  // Don't forget the CSS!
 
+// Import the ProcessedStation type from the page file
+import type { ProcessedStation } from '@/app/page';
+
 // Configure Mapbox with the access token
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 // Define the props (inputs) this component expects
 interface StationMapProps {
   stations: ProcessedStation[];  // Array of processed stations from Step 2
-}
-
-// Define the station type (this can be imported from the page file instead)
-interface ProcessedStation {
-  name: string;
-  lat: number;
-  lng: number;
-  deploymentCount: number;
-  years: number[];
-  dateRange: {
-    start: string;
-    end: string;
-  };
 }
 
 export function StationMap({ stations }: StationMapProps) {
@@ -429,23 +423,35 @@ export default function DashboardPage() {
 
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Data-Related Issues
 
-1. **Map doesn't appear**
+1. **Too many stations showing (more than 3)**
+   - **Problem**: Data hasn't been filtered correctly
+   - **Solution**: Update data processing script as outlined in `docs/data-restructuring-plan.md`
+   - **Expected**: Only 9M, 14M, 37M should appear
+
+2. **Date ranges look wrong in popups**  
+   - **Problem**: Multiple deployment records per station creating incorrect date ranges
+   - **Expected**: Should show reasonable date ranges for 2018, 2021 deployments
+   - **Solution**: See "Future improvements" for popup data processing fixes
+
+### Technical Issues
+
+3. **Map doesn't appear**
    - Check browser console for errors
    - Verify the Mapbox token is set in `.env.local`
    - Make sure the map container has a height
 
-2. **"Cannot read property 'lat' of undefined"**
+4. **"Cannot read property 'lat' of undefined"**
    - Check that `gps_lat` and `gps_long` exist in the data
    - Verify the field names match exactly (it's `gps_long` not `gps_lng` in the data)
 
-3. **Markers don't show up**
+5. **Markers don't show up**
    - Check that coordinates are valid numbers
    - Verify they're in the correct order [lng, lat]
    - Check browser console for Mapbox errors
 
-4. **TypeScript errors**
+6. **TypeScript errors**
    - Make sure all interfaces are defined
    - Check that imports are correct
    - Run `npm run type-check` to see all TypeScript errors

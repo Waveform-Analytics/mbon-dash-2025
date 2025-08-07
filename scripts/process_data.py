@@ -22,6 +22,10 @@ DATA_DIR = Path("data")
 OUTPUT_DIR = Path("public/data")
 COLUMN_MAPPING_FILE = DATA_DIR / "det_column_names.csv"
 
+# FOCUSED SCOPE: Only process these years and stations
+YEARS_OF_INTEREST = ["2018", "2021"]
+STATIONS_OF_INTEREST = ["9M", "14M", "37M"]
+
 # File patterns for different data types
 DETECTION_PATTERN = "Master_Manual_*_2h_*.xlsx"
 TEMP_PATTERN = "Master_*_Temp_*.xlsx"
@@ -55,9 +59,9 @@ def process_detection_files():
     column_lookup = load_column_mapping()
     short_column_names = list(column_lookup.keys())
     
-    # Find all detection files
+    # Find all detection files (FILTERED TO YEARS OF INTEREST)
     detection_files = []
-    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
+    for year in YEARS_OF_INTEREST:  # Only 2018, 2021
         year_dir = DATA_DIR / year
         if year_dir.exists():
             detection_files.extend(year_dir.glob("Master_Manual_*_2h_*.xlsx"))
@@ -80,6 +84,12 @@ def process_detection_files():
             
             # Extract metadata
             year, station = extract_metadata_from_filename(file)
+            
+            # FILTER: Only process stations of interest
+            if station not in STATIONS_OF_INTEREST:
+                print(f"  ⏭️  Skipping station {station} (not in stations of interest: {STATIONS_OF_INTEREST})")
+                continue
+                
             df['year'] = year
             df['station'] = station
             df['source_file'] = file.name
@@ -108,7 +118,7 @@ def process_environmental_files():
     
     environmental_data = []
     
-    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
+    for year in YEARS_OF_INTEREST:  # Only 2018, 2021
         year_dir = DATA_DIR / year
         if not year_dir.exists():
             continue
@@ -118,7 +128,14 @@ def process_environmental_files():
         for file in temp_files:
             try:
                 year, station = extract_metadata_from_filename(file)
-                df = pd.read_excel(file, sheet_name=0)
+                
+                # FILTER: Only process stations of interest
+                if station not in STATIONS_OF_INTEREST:
+                    print(f"  ⏭️  Skipping temperature {station} (not in stations of interest)")
+                    continue
+                    
+                # FIX: Use sheet 1 instead of sheet 0
+                df = pd.read_excel(file, sheet_name=1)
                 df['year'] = year
                 df['station'] = station
                 df['measurement_type'] = 'temperature'
@@ -133,7 +150,14 @@ def process_environmental_files():
         for file in depth_files:
             try:
                 year, station = extract_metadata_from_filename(file)
-                df = pd.read_excel(file, sheet_name=0)
+                
+                # FILTER: Only process stations of interest
+                if station not in STATIONS_OF_INTEREST:
+                    print(f"  ⏭️  Skipping depth {station} (not in stations of interest)")
+                    continue
+                    
+                # FIX: Use sheet 1 instead of sheet 0
+                df = pd.read_excel(file, sheet_name=1)
                 df['year'] = year
                 df['station'] = station
                 df['measurement_type'] = 'depth'
@@ -157,7 +181,7 @@ def process_acoustic_files():
     
     acoustic_data = []
     
-    for year in ["2017", "2018", "2019", "2020", "2021", "2022"]:
+    for year in YEARS_OF_INTEREST:  # Only 2018, 2021
         year_dir = DATA_DIR / year
         if not year_dir.exists():
             continue
@@ -166,7 +190,14 @@ def process_acoustic_files():
         for file in acoustic_files:
             try:
                 year, station = extract_metadata_from_filename(file)
-                df = pd.read_excel(file, sheet_name=0)
+                
+                # FILTER: Only process stations of interest
+                if station not in STATIONS_OF_INTEREST:
+                    print(f"  ⏭️  Skipping acoustic {station} (not in stations of interest)")
+                    continue
+                    
+                # FIX: Use sheet 1 instead of sheet 0
+                df = pd.read_excel(file, sheet_name=1)
                 df['year'] = year
                 df['station'] = station
                 df['source_file'] = file.name
@@ -200,7 +231,22 @@ def process_deployment_metadata():
         # Clean up column names (remove spaces, lowercase)
         metadata_df.columns = [col.strip().lower().replace(' ', '_') for col in metadata_df.columns]
         
-        print(f"✅ Processed metadata with {len(metadata_df)} records")
+        print(f"📋 Read {len(metadata_df)} total metadata records")
+        
+        # FILTER: Only keep records for years and stations of interest
+        before_count = len(metadata_df)
+        
+        # Filter by year (if year column exists)
+        if 'year' in metadata_df.columns:
+            metadata_df = metadata_df[metadata_df['year'].isin([2018, 2021])]
+            print(f"  📅 Filtered to years {YEARS_OF_INTEREST}: {len(metadata_df)} records")
+        
+        # Filter by station (if station column exists)
+        if 'station' in metadata_df.columns:
+            metadata_df = metadata_df[metadata_df['station'].isin(STATIONS_OF_INTEREST)]
+            print(f"  📍 Filtered to stations {STATIONS_OF_INTEREST}: {len(metadata_df)} records")
+        
+        print(f"✅ Processed metadata: {before_count} → {len(metadata_df)} records (filtered)")
         return metadata_df
     except Exception as e:
         print(f"❌ Error processing metadata file: {e}")

@@ -4,15 +4,31 @@
 Interactive web dashboard for exploring marine acoustic monitoring data from the OSA MBON project. Visualizes species detections, temporal patterns, station comparisons, and acoustic indices to understand relationships between acoustic environment and species presence.
 
 ## Data Structure
-- **Detection Data**: Manual species annotations from hydrophone recordings (2018, 2021)
-- **Environmental Data**: Temperature and depth measurements by station
-- **Acoustic Indices**: RMS Sound Pressure Level (rmsSPL) measurements
-- **Stations**: 9M, 14M, 37M (2018, 2021) + B, C, CC4, CR1, D, WB (2021 only)
-- **Species**: Silver perch, oyster toadfish, black drum, spotted seatrout, red drum, Atlantic croaker, weakfish, bottlenose dolphin, right whale, manatee, alligator
+
+### **Primary Data (Core Focus)**
+- **Detection Data**: Manual species annotations from hydrophone recordings
+  - **Years**: 2018, 2021 ONLY
+  - **Stations**: 9M, 14M, 37M ONLY
+  - **Files**: Master_Manual_[STATION]_2h_[YEAR].xlsx (sheet 1)
+  - **Purpose**: Primary dataset for species detection analysis
+
+### **Secondary Data (For Correlations)**
+- **Environmental Data**: Temperature and depth measurements
+  - **Temperature**: Master_[STATION]_Temp_[YEAR].xlsx (sheet 1)
+  - **Depth**: Master_[STATION]_Depth_[YEAR].xlsx (sheet 1)
+- **Acoustic Indices**: RMS Sound Pressure Level (rmsSPL) measurements  
+  - **Files**: Master_rmsSPL_[STATION]_1h_[YEAR].xlsx (sheet 1)
+- **Deployment Metadata**: Filtered to relevant deployments only (2018, 2021, 9M/14M/37M)
+
+### **Important Notes**
+- **Only 3 stations of interest**: 9M, 14M, 37M (ignore B, C, CC4, CR1, D, WB)
+- **Only 2 years of interest**: 2018, 2021 (ignore other years)
+- **Sheet selection**: Manual files use sheet 1, all others use sheet 1 (NOT sheet 0)
+- **Data priority**: Manual detection files are PRIMARY, others are secondary for correlation analysis
 
 ## Technology Stack
 - **Frontend**: Next.js 14 with TypeScript, Tailwind CSS
-- **Visualization**: Plotly.js, Mapbox GL JS, Observable plot/d3
+- **Visualization**: Observable Plot (primary), Mapbox GL JS, D3.js utilities
 - **State Management**: Zustand
 - **Data Processing**: Python (uv) for local processing, Cloudflare R2 CDN for storage
 - **Deployment**: Vercel (frontend only)
@@ -38,9 +54,9 @@ uv init
 uv add pandas openpyxl numpy
 
 # Install Node.js dependencies for web app
-npm install plotly.js react-plotly.js mapbox-gl zustand date-fns
+npm install @observablehq/plot d3 mapbox-gl zustand date-fns
 npm install file-saver papaparse jszip
-npm install -D @types/plotly.js @types/file-saver @types/papaparse
+npm install -D @types/d3 @types/file-saver @types/papaparse
 ```
 
 ### 2. Data Processing
@@ -84,24 +100,38 @@ data/
 ```
 
 ### Data Processing Script (`scripts/process_data.py`)
-**Using Python for data processing (RECOMMENDED)** - builds on the existing `examples.py`:
+**Using Python for data processing (RECOMMENDED)** - processes the focused dataset:
 
-1. **Combine Detection Files**: Merge all Manual_*_2h files into single dataset
-2. **Add Environmental Data**: Join temperature and depth measurements  
-3. **Include Acoustic Indices**: Merge rmsSPL data for acoustic analysis
-4. **Generate Metadata**: Extract station coordinates, species lists, date ranges
-5. **Output JSON Files**: Optimized for client-side loading
+1. **Process Detection Files**: Merge Manual detection files (PRIMARY DATA)
+   - **Scope**: 2018, 2021 years ONLY + 9M, 14M, 37M stations ONLY
+   - **Files**: 6 Manual files (3 stations × 2 years)
+   - **Sheet**: Always sheet 1 for Manual files
+
+2. **Process Environmental Data**: Join temperature and depth measurements (SECONDARY)
+   - **Files**: 12 environmental files (6 temp + 6 depth)
+   - **Sheet**: Always sheet 1 (NOT sheet 0)
+
+3. **Process Acoustic Indices**: Merge rmsSPL data (SECONDARY) 
+   - **Files**: 6 rmsSPL files (3 stations × 2 years)
+   - **Sheet**: Always sheet 1 (NOT sheet 0)
+
+4. **Filter Deployment Metadata**: Only relevant deployments (2018, 2021, 9M/14M/37M)
+
+5. **Output Filtered JSON Files**: Optimized for focused analysis
 
 ```bash
 uv run scripts/process_data.py
-# Creates:
-# - public/data/detections.json (~5MB combined dataset)
-# - public/data/stations.json (station metadata)
-# - public/data/species.json (species lookup)
-# - public/data/environmental.json (temp/depth data)
-# - public/data/acoustic.json (rmsSPL indices)
-# - public/data/metadata.json (data summary and metadata)
+# Creates filtered datasets:
+# - public/data/detections.json (6 detection files, PRIMARY)
+# - public/data/environmental.json (12 temp/depth files, SECONDARY)
+# - public/data/acoustic.json (6 rmsSPL files, SECONDARY)
+# - public/data/deployment_metadata.json (filtered ~6-12 records)
+# - public/data/stations.json (3 stations: 9M, 14M, 37M)
+# - public/data/species.json (species from detection data)
+# - public/data/metadata.json (corrected summary statistics)
 ```
+
+**UPDATED**: Script has been corrected and data regenerated with proper scope (3 stations, 2018/2021 only).
 
 **Why Python over Node.js for data processing:**
 - Superior pandas/numpy ecosystem for scientific data
@@ -175,7 +205,7 @@ mbon-dashboard/
 │   │   ├── temporal/page.tsx   # Temporal patterns
 │   │   └── explorer/page.tsx   # Data explorer
 │   ├── components/
-│   │   ├── charts/             # Plotly.js visualizations
+│   │   ├── charts/             # Observable Plot visualizations
 │   │   ├── maps/               # Mapbox components
 │   │   ├── filters/            # Filter controls
 │   │   ├── export/             # Data export tools
@@ -367,11 +397,23 @@ npm run data-stats        # View data summary statistics
 4. Commit processed JSON files along with raw data
 
 ## Research Questions to Address
-- Correlation between acoustic indices and species detections
-- Temporal patterns in marine soundscape
-- Environmental drivers of species presence
-- Station-specific acoustic signatures
-- Year-over-year ecosystem changes
+
+### **Primary Analysis (Detection-Focused)**
+- Species detection patterns across the 3 stations (9M, 14M, 37M)
+- Temporal patterns in species presence between 2018 and 2021
+- Station-specific species diversity and detection frequency
+- Seasonal and daily patterns in species activity
+
+### **Secondary Analysis (Correlation-Focused)**
+- Correlation between acoustic indices (rmsSPL) and species detections
+- Environmental drivers of species presence (temperature, depth effects)
+- How environmental conditions relate to detection success
+- Multi-year changes in ecosystem composition (2018 vs 2021)
+
+### **Methodological Questions**
+- Data quality and detection consistency across stations
+- Temporal coverage and sampling effectiveness
+- Relationships between different data types (manual vs automated)
 
 ## Development Notes
 - Don't run `npm run dev` - the user will do that in a separate terminal window. Just tell them when they're ready to run.
@@ -379,16 +421,45 @@ npm run data-stats        # View data summary statistics
 - CLAUDE.md should not use conversational language like "you" or "your".
 
 ## Current Implementation Status
-- ✅ Next.js 14 with TypeScript and Tailwind CSS setup
-- ✅ Python data processing with uv dependency management
-- ✅ Cloudflare R2 CDN integration for data storage
-- ✅ Consolidated data loading hooks in `useData.ts`
-- ✅ Modern ocean-themed design with Google Fonts
-- ✅ Navigation system across all pages
-- ✅ Vercel deployment (frontend only, no Python dependencies)
-- 🚧 Visualization components (placeholder implementation)
-- 🚧 Data filtering and export functionality
-- 🚧 Interactive charts and maps
+
+### ✅ **Completed**
+- Next.js 14 with TypeScript and Tailwind CSS setup
+- Modern ocean-themed design with Google Fonts
+- Navigation system across all pages
+- Vercel deployment configuration (frontend only)
+- Interactive station map with Mapbox GL JS
+- Data loading hooks in `useData.ts`
+- Cloudflare R2 CDN integration for data storage
+
+### ✅ **Recently Completed (Data Foundation & Visualization)**
+- **Data processing script updated** - now correctly processes focused scope
+- **Data filtered to 2018, 2021, 9M/14M/37M only** - 3 stations, 2 years as intended
+- **Sheet selection corrected** - environmental/acoustic files now use sheet 1
+- **Primary data prioritized** - Manual detection files properly emphasized
+- **Species Activity Timeline Heatmap** - implemented with Observable Plot
+- **Observable Plot integration** - replaced Plotly.js for better performance
+
+### 🚧 **In Progress (MVP Focus)**
+- Station map (✅ working with correct 3 stations)
+- Dashboard metrics (✅ showing correct scope and data)
+- Species activity timeline (✅ completed with Observable Plot heatmap)
+- Species analysis page (placeholder)
+- Temporal patterns page (placeholder)
+- Data explorer page (placeholder)
+
+### 🔮 **Planned (After Data Fixed)**
+- Interactive charts and visualizations
+- Data filtering and export functionality
+- Species detection analysis tools
+- Environmental correlation features
+
+### 🎯 **Current Priority**
+1. ✅ **Data processing fixed** - 3 stations, 2018/2021 scope confirmed
+2. ✅ **JSON files regenerated** and uploaded to CDN
+3. ✅ **Dashboard verified** - showing 3 stations correctly
+4. ✅ **Species activity timeline** - Interactive heatmap completed with Observable Plot
+5. **Build basic versions of remaining pages** (species, temporal, explorer)
+6. **Polish and refinements** (see `docs/future-improvements.md`)
 
 ---
 

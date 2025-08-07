@@ -1,34 +1,41 @@
 'use client'
 
-import {DeploymentMetadata, useCoreData} from '@/lib/hooks/useData'
+import { useMemo } from 'react';  // Add this import
+import { useCoreData, useDeploymentMetadata, useTimelineData, DeploymentMetadata } from '@/lib/hooks/useData'
+import { StationMap } from '@/components/maps/StationMap';  // Add this import
+import { SpeciesActivityHeatmap } from '@/components/charts/SpeciesActivityHeatmap';
 
 // Define what processed station data will look like
-interface ProcessedStation {
-  name: string;
-  lat: number;
-  lng: number;
-  deploymentCount: number;
-  years: number[];
-  dateRange: {
+// Export it so other files can import and use it
+export interface ProcessedStation {
+  name: string;              // Station name (e.g., "9M")
+  lat: number;               // Latitude
+  lng: number;               // Longitude (note: we rename from "long" to "lng")
+  deploymentCount: number;   // Number of equipment deployments at this location
+  years: number[];           // Years with deployments
+  dateRange: {              // Overall date range for this station
     start: string;
     end: string;
   };
-  // Add summary fields later as needed
+  // Additional summary fields can be added as needed
 }
 
-// function to process the raw deployment data into station summaries
+// This function processes the raw deployment data into station summaries
 function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStation[] {
+  // A Map is like an object but better for grouping data
+  // The key will be the station name, the value will be our processed data
   const stationMap = new Map<string, ProcessedStation>();
-
+  
+  // Loop through each deployment record
   deployments.forEach(deployment => {
     const stationName = deployment.station;
-
-    // if we haven't seen this station before, create a new entry
+    
+    // If we haven't seen this station before, create a new entry
     if (!stationMap.has(stationName)) {
       stationMap.set(stationName, {
         name: stationName,
         lat: deployment.gps_lat,
-        lng: deployment.gps_long,
+        lng: deployment.gps_long,  // Note: renaming "long" to "lng"
         deploymentCount: 0,
         years: [],
         dateRange: {
@@ -37,18 +44,18 @@ function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStat
         }
       });
     }
-
-    // get the existing station data
+    
+    // Get the existing station data
     const station = stationMap.get(stationName)!;
-
+    
     // Update the station's aggregate data
     station.deploymentCount += 1;
-
+    
     // Add year if we haven't seen it before
     if (!station.years.includes(deployment.year)) {
       station.years.push(deployment.year);
     }
-
+    
     // Update date range (keep earliest start and latest end)
     if (deployment.start_date < station.dateRange.start) {
       station.dateRange.start = deployment.start_date;
@@ -57,15 +64,42 @@ function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStat
       station.dateRange.end = deployment.end_date;
     }
   });
-
+  
   // Convert the Map back to an array and sort by station name
   return Array.from(stationMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export default function DashboardPage() {
+  // Existing data fetching
   const { metadata, stations, species, loading, error } = useCoreData()
+  
+  // NEW: Fetch deployment metadata
+  const { 
+    data: deployments, 
+    loading: deploymentsLoading, 
+    error: deploymentsError 
+  } = useDeploymentMetadata();
+  
+  // NEW: Fetch timeline data for heatmap
+  const {
+    detections,
+    speciesMapping,
+    deploymentMetadata,
+    loading: timelineLoading,
+    error: timelineError
+  } = useTimelineData();
+  
+  // NEW: Process the deployment data for the map
+  // useMemo prevents recalculating on every render
+  const stationsForMap = useMemo(() => {
+    if (!deployments) return [];
+    return processStationsForMap(deployments);
+  }, [deployments]);  // Only recalculate if deployments change
+  
+  // Combine loading states
+  const isLoading = loading || deploymentsLoading;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -122,31 +156,75 @@ export default function DashboardPage() {
       </div>
 
       {/* Preview Charts */}
-      <div className="card-grid lg:grid-cols-2 gap-8 mb-12">
+      <div className="card-grid lg:grid-cols-1 gap-8 mb-12">
+        {/* Species Activity Heatmap - Full width */}
         <div className="chart-container group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
-            <span className="badge badge-ocean">Coming Soon</span>
-          </div>
-          <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
-            <div className="text-center">
-              <div className="text-4xl mb-2">📊</div>
-              <div className="text-slate-500 font-medium">Interactive time series visualization</div>
+          {detections && detections.length > 0 ? (
+            <SpeciesActivityHeatmap
+              detections={detections}
+              speciesMapping={speciesMapping}
+              deploymentMetadata={deploymentMetadata || []}
+              height={400}
+              topSpeciesCount={10}
+            />
+          ) : timelineLoading ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
+                <span className="badge badge-ocean">Loading...</span>
+              </div>
+              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
+                  <div className="text-slate-500 font-medium mt-4">Loading species detection data...</div>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
+                <span className="badge badge-red">No Data</span>
+              </div>
+              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">📊</div>
+                  <div className="text-slate-500 font-medium">No detection data available</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        
+      </div>
+      
+      {/* Station Map - Separate section */}
+      <div className="card-grid lg:grid-cols-1 gap-8 mb-12">
         <div className="chart-container group">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-900">Station Distribution Map</h3>
-            <span className="badge badge-coral">Coming Soon</span>
+            {deploymentsLoading && (
+              <span className="badge badge-ocean">Loading...</span>
+            )}
           </div>
-          <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🗺️</div>
-              <div className="text-slate-500 font-medium">Geographic station locations & activity</div>
+          
+          {/* Show the map if we have data, otherwise show placeholder */}
+          {stationsForMap.length > 0 ? (
+            <StationMap stations={stationsForMap} />
+          ) : deploymentsLoading ? (
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
+                <div className="text-slate-500 font-medium mt-4">Loading station locations...</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+              <div className="text-center">
+                <div className="text-4xl mb-2">📍</div>
+                <div className="text-slate-500 font-medium">No station data available</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
