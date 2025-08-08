@@ -12,9 +12,9 @@ import * as d3 from 'd3';
 import { 
   processTimelineData, 
   aggregateTimelineData, 
-  prepareHeatmapData,
   type Detection 
 } from '@/lib/utils/timelineProcessing';
+import { ChartExport } from '@/components/export/ChartExport';
 
 interface SpeciesActivityHeatmapProps {
   detections: Detection[];
@@ -196,26 +196,35 @@ export function SpeciesActivityHeatmap({
           </p>
         </div>
         
-        {/* Station selector */}
-        {availableStations.length > 1 && (
-          <div className="flex items-center space-x-2">
-            <label htmlFor="station-select" className="text-sm font-medium text-slate-700">
-              Station:
-            </label>
-            <select
-              id="station-select"
-              value={selectedStation}
-              onChange={(e) => setSelectedStation(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {availableStations.map(station => (
-                <option key={station} value={station}>
-                  {station === 'all' ? 'All Stations' : station}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Controls section */}
+        <div className="flex items-center space-x-4">
+          {/* Station selector */}
+          {availableStations.length > 1 && (
+            <div className="flex items-center space-x-2">
+              <label htmlFor="station-select" className="text-sm font-medium text-slate-700">
+                Station:
+              </label>
+              <select
+                id="station-select"
+                value={selectedStation}
+                onChange={(e) => setSelectedStation(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {availableStations.map(station => (
+                  <option key={station} value={station}>
+                    {station === 'all' ? 'All Stations' : station}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          {/* Export buttons */}
+          <ChartExport 
+            chartRef={plotRef} 
+            filename={`species-activity-timeline-${selectedStation}-${new Date().toISOString().split('T')[0]}`}
+          />
+        </div>
       </div>
 
       {/* Heatmap visualization */}
