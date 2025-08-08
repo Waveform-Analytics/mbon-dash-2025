@@ -108,32 +108,32 @@ export function SpeciesActivityHeatmap({
     plotRef.current.innerHTML = '';
 
     // Aggregate data by year for mobile-friendly display
-    const yearlyData = new Map<string, Map<string, number>>();
+    const yearlyAggregation = new Map<string, {
+      year: string;
+      species: string;
+      detections: number;
+      station: string;
+    }>();
     
     processedData.forEach(d => {
       const year = d.month.split('-')[0]; // Extract year from "YYYY-MM"
       const key = `${year}-${d.species}`;
       
-      if (!yearlyData.has(key)) {
-        yearlyData.set(key, new Map([
-          ['year', year],
-          ['species', d.species], 
-          ['detections', 0],
-          ['station', d.station]
-        ]));
+      if (!yearlyAggregation.has(key)) {
+        yearlyAggregation.set(key, {
+          year,
+          species: d.species,
+          detections: 0,
+          station: d.station
+        });
       }
       
-      const existing = yearlyData.get(key)!;
-      existing.set('detections', (existing.get('detections') as number) + d.detections);
+      const existing = yearlyAggregation.get(key)!;
+      existing.detections += d.detections;
     });
 
-    // Convert back to array format
-    const plotData = Array.from(yearlyData.values()).map(dataMap => ({
-      year: dataMap.get('year') as string,
-      species: dataMap.get('species') as string,
-      detections: dataMap.get('detections') as number,
-      station: dataMap.get('station') as string
-    }));
+    // Convert to array format
+    const plotData = Array.from(yearlyAggregation.values());
 
     // Get unique years in chronological order
     const uniqueYears = Array.from(new Set(plotData.map(d => d.year))).sort();
