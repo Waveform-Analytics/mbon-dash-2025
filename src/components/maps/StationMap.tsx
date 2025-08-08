@@ -100,7 +100,7 @@ export function StationMap({ stations }: StationMapProps) {
   // Show loading state while mapbox is loading
   if (!mapboxgl) {
     return (
-      <div className="h-64 w-full rounded-lg flex items-center justify-center bg-slate-50">
+      <div className="h-full w-full rounded-lg flex items-center justify-center bg-slate-50">
         <div className="text-slate-500">Loading map...</div>
       </div>
     );
@@ -110,8 +110,8 @@ export function StationMap({ stations }: StationMapProps) {
   return (
     <div 
       ref={mapContainer} 
-      className="h-64 w-full rounded-lg"
-      style={{ minHeight: '256px' }}  // Ensure minimum height
+      className="h-full w-full rounded-lg"
+      style={{ minHeight: '400px' }}  // Ensure minimum height
     />
   );
 }
