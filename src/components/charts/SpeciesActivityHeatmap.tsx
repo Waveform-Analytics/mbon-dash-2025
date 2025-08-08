@@ -34,6 +34,7 @@ export function SpeciesActivityHeatmap({
   topSpeciesCount = 12
 }: SpeciesActivityHeatmapProps) {
   const [selectedStation, setSelectedStation] = useState<string>('all');
+  const [containerWidth, setContainerWidth] = useState<number>(800);
   const plotRef = useRef<HTMLDivElement>(null);
   
   // Process data for heatmap
@@ -81,6 +82,24 @@ export function SpeciesActivityHeatmap({
     };
   }, [detections, speciesMapping, deploymentMetadata, selectedStation, topSpeciesCount]);
 
+  // Handle container resize
+  useEffect(() => {
+    if (!plotRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(plotRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   // Create the plot using Observable Plot
   useEffect(() => {
     if (!plotRef.current || processedData.length === 0) return;
@@ -88,34 +107,55 @@ export function SpeciesActivityHeatmap({
     // Clear previous plot
     plotRef.current.innerHTML = '';
 
-    // Process data for proper date handling
-    const plotData = processedData.map(d => ({
-      ...d,
-      // Parse month string to Date object for proper time scale
-      monthDate: new Date(d.month + '-01'),
-      // Format month for display
-      monthDisplay: new Date(d.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    // Aggregate data by year for mobile-friendly display
+    const yearlyData = new Map<string, Map<string, number>>();
+    
+    processedData.forEach(d => {
+      const year = d.month.split('-')[0]; // Extract year from "YYYY-MM"
+      const key = `${year}-${d.species}`;
+      
+      if (!yearlyData.has(key)) {
+        yearlyData.set(key, new Map([
+          ['year', year],
+          ['species', d.species], 
+          ['detections', 0],
+          ['station', d.station]
+        ]));
+      }
+      
+      const existing = yearlyData.get(key)!;
+      existing.set('detections', (existing.get('detections') as number) + d.detections);
+    });
+
+    // Convert back to array format
+    const plotData = Array.from(yearlyData.values()).map(dataMap => ({
+      year: dataMap.get('year') as string,
+      species: dataMap.get('species') as string,
+      detections: dataMap.get('detections') as number,
+      station: dataMap.get('station') as string
     }));
 
-    // Get unique months in chronological order
-    const uniqueMonths = Array.from(new Set(plotData.map(d => d.month)))
-      .sort()
-      .map(month => new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+    // Get unique years in chronological order
+    const uniqueYears = Array.from(new Set(plotData.map(d => d.year))).sort();
 
+    // Create responsive dimensions
+    const actualWidth = containerWidth || plotRef.current.clientWidth || 800;
+    const isMobile = actualWidth < 600;
+    
     // Create the plot
     const plot = Plot.plot({
-      width: plotRef.current.clientWidth || 800,
-      height: height,
-      marginLeft: 200,
-      marginBottom: 80,
+      width: actualWidth,
+      height: isMobile ? Math.min(height, 400) : height,
+      marginLeft: isMobile ? 150 : 200,
+      marginBottom: isMobile ? 60 : 80,
       marginTop: 40,
-      marginRight: 80,
+      marginRight: isMobile ? 60 : 80,
       
       // Explicit scale definitions
       x: {
         type: "band",  // Use band scale to suppress the warning
-        domain: uniqueMonths,  // Set explicit domain for chronological order
-        label: "Time Period"
+        domain: uniqueYears,  // Set explicit domain for chronological order
+        label: "Year"
       },
       y: {
         type: "band", 
@@ -131,33 +171,36 @@ export function SpeciesActivityHeatmap({
       
       // Marks
       marks: [
-        // Heatmap cells with proper date handling
+        // Heatmap cells aggregated by year
         Plot.cell(plotData, {
-          x: "monthDisplay",  // Use formatted month string
+          x: "year",  // Use year instead of month
           y: "species", 
           fill: "detections",
-          title: d => `${d.species}\n${d.monthDisplay}\nDetections: ${d.detections}\nStation: ${d.station}`,
+          title: d => `${d.species}\n${d.year}\nDetections: ${d.detections}`,
           stroke: "white",
           strokeWidth: 1
         }),
         
-        // X-axis with custom formatting
+        // X-axis with year labels - fixed font size
         Plot.axisX({
-          label: "Time Period",
-          tickRotate: -45,
-          fontSize: 10
+          label: "Year",
+          fontSize: isMobile ? 14 : 16,
+          tickSize: 6,
+          labelAnchor: "center"
         }),
         
-        // Y-axis  
+        // Y-axis - fixed font size
         Plot.axisY({
           label: "Species",
-          fontSize: 10
+          fontSize: isMobile ? 11 : 12,
+          tickSize: 6,
+          labelAnchor: "center"
         })
       ],
       
-      // Style
+      // Style - fixed base font size
       style: {
-        fontSize: "12px",
+        fontSize: isMobile ? "11px" : "12px",
         fontFamily: "Inter, system-ui, sans-serif"
       }
     });
@@ -170,7 +213,7 @@ export function SpeciesActivityHeatmap({
         plotRef.current.innerHTML = '';
       }
     };
-  }, [processedData, height]);
+  }, [processedData, height, containerWidth]);
 
   if (!detections.length) {
     return (
@@ -192,7 +235,7 @@ export function SpeciesActivityHeatmap({
             Species Activity Timeline
           </h3>
           <p className="text-sm text-slate-600 mt-1">
-            Detection frequency across {selectedStation === 'all' ? 'all stations' : `station ${selectedStation}`} over time
+            Annual detection totals across {selectedStation === 'all' ? 'all stations' : `station ${selectedStation}`} (2018 vs 2021)
           </p>
         </div>
         

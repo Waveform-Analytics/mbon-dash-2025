@@ -166,7 +166,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Preview Charts */}
-      <div className="card-grid lg:grid-cols-1 gap-8 mb-12">
+      <div className="space-y-8 mb-12">
         {/* Species Activity Heatmap - Full width */}
         <div className="chart-container group">
           {detections && detections.length > 0 ? (
@@ -208,7 +208,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Station Map - Separate section */}
-      <div className="card-grid lg:grid-cols-1 gap-8 mb-12">
+      <div className="mb-12">
         <div className="chart-container group">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-900">Station Distribution Map</h3>

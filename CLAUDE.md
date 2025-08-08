@@ -350,6 +350,45 @@ dependencies = [
 requires-python = ">=3.9"
 ```
 
+## Responsive Dashboard Design Best Practices
+
+### Multi-Screen Strategy
+Professional dashboards follow an established approach for handling different screen sizes and devices:
+
+#### **Desktop-First Philosophy**
+- **Complex data visualization** assumes desktop/laptop usage for detailed analysis
+- **Full feature set** available with large screens and mouse interaction
+- **Multiple panels** and detailed charts work well on wide screens
+
+#### **Mobile-Responsive but Simplified**  
+- **Key metrics prominently displayed** - show overview statistics and high-level insights
+- **Simplified charts** - reduce complexity, aggregate data (e.g., yearly vs monthly)
+- **Progressive disclosure** - "View full analysis" links to desktop experience
+- **Touch-friendly controls** - larger buttons, simplified interactions
+
+#### **Responsive Breakpoints**
+- **< 600px (Mobile)**: Single column, simplified charts, key metrics only
+- **600-1024px (Tablet)**: Two columns, medium complexity charts
+- **> 1024px (Desktop)**: Full layout, complex visualizations, multiple panels
+
+#### **Chart-Specific Responsive Strategies**
+1. **Data Aggregation**: Monthly data → Yearly data (fewer columns)
+2. **Fixed Font Sizes**: Prevent tiny text on small screens
+3. **Horizontal Scrolling**: Acceptable for tables/timelines on mobile
+4. **Simplified Color Schemes**: Avoid overly complex legends on small screens
+5. **Tooltip Over Labels**: Hover/touch for details instead of cramped text
+
+#### **Industry Examples**
+- **Tableau/PowerBI**: Desktop-focused with mobile companion apps
+- **Google Analytics**: Simplified mobile dashboard, full desktop experience
+- **Financial Dashboards**: Key metrics on mobile, detailed charts on desktop
+
+### Implementation Guidelines
+- Use responsive margins and font sizes based on screen width
+- Implement ResizeObserver for dynamic chart reflow
+- Test at multiple breakpoints during development
+- Consider touch interactions for mobile users
+
 ## Performance Considerations
 
 ### Data Loading Strategy
