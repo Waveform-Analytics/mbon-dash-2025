@@ -102,9 +102,19 @@ const CATEGORY_DESCRIPTIONS: Record<CategoryType, string> = {
 export default function AcousticGlossaryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const categories = ['All', ...Object.keys(CATEGORY_COLORS)];
+  
+  // Get available subcategories based on selected category
+  const availableSubcategories = useMemo(() => {
+    const subcategories = new Set<string>();
+    ACOUSTIC_INDICES
+      .filter(index => selectedCategory === 'All' || index.category === selectedCategory)
+      .forEach(index => subcategories.add(index.subcategory));
+    return ['All', ...Array.from(subcategories).sort()];
+  }, [selectedCategory]);
   
   const filteredIndices = useMemo(() => {
     return ACOUSTIC_INDICES.filter(index => {
@@ -114,10 +124,16 @@ export default function AcousticGlossaryPage() {
         index.description.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = selectedCategory === 'All' || index.category === selectedCategory;
+      const matchesSubcategory = selectedSubcategory === 'All' || index.subcategory === selectedSubcategory;
       
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesSubcategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, selectedSubcategory]);
+  
+  // Reset subcategory when category changes
+  React.useEffect(() => {
+    setSelectedSubcategory('All');
+  }, [selectedCategory]);
 
   const indexCounts = Object.keys(CATEGORY_COLORS).reduce((acc, category) => {
     acc[category] = ACOUSTIC_INDICES.filter(index => index.category === category).length;
@@ -166,9 +182,26 @@ export default function AcousticGlossaryPage() {
               ))}
             </select>
             
-            {selectedCategory !== 'All' && (
+            {selectedCategory !== 'All' && availableSubcategories.length > 1 && (
+              <select
+                value={selectedSubcategory}
+                onChange={(e) => setSelectedSubcategory(e.target.value)}
+                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-ocean-500 text-sm"
+              >
+                {availableSubcategories.map(subcategory => (
+                  <option key={subcategory} value={subcategory}>
+                    {subcategory === 'All' ? 'All Subcategories' : subcategory}
+                  </option>
+                ))}
+              </select>
+            )}
+            
+            {(selectedCategory !== 'All' || selectedSubcategory !== 'All') && (
               <button
-                onClick={() => setSelectedCategory('All')}
+                onClick={() => {
+                  setSelectedCategory('All');
+                  setSelectedSubcategory('All');
+                }}
                 className="px-4 py-2 bg-ocean-100 text-ocean-700 rounded-lg hover:bg-ocean-200 transition-colors font-medium flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,6 +225,7 @@ export default function AcousticGlossaryPage() {
         <div className="mt-4 text-sm text-slate-600">
           Showing {filteredIndices.length} of {ACOUSTIC_INDICES.length} indices
           {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+          {selectedSubcategory !== 'All' && ` → ${selectedSubcategory}`}
         </div>
       </div>
 
@@ -233,9 +267,13 @@ export default function AcousticGlossaryPage() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className={`font-bold text-lg ${colors.text}`}>{index.prefix}</h3>
-                  <div className={`text-sm ${colors.badge} ${colors.text} px-2 py-1 rounded-full inline-block mt-1`}>
+                  <button
+                    onClick={() => setSelectedSubcategory(index.subcategory)}
+                    className={`text-sm ${colors.badge} ${colors.text} px-2 py-1 rounded-full inline-block mt-1 hover:opacity-80 hover:shadow-sm transition-all cursor-pointer border-2 border-transparent hover:border-current`}
+                    title={`Filter by ${index.subcategory}`}
+                  >
                     {index.subcategory}
-                  </div>
+                  </button>
                 </div>
                 <div className={`text-xs ${colors.text} opacity-75`}>
                   {index.category.replace(' Indices', '')}
