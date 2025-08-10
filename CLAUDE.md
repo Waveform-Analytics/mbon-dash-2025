@@ -3,7 +3,13 @@
 ## Project Overview
 Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as cost-effective proxies for complex biodiversity monitoring. The core research question: "Can computed acoustic indices help us understand and predict marine biodiversity patterns as an alternative to expensive, labor-intensive manual species detection methods?"
 
-**Research Focus**: Analyzing relationships between 60+ acoustic indices and species presence across 3 stations in May River, South Carolina, with emphasis on identifying the most informative indices for biodiversity assessment and understanding environmental confounding factors.
+**Research Focus**: Analyzing relationships between 56+ acoustic indices and species presence across 3 stations in May River, South Carolina, with emphasis on identifying the most informative indices for biodiversity assessment and understanding environmental confounding factors.
+
+**Key Goals**:
+- Identify which acoustic indices best predict species detection patterns
+- Use PCA to reduce 56 indices to a smaller set of "super indices" 
+- Develop cost-effective alternatives to manual species annotation
+- Understand spatial (between stations) and temporal patterns in acoustic environments
 
 ## Data Structure
 
@@ -18,9 +24,26 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 - **Environmental Data**: Temperature and depth measurements
   - **Temperature**: Master_[STATION]_Temp_[YEAR].xlsx (sheet 1)
   - **Depth**: Master_[STATION]_Depth_[YEAR].xlsx (sheet 1)
-- **Acoustic Indices**: RMS Sound Pressure Level (rmsSPL) measurements  
+- **Legacy Acoustic Data**: RMS Sound Pressure Level (rmsSPL) measurements  
   - **Files**: Master_rmsSPL_[STATION]_1h_[YEAR].xlsx (sheet 1)
+  - **Note**: Being replaced by comprehensive acoustic indices (see below)
 - **Deployment Metadata**: Filtered to relevant deployments only (2018, 2021, 9M/14M/37M)
+
+### **NEW: Comprehensive Acoustic Indices (Primary Analysis Focus)**
+- **Source**: Collaborator-provided CSV files with 56 acoustic indices
+- **Temporal Resolution**: Hourly (aggregated to 2-hour windows to match detections)
+- **Expected Files**: 
+  - `AcousticIndices_[STATION]_FullBW_v1.csv` (Full bandwidth)
+  - `AcousticIndices_[STATION]_[OTHER_BW]_v1.csv` (Additional bandwidth - TBD)
+- **Stations**: 9M (received), 14M & 37M (expected)
+- **Years**: 2021 (received), 2018 (expected)
+- **Index Categories**:
+  - Temporal domain: ZCR, MEANt, VARt, SKEWt, KURTt, LEQt, etc.
+  - Frequency domain: MEANf, VARf, SKEWf, KURTf, NBPEAKS, etc.
+  - Acoustic complexity: ACI, NDSI, ADI, AEI
+  - Diversity indices: H_Havrda, H_Renyi, H_pairedShannon, RAOQ, etc.
+  - Bioacoustic: BioEnergy, AnthroEnergy, BI, rBA
+  - Spectral coverage: LFC, MFC, HFC
 
 ### **Important Notes**
 - **Only 3 stations of interest**: 9M, 14M, 37M (ignore B, C, CC4, CR1, D, WB)
@@ -88,49 +111,140 @@ NEXT_PUBLIC_MAPBOX_TOKEN=mapbox_token_here
 
 ## Data Processing Workflow
 
-### Current Data Structure
+### UPDATED: Data Structure (Post-Acoustic Indices Integration)
+
 ```
-data/
-├── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx  # Deployment metadata across years
-├── 2018/
-│   ├── Master_Manual_[STATION]_2h_2018.xlsx    # Species detections
-│   ├── Master_[STATION]_Temp_2018.xlsx         # Temperature data
-│   ├── Master_[STATION]_Depth_2018.xlsx        # Depth data
-│   └── Master_rmsSPL_[STATION]_1h_2018.xlsx    # Acoustic indices
-└── 2021/
-    └── [similar structure with more stations]
+mbon-dash-2025/
+├── data/                           # Raw data (committed to git)
+│   ├── indices/
+│   │   └── raw/                   # Raw acoustic indices from collaborator
+│   │       ├── AcousticIndices_9M_FullBW_v1.csv      # ✅ Received
+│   │       ├── AcousticIndices_14M_FullBW_v1.csv     # 🔄 Expected
+│   │       ├── AcousticIndices_37M_FullBW_v1.csv     # 🔄 Expected  
+│   │       ├── AcousticIndices_9M_[OTHER_BW]_v1.csv  # 🔄 Expected
+│   │       └── ... (additional stations/years/bandwidths)
+│   ├── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx
+│   ├── 2018/                      # Legacy detection/environmental data
+│   │   ├── Master_Manual_[STATION]_2h_2018.xlsx
+│   │   ├── Master_[STATION]_Temp_2018.xlsx
+│   │   ├── Master_[STATION]_Depth_2018.xlsx
+│   │   └── Master_rmsSPL_[STATION]_1h_2018.xlsx  # Legacy - keep for comparison
+│   └── 2021/                      # [similar structure]
+│
+├── processed/                      # Intermediate processing (gitignored)
+│   ├── indices/                   # Cleaned index data
+│   │   ├── indices_9M_2021.json
+│   │   ├── indices_14M_2021.json  
+│   │   └── indices_combined.json   # All stations/years/bandwidths
+│   ├── detections/               # Processed detection data
+│   ├── environmental/            # Processed environmental data  
+│   └── combined/                 # Temporally aligned datasets
+│       ├── full_dataset.json     # All data types joined
+│       └── analysis_ready.json   # Filtered for PCA
+│
+├── analysis/                      # Analysis results (gitignored) 
+│   ├── pca/                      # PCA results, loadings, component scores
+│   │   ├── pca_loadings.json
+│   │   ├── pca_scores.json
+│   │   └── explained_variance.json
+│   ├── correlations/             # Index-species correlation matrices
+│   ├── summaries/               # Statistical summaries
+│   └── model_results/           # Predictive model outputs
+│
+├── cdn/                          # CDN-ready data (gitignored)
+│   ├── dashboard-data.json      # Lightweight dashboard data
+│   ├── pca-results.json        # Pre-computed PCA for visualization
+│   ├── index-summaries.json    # Key metrics and trends
+│   └── station-profiles.json   # Station-specific acoustic profiles
+│
+└── public/                      # Static assets only (no data files)
+    ├── images/
+    └── icons/
 ```
 
-### Data Processing Script (`scripts/process_data.py`)
-**Using Python for data processing (RECOMMENDED)** - processes the focused dataset:
+### UPDATED: Processing Pipeline Architecture
 
-1. **Process Detection Files**: Merge Manual detection files (PRIMARY DATA)
-   - **Scope**: 2018, 2021 years ONLY + 9M, 14M, 37M stations ONLY
-   - **Files**: 6 Manual files (3 stations × 2 years)
-   - **Sheet**: Always sheet 1 for Manual files
+The data processing has been redesigned as a modular pipeline to handle the integration of comprehensive acoustic indices with existing detection and environmental data.
 
-2. **Process Environmental Data**: Join temperature and depth measurements (SECONDARY)
-   - **Files**: 12 environmental files (6 temp + 6 depth)
-   - **Sheet**: Always sheet 1 (NOT sheet 0)
-
-3. **Process Acoustic Indices**: Merge rmsSPL data (SECONDARY) 
-   - **Files**: 6 rmsSPL files (3 stations × 2 years)
-   - **Sheet**: Always sheet 1 (NOT sheet 0)
-
-4. **Filter Deployment Metadata**: Only relevant deployments (2018, 2021, 9M/14M/37M)
-
-5. **Output Filtered JSON Files**: Optimized for focused analysis
-
+#### **Pipeline Overview**
 ```bash
-uv run scripts/process_data.py
-# Creates filtered datasets:
-# - public/data/detections.json (6 detection files, PRIMARY)
-# - public/data/environmental.json (12 temp/depth files, SECONDARY)
-# - public/data/acoustic.json (6 rmsSPL files, SECONDARY)
-# - public/data/deployment_metadata.json (filtered ~6-12 records)
-# - public/data/stations.json (3 stations: 9M, 14M, 37M)
-# - public/data/species.json (species from detection data)
-# - public/data/metadata.json (corrected summary statistics)
+# Complete pipeline (run when new data arrives)
+uv run scripts/pipeline/run_full_pipeline.py
+
+# Individual processing steps (for development/debugging)
+uv run scripts/pipeline/steps/1_process_raw_data.py
+uv run scripts/pipeline/steps/2_align_temporal_windows.py  
+uv run scripts/pipeline/steps/3_join_datasets.py
+uv run scripts/pipeline/steps/4_handle_missing_data.py
+uv run scripts/pipeline/steps/5_run_pca_analysis.py
+uv run scripts/pipeline/steps/6_prepare_dashboard_data.py
+
+# Analysis scripts (heavy computational work)
+uv run scripts/analysis/pca_analysis.py
+uv run scripts/analysis/correlation_analysis.py
+uv run scripts/analysis/biodiversity_models.py
+```
+
+#### **Step-by-Step Processing**
+
+**Step 1: Process Raw Data**
+- **Detection Files**: Master_Manual_[STATION]_2h_[YEAR].xlsx (6 files)
+- **Environmental Files**: Temperature/Depth files (12 files) 
+- **Acoustic Indices**: AcousticIndices_[STATION]_[BANDWIDTH]_v1.csv (flexible count)
+- **Deployment Metadata**: Filter to relevant deployments
+- **Output**: `processed/` directory with cleaned JSON files
+
+**Step 2: Temporal Alignment** 
+- **Challenge**: Indices are hourly, detections are 2-hourly
+- **Solution**: Aggregate indices to 2-hour windows using configurable methods (mean, max, etc.)
+- **Missing Data**: Flag gaps, apply interpolation rules
+- **Output**: `processed/combined/aligned_windows.json`
+
+**Step 3: Dataset Joining**
+- **Join Criteria**: Station + datetime windows
+- **Data Prioritization**: Detection data drives temporal scope
+- **Quality Control**: Flag mismatched windows, missing periods
+- **Output**: `processed/combined/full_dataset.json`
+
+**Step 4: Missing Data Handling**
+- **Short gaps (≤2 hours)**: Linear interpolation with QC flags
+- **Medium gaps (2-6 hours)**: Mark as "interpolated" 
+- **Long gaps (>6 hours)**: Exclude from analysis
+- **Output**: `processed/combined/analysis_ready.json`
+
+**Step 5: PCA Analysis** (Heavy Computation)
+- **Index Filtering**: Remove low-variance, highly-correlated indices
+- **PCA Computation**: Principal components, loadings, explained variance
+- **Component Analysis**: Identify key indices for each component
+- **Output**: `analysis/pca/` directory with multiple JSON files
+
+**Step 6: Dashboard Data Preparation**
+- **Data Reduction**: Extract key metrics, trends, PCA results  
+- **Visualization Prep**: Format for Observable Plot consumption
+- **CDN Optimization**: Compress, split by usage patterns
+- **Output**: `cdn/` directory ready for upload
+
+#### **Flexible File Handling**
+
+The pipeline automatically detects and processes available acoustic index files:
+
+```python
+# File pattern matching (flexible for new datasets)
+ACOUSTIC_INDEX_PATTERNS = [
+    "AcousticIndices_{station}_{bandwidth}_v*.csv",
+    "Acoustic_Indices_{station}_{bandwidth}_v*.csv"  # Handle naming variations
+]
+
+# Supported configurations
+EXPECTED_STATIONS = ["9M", "14M", "37M"]
+EXPECTED_YEARS = [2018, 2021] 
+BANDWIDTH_TYPES = ["FullBW", "LowBW", "HighBW"]  # Flexible list
+
+# Processing behavior:
+# - Process all found files matching patterns
+# - Log missing expected files  
+# - Handle naming variations gracefully
+# - Support future bandwidth types automatically
 ```
 
 **UPDATED**: Script has been corrected and data regenerated with proper scope (3 stations, 2018/2021 only).
@@ -160,16 +274,33 @@ This metadata provides crucial context for interpreting the detection, environme
 
 ### Data Processing (Python with uv)
 ```bash
-# Direct uv commands (recommended)
-uv run scripts/process_data.py      # Process Excel files to JSON
-uv run scripts/check_data_freshness.py  # Check if data needs reprocessing
-uv run scripts/validate_data.py     # Check data integrity  
-uv run scripts/data_stats.py        # Generate data summary
+# UPDATED: Pipeline processing (recommended for full workflow)
+uv run scripts/pipeline/run_full_pipeline.py    # Complete data processing pipeline
+uv run scripts/pipeline/run_partial_pipeline.py --steps 1,2,3  # Run specific steps
+
+# Individual pipeline steps (for development)
+uv run scripts/pipeline/steps/1_process_raw_data.py
+uv run scripts/pipeline/steps/2_align_temporal_windows.py
+uv run scripts/pipeline/steps/3_join_datasets.py
+uv run scripts/pipeline/steps/4_handle_missing_data.py
+uv run scripts/pipeline/steps/5_run_pca_analysis.py
+uv run scripts/pipeline/steps/6_prepare_dashboard_data.py
+
+# Analysis scripts (computationally intensive)
+uv run scripts/analysis/pca_analysis.py         # Principal component analysis
+uv run scripts/analysis/correlation_analysis.py  # Index-species correlations
+uv run scripts/analysis/biodiversity_models.py  # Predictive models
+
+# Legacy/utility scripts (maintained for compatibility)
+uv run scripts/legacy/process_data.py           # Original processing script
+uv run scripts/legacy/validate_data.py          # Data integrity checks
+uv run scripts/legacy/data_stats.py             # Generate data summaries
 
 # Or via npm scripts (calls uv under the hood)
-npm run build-data                   # Runs: uv run scripts/process_data.py
-npm run validate-data               # Runs: uv run scripts/validate_data.py
-npm run data-stats                  # Runs: uv run scripts/data_stats.py
+npm run build-data                   # Runs full pipeline
+npm run validate-data               # Runs validation
+npm run data-stats                  # Runs statistics
+npm run build-analysis             # Runs PCA and correlation analysis
 ```
 
 ### Smart Data Processing Workflow
@@ -439,44 +570,109 @@ npm run data-stats        # View data summary statistics
 
 ## Research Questions to Address
 
-### **🎯 Primary Research Questions (Phase 1)**
-1. **Acoustic Indices as Biodiversity Proxies**
-   - Which acoustic indices best predict species presence and soundscape biodiversity?
-   - Can indices differentiate between biological vs anthropogenic sounds (vessel, chain, etc.)?
-   - What is the performance ranking of indices for biodiversity prediction?
-   - PCA analysis: Which indices cluster with species detections?
+### **🎯 Primary Research Questions (Phase 1) - UPDATED**
+1. **Index Dimensionality Reduction**
+   - Can we reduce 56+ acoustic indices to 3-5 "super indices" that capture most environmental variation?
+   - Which indices contribute most to the first 3 principal components?
+   - What percentage of variance do the top components explain?
 
-2. **Environmental Confounding Factors**
-   - Do temperature and depth significantly affect acoustic indices?
-   - Should indices be environmentally corrected for better biodiversity prediction?
-   - Are indices driven by environmental conditions or biological activity?
+2. **Biodiversity Prediction Capability**
+   - Which acoustic indices (or index combinations) best predict species detection patterns?
+   - Can PCA-derived components predict biodiversity better than individual indices?
+   - How do index-based predictions compare to environmental predictors (temp/depth)?
+
+3. **Index Categories Performance**
+   - Do certain index categories (diversity, complexity, bioacoustic) outperform others?
+   - Which temporal vs frequency domain indices are most informative?
+   - Are there redundant index categories we can eliminate?
 
 ### **🔍 Secondary Research Questions (Phase 2)**
-3. **Seasonal and Temporal Patterns**
-   - Are there seasonal fluctuations in acoustic indices?
-   - How do seasonal patterns relate to species activity vs environmental cycles?
-   - Multi-year changes in soundscape biodiversity (2018 vs 2021)
+4. **Spatial and Temporal Patterns**
+   - How do acoustic environments differ between stations (9M, 14M, 37M)?
+   - Are there consistent temporal patterns (hourly, seasonal) in key indices?
+   - Multi-year stability: Do index patterns remain consistent (2018 vs 2021)?
 
-4. **Anthropogenic Impact Assessment**
-   - How does proximity to marinas/shipping routes affect indices?
-   - Can we separate anthropogenic noise from biological sounds using indices?
-   - Station-specific anthropogenic signatures
+5. **Environmental Interactions**
+   - Do temperature and depth cycles drive index variation independent of biology?
+   - Should indices be environmentally corrected for better biodiversity assessment?
+   - Which indices are most/least affected by environmental confounders?
+
+6. **Cost-Effectiveness Assessment**
+   - Can a reduced index set provide equivalent biodiversity information to manual annotation?
+   - What is the processing time/computational cost trade-off for different index sets?
+   - ROI analysis: effort savings vs information loss
 
 ### **🔮 Future Research Questions (Phase 3)**
-5. **Spatial Gradients and Site Characteristics**
-   - Does distance from river mouth affect acoustic indices and biodiversity?
-   - Station-specific environmental and biological profiles
-   - Scaling patterns across different estuarine locations
+7. **Practical Implementation**
+   - Can real-time index calculation support adaptive monitoring strategies?
+   - How do results scale to other estuarine environments?
+   - Integration with existing marine monitoring programs
 
-6. **Advanced Acoustic Analysis (with 60 indices at 5-min resolution)**
-   - Fine-temporal resolution patterns in soundscape biodiversity
-   - Machine learning models for biodiversity prediction
-   - Real-time monitoring applications
+8. **Advanced Modeling**
+   - Machine learning models using top-performing indices for species prediction
+   - Bandwidth comparison: Does analysis of different frequency ranges improve predictions?
+   - Automated index selection algorithms for new environments
 
 ### **🎓 Science Communication Goals**
 - Make acoustic indices accessible to non-acoustics researchers
 - Demonstrate cost-effectiveness of acoustic monitoring for biodiversity assessment
 - Provide actionable recommendations for marine monitoring programs
+
+## Implementation Timeline & Milestones
+
+### **Phase 1: Data Integration & Basic Analysis (Weeks 1-2)**
+
+**Week 1: Infrastructure Setup**
+- ✅ Restructure data folders (`data/`, `processed/`, `analysis/`, `cdn/`)
+- ✅ Create flexible acoustic indices processing pipeline
+- ✅ Implement temporal alignment (hourly → 2-hour windows)
+- ✅ Basic PCA analysis with 9M 2021 data
+
+**Week 2: Multi-Dataset Integration**  
+- ⏳ Extend pipeline for multiple stations/bandwidths (when available)
+- ⏳ Missing data handling implementation
+- ⏳ Dashboard integration: Index Explorer page
+- ⏳ **Milestone 1 Presentation**: "Here's what the acoustic indices look like"
+
+### **Phase 2: PCA Analysis & Insights (Weeks 3-4)**
+
+**Week 3: Advanced Analysis**
+- ⏳ Index filtering and dimensionality reduction
+- ⏳ Full PCA analysis with component interpretation
+- ⏳ Index-species correlation analysis
+- ⏳ Environmental confounder assessment
+
+**Week 4: Visualization & Results**
+- ⏳ Interactive PCA dashboard components  
+- ⏳ Top indices identification and ranking
+- ⏳ Station comparison analysis
+- ⏳ **Milestone 2 Presentation**: "Here's what we're learning from the indices"
+
+### **Phase 3: Predictive Models & Recommendations (Weeks 5-6)**
+
+**Week 5: Model Development**
+- ⏳ Biodiversity prediction models using reduced index sets
+- ⏳ Cost-effectiveness analysis
+- ⏳ Cross-validation and model performance assessment
+- ⏳ Environmental correction experiments
+
+**Week 6: Final Integration**
+- ⏳ Dashboard completion with all analysis results
+- ⏳ Index recommendation system
+- ⏳ Documentation and methodology writeup
+- ⏳ **Final Presentation**: "Here's what managers should use"
+
+### **Flexible Timeline Notes**
+- Timeline adjusts based on data availability from collaborators
+- Each milestone can be presented independently
+- Pipeline designed to incorporate new datasets as they arrive
+- Dashboard iterates based on analysis discoveries
+
+### **Success Metrics**
+- **Technical**: Pipeline processes new acoustic index files automatically
+- **Scientific**: Identify <10 key indices that explain >70% of biodiversity variation
+- **Practical**: Demonstrate computational cost savings vs manual annotation
+- **Communication**: Clear visualizations showing index-biodiversity relationships
 
 ## Development Notes
 - Don't run `npm run dev` - the user will do that in a separate terminal window. Just tell them when they're ready to run.
