@@ -17,7 +17,7 @@ export function StationMap({ stations }: StationMapProps) {
   
   // useRef creates a reference to DOM elements and values that persist between renders
   const mapContainer = useRef<HTMLDivElement>(null);  // Reference to the map's DOM container
-  const map = useRef<any>(null);     // Reference to the Mapbox instance
+  const map = useRef<import('mapbox-gl').Map | null>(null);  // Reference to the Mapbox instance
   
   // Load mapbox-gl dynamically
   useEffect(() => {

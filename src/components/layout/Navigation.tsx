@@ -6,33 +6,30 @@ import { useState } from 'react'
 import { 
   HomeIcon, 
   ChartBarIcon, 
-  BeakerIcon, 
   BookOpenIcon, 
-  MapPinIcon, 
   MagnifyingGlassIcon,
-  MusicalNoteIcon,
-  SunIcon,
   ChevronDownIcon,
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
+import type { NavItem, NavChild } from '@/types/data'
 
-const navigation = [
+const navigation: NavItem[] = [
   { name: 'Overview', href: '/', icon: HomeIcon },
   {
     name: 'Analysis',
     icon: ChartBarIcon,
     children: [
-      { name: 'Acoustic Indices', href: '/acoustic-biodiversity', icon: MusicalNoteIcon, description: 'Which indices predict biodiversity?' },
-      { name: 'Environmental Factors', href: '/environmental-factors', icon: SunIcon, description: 'Temperature, depth & seasonal effects' },
+      { name: 'Acoustic Indices', href: '/acoustic-biodiversity', description: 'Which indices predict biodiversity?' },
+      { name: 'Environmental Factors', href: '/environmental-factors', description: 'Temperature, depth & seasonal effects' },
     ]
   },
   {
     name: 'Resources',
     icon: BookOpenIcon,
     children: [
-      { name: 'Index Guide', href: '/acoustic-glossary', icon: BeakerIcon, description: 'Understanding acoustic indices' },
-      { name: 'Station Profiles', href: '/stations', icon: MapPinIcon, description: 'Study sites & spatial context' },
+      { name: 'Index Guide', href: '/acoustic-glossary', description: 'Understanding acoustic indices' },
+      { name: 'Station Profiles', href: '/stations', description: 'Study sites & spatial context' },
     ]
   },
   { name: 'Explorer', href: '/explorer', icon: MagnifyingGlassIcon },
@@ -44,8 +41,8 @@ export default function Navigation() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
   // Helper function to check if a dropdown should be active
-  const isDropdownActive = (children: any[]) => {
-    return children.some((child: any) => pathname === child.href)
+  const isDropdownActive = (children: NavChild[]) => {
+    return children.some((child: NavChild) => pathname === child.href)
   }
 
   return (
@@ -83,7 +80,7 @@ export default function Navigation() {
                         : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50'
                     }`}
                   >
-                    <item.icon className="w-5 h-5" />
+                    {item.icon ? <item.icon className="w-5 h-5" /> : null}
                     <span>{item.name}</span>
                   </Link>
                 )
@@ -108,7 +105,7 @@ export default function Navigation() {
                           : 'text-slate-600 hover:text-ocean-700 hover:bg-slate-50 rounded-lg'
                       }`}
                     >
-                      <item.icon className="w-5 h-5" />
+                      {item.icon ? <item.icon className="w-5 h-5" /> : null}
                       <span>{item.name}</span>
                       <ChevronDownIcon className="w-4 h-4 ml-1" />
                     </button>
@@ -116,7 +113,7 @@ export default function Navigation() {
                     {/* Dropdown Menu */}
                     {activeDropdown === item.name && (
                       <div className="absolute top-full left-0 w-72 bg-white border border-slate-200 border-t-0 rounded-b-lg rounded-tr-lg shadow-lg py-2 z-50">
-                        {item.children.map((child: any) => {
+                        {item.children.map((child) => {
                           const childIsActive = pathname === child.href
                           return (
                             <Link
@@ -126,7 +123,6 @@ export default function Navigation() {
                                 childIsActive ? 'bg-ocean-50 border-r-2 border-ocean-500' : ''
                               }`}
                             >
-                              <child.icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
                               <div>
                                 <div className={`font-medium ${childIsActive ? 'text-ocean-700' : 'text-slate-900'}`}>
                                   {child.name}
@@ -184,7 +180,7 @@ export default function Navigation() {
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <item.icon className="w-5 h-5" />
+                      {item.icon ? <item.icon className="w-5 h-5" /> : null}
                       <span>{item.name}</span>
                     </Link>
                   )
@@ -195,11 +191,11 @@ export default function Navigation() {
                   return (
                     <div key={item.name} className="space-y-1">
                       <div className="px-3 py-2 text-base font-semibold text-slate-700 flex items-center space-x-3">
-                        <item.icon className="w-5 h-5" />
+                        {item.icon ? <item.icon className="w-5 h-5" /> : null}
                         <span>{item.name}</span>
                       </div>
                       <div className="ml-6 space-y-1">
-                        {item.children.map((child: any) => {
+                        {item.children.map((child) => {
                           const childIsActive = pathname === child.href
                           return (
                             <Link
@@ -212,7 +208,6 @@ export default function Navigation() {
                               }`}
                               onClick={() => setMobileMenuOpen(false)}
                             >
-                              <child.icon className="w-4 h-4" />
                               <span>{child.name}</span>
                             </Link>
                           )

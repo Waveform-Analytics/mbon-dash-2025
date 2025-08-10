@@ -3,18 +3,14 @@
  */
 
 import { useState, useEffect } from 'react';
+import type { 
+  DetectionRecord as Detection
+} from '@/types/data';
 
 const DATA_URL = process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data';
 
-export interface Detection {
-  id: string;
-  file: string;
-  date: string;
-  time: string;
-  year: string;
-  station: string;
-  [key: string]: any;
-}
+// Re-export types with compatibility aliases
+export type { Detection };
 
 export interface Station {
   id: string;

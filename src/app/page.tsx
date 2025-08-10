@@ -87,7 +87,7 @@ export default function DashboardPage() {
   const { 
     data: deployments, 
     loading: deploymentsLoading, 
-    error: deploymentsError 
+    error: _deploymentsError 
   } = useDeploymentMetadata();
   
   // NEW: Fetch timeline data for heatmap
@@ -96,7 +96,7 @@ export default function DashboardPage() {
     speciesMapping,
     deploymentMetadata,
     loading: timelineLoading,
-    error: timelineError
+    error: _timelineError
   } = useTimelineData();
   
   // NEW: Process the deployment data for the map

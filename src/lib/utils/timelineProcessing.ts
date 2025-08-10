@@ -3,12 +3,13 @@
  */
 
 import { format, parseISO, startOfMonth, isValid } from 'date-fns';
+import type { DeploymentMetadata } from '@/types/data';
 
 export interface Detection {
   date: string;
   station: string;
-  year: string;
-  [speciesCode: string]: any; // Species detection columns
+  year: string | number; // Allow both string and number for compatibility
+  [speciesCode: string]: string | number | undefined; // Species detection columns, allow undefined
 }
 
 export interface TimelineDataPoint {
@@ -33,7 +34,7 @@ export interface HeatmapData {
 export function processTimelineData(
   detections: Detection[],
   speciesMapping: Record<string, string>,
-  deploymentMetadata: any[] = []
+  deploymentMetadata: DeploymentMetadata[] = []
 ): TimelineDataPoint[] {
   const timelineData: TimelineDataPoint[] = [];
   const speciesColumns = Object.keys(speciesMapping).filter(
@@ -105,7 +106,7 @@ export function aggregateTimelineData(timelineData: TimelineDataPoint[]): Timeli
 /**
  * Extract deployment periods from metadata
  */
-function getDeploymentPeriods(metadata: any[]): Record<string, Array<{start: string, end: string}>> {
+function getDeploymentPeriods(metadata: DeploymentMetadata[]): Record<string, Array<{start: string, end: string}>> {
   const periods: Record<string, Array<{start: string, end: string}>> = {};
   
   metadata.forEach(deployment => {
@@ -114,10 +115,14 @@ function getDeploymentPeriods(metadata: any[]): Record<string, Array<{start: str
       periods[station] = [];
     }
     
-    if (deployment.start_date && deployment.end_date) {
+    // Check both naming conventions
+    const startDate = deployment.deployment_start || deployment.start_date;
+    const endDate = deployment.deployment_end || deployment.end_date;
+    
+    if (startDate && endDate) {
       periods[station].push({
-        start: deployment.start_date,
-        end: deployment.end_date
+        start: startDate,
+        end: endDate
       });
     }
   });
@@ -152,7 +157,7 @@ function isStationActiveInMonth(
 /**
  * Format month key for display
  */
-function formatMonthLabel(monthKey: string): string {
+function _formatMonthLabel(monthKey: string): string {
   try {
     const date = parseISO(monthKey + '-01');
     return format(date, 'MMM yyyy'); // e.g., "Jan 2018"
@@ -164,7 +169,7 @@ function formatMonthLabel(monthKey: string): string {
 /**
  * Get color scale for heatmap based on data range
  */
-export function getHeatmapColorScale(maxDetections: number): (string | number)[][] {
+export function getHeatmapColorScale(_maxDetections: number): (string | number)[][] {
   // Ocean-themed color scale matching your dashboard
   const colors = [
     [0, 'rgb(247, 251, 255)'],      // Very light blue (no detections)

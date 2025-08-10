@@ -15,11 +15,12 @@ import {
   type Detection 
 } from '@/lib/utils/timelineProcessing';
 import { ChartExport } from '@/components/export/ChartExport';
+import type { DeploymentMetadata } from '@/types/data';
 
 interface SpeciesActivityHeatmapProps {
   detections: Detection[];
   speciesMapping: Record<string, string>;
-  deploymentMetadata?: any[];
+  deploymentMetadata?: DeploymentMetadata[];
   className?: string;
   height?: number;
   topSpeciesCount?: number;
@@ -205,12 +206,15 @@ export function SpeciesActivityHeatmap({
       }
     });
 
-    plotRef.current.appendChild(plot);
+    // Store current ref value for cleanup
+    const currentPlotRef = plotRef.current;
+    currentPlotRef.appendChild(plot);
 
     // Cleanup
     return () => {
-      if (plotRef.current) {
-        plotRef.current.innerHTML = '';
+      // Use stored reference to avoid stale closure warning
+      if (currentPlotRef) {
+        currentPlotRef.innerHTML = '';
       }
     };
   }, [processedData, height, containerWidth]);

@@ -4,8 +4,8 @@
   "description": "Interactive marine biodiversity dashboard for OSA MBON project",
   "scripts": {
     "build-data": "uv run scripts/process_data.py",
-    "validate-data": "echo 'Data validation script coming soon'",
-    "data-stats": "echo 'Data statistics script coming soon'",
+    "validate-data": "uv run scripts/validate_data.py",
+    "data-stats": "uv run scripts/data_stats.py",
     "dev": "next dev",
     "dev:fresh": "npm run build-data && next dev",
     "dev:clean": "rm -rf .next && next dev",
@@ -39,8 +39,13 @@
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
     "autoprefixer": "^10.4.21",
+    "eslint-config-next": "^15.4.6",
+    "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
   }
