@@ -55,7 +55,7 @@ interface UseDataResult<T> {
 
 // Simple fetch wrapper
 async function fetchData<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${DATA_URL}/${endpoint}`);
+  const response = await fetch(`${DATA_URL}/processed/${endpoint}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
   }

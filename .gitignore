@@ -59,19 +59,26 @@ Thumbs.db
 *.temp
 combined_df_export.csv
 
-# Data files - CDN-based approach
+# Data files - Organized CDN-mirror structure
 # Raw data too large for git (114MB+) - stored on CDN
-data/                           # Ignore all raw data files
 
-# Keep only essential small reference files in git
-!data/det_column_names.csv      # Species name mappings (small)
-!data/Updated_Index_Categories_v2.csv  # Index categories (small)
-!data/.gitkeep                 # Keep directory structure
+# Ignore all generated/processed data
+data/processed/
+data/analysis/
+data/cdn/
 
-# Ignore processed and analysis outputs
-processed/                      # Intermediate processing results
-analysis/                       # Analysis results (PCA, correlations, etc.)
-cdn/                           # CDN-ready data files
+# Ignore raw data EXCEPT for small reference files
+data/raw-data/**/*.xlsx
+data/raw-data/**/*.xls
+data/raw-data/**/*.csv
+
+# But keep these small reference files
+!data/raw-data/det_column_names.csv
+!data/raw-data/Updated_Index_Categories_v2.csv
+!data/raw-data/.gitkeep
 
 # Legacy: Remove old public/data structure (data now served from CDN)
 public/data/
+
+# MkDocs generated site
+site/
