@@ -6,6 +6,21 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
+  // Development proxy to bypass CORS
+  async rewrites() {
+    // Only proxy in development
+    if (process.env.NODE_ENV !== 'development') {
+      return [];
+    }
+    
+    return [
+      {
+        source: '/api/cdn/:path*',
+        destination: 'https://pub-71436b8d94864ba1ace2ef29fa28f0f1.r2.dev/:path*',
+      },
+    ]
+  },
+  
   // Security headers configuration
   async headers() {
     return [

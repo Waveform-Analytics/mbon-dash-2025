@@ -1,55 +1,48 @@
-'use client'  // This tells Next.js this is a client-side component
+'use client'
 
-import { useEffect, useRef, useState } from 'react';
-import 'mapbox-gl/dist/mapbox-gl.css';  // CSS can stay as static import
+import { useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Import the ProcessedStation type from the page file
 import type { ProcessedStation } from '@/app/page';
 
-// Define the props (inputs) this component expects
 interface StationMapProps {
-  stations: ProcessedStation[];  // Array of processed stations from Step 2
+  stations: ProcessedStation[];
 }
 
 export function StationMap({ stations }: StationMapProps) {
-  // State to track if mapbox is loaded
-  const [mapboxgl, setMapboxgl] = useState<typeof import('mapbox-gl') | null>(null);
-  
-  // useRef creates a reference to DOM elements and values that persist between renders
-  const mapContainer = useRef<HTMLDivElement>(null);  // Reference to the map's DOM container
-  const map = useRef<import('mapbox-gl').Map | null>(null);  // Reference to the Mapbox instance
-  
-  // Load mapbox-gl dynamically
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+
   useEffect(() => {
-    import('mapbox-gl').then((module) => {
-      setMapboxgl(module.default);
-    });
-  }, []);
-  
-  // Initialize map once mapbox is loaded
-  useEffect(() => {
-    // Safety checks
-    if (!mapContainer.current || !mapboxgl || map.current) return;
-    
-    // Configure Mapbox with the access token
+    // Don't initialize if no container
+    if (!mapContainer.current) return;
+
+    // Set token
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-    
-    // Create the map instance
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,           // HTML element to render in
-      style: 'mapbox://styles/mapbox/light-v11', // Map style (light theme)
-      center: [-80.9, 32.2],                    // Starting position [lng, lat] - South Carolina coast
-      zoom: 9                                    // Starting zoom level
-    });
-    
-    // Add navigation controls (zoom buttons)
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    // Wait for the map to load before adding markers
-    map.current.on('load', () => {
-      // Add a marker for each station
+
+    // Initialize map if it doesn't exist
+    if (!map.current) {
+      // Create map
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [-80.9, 32.2],
+        zoom: 9
+      });
+
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    }
+
+    // Clear existing markers
+    const markers = document.querySelectorAll('.mapboxgl-marker');
+    markers.forEach(marker => marker.remove());
+
+    // When map is ready, add markers
+    const addMarkers = () => {
+      // Add markers for each station
       stations.forEach(station => {
-        // Create the popup content with HTML
         const popupContent = `
           <div style="padding: 8px;">
             <h3 style="margin: 0 0 8px 0; font-weight: bold;">${station.name}</h3>
@@ -66,22 +59,20 @@ export function StationMap({ stations }: StationMapProps) {
           </div>
         `;
         
-        // Create the popup
         const popup = new mapboxgl.Popup({
-          offset: 25,  // Offset from the marker
-          closeButton: false  // No close button (click away to close)
+          offset: 25,
+          closeButton: false
         }).setHTML(popupContent);
         
-        // Create the marker
         new mapboxgl.Marker({
-          color: '#0891b2'  // Ocean blue color to match the theme
+          color: '#0891b2'
         })
-          .setLngLat([station.lng, station.lat])  // Set position
-          .setPopup(popup)                        // Attach popup
-          .addTo(map.current!);                   // Add to map
+          .setLngLat([station.lng, station.lat])
+          .setPopup(popup)
+          .addTo(map.current!);
       });
       
-      // If we have stations, fit the map to show all of them
+      // Fit bounds to show all stations
       if (stations.length > 0) {
         const bounds = new mapboxgl.LngLatBounds();
         stations.forEach(station => {
@@ -89,22 +80,24 @@ export function StationMap({ stations }: StationMapProps) {
         });
         map.current!.fitBounds(bounds, { padding: 50 });
       }
-    });
-    
-    // Cleanup function (runs when component unmounts)
-    return () => {
-      map.current?.remove();
     };
-  }, [mapboxgl, stations]);  // Re-run if mapbox loads or stations change
-  
-  // Show loading state while mapbox is loading
-  if (!mapboxgl) {
-    return (
-      <div className="h-full w-full rounded-lg flex items-center justify-center bg-slate-50">
-        <div className="text-slate-500">Loading map...</div>
-      </div>
-    );
-  }
+
+    // Add markers when map is loaded or immediately if already loaded
+    if (map.current.loaded()) {
+      addMarkers();
+    } else {
+      map.current.once('load', addMarkers);
+    }
+
+    // Cleanup
+    return () => {
+      // Only remove the map when component unmounts
+      if (!stations || stations.length === 0) {
+        map.current?.remove();
+        map.current = null;
+      }
+    };
+  }, [stations]); // Re-run when stations change
   
   // The actual HTML element that will contain the map
   return (

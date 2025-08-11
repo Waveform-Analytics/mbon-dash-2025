@@ -209,8 +209,8 @@ export default function DashboardPage() {
       
       {/* Station Map - Separate section */}
       <div className="mb-12">
-        <div className="chart-container group">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between p-6 pb-4">
             <h3 className="text-lg font-semibold text-slate-900">Station Distribution Map</h3>
             {deploymentsLoading && (
               <span className="badge badge-ocean">Loading...</span>
@@ -219,16 +219,18 @@ export default function DashboardPage() {
           
           {/* Show the map if we have data, otherwise show placeholder */}
           {stationsForMap.length > 0 ? (
-            <StationMap stations={stationsForMap} />
+            <div className="h-[400px] w-full rounded-b-xl overflow-hidden">
+              <StationMap stations={stationsForMap} />
+            </div>
           ) : deploymentsLoading ? (
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
                 <div className="text-slate-500 font-medium mt-4">Loading station locations...</div>
               </div>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
               <div className="text-center">
                 <MapPinIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
                 <div className="text-slate-500 font-medium">No station data available</div>

@@ -7,7 +7,10 @@ import type {
   DetectionRecord as Detection
 } from '@/types/data';
 
-const DATA_URL = process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data';
+// Use proxy in development to bypass CORS
+const DATA_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? '/api/cdn'  // Use local proxy in development
+  : (process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data');
 
 // Re-export types with compatibility aliases
 export type { Detection };
