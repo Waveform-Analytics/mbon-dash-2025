@@ -110,6 +110,7 @@ graph LR
 
 ### 👩‍🔬 **For Scientists**
 - **[Getting Started](for-scientists/getting-started.md)**: Installation and first analysis
+- **[Editing Content](for-scientists/content-editing.md)**: How to update 
 - **[Data Analysis Workflow](for-scientists/data-analysis.md)**: Step-by-step analysis guide
 - **[Research Questions](for-scientists/research-questions.md)**: Scientific objectives and methods
 - **[Acoustic Indices](for-scientists/acoustic-indices.md)**: Understanding the 56 indices
