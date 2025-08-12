@@ -4,6 +4,8 @@ Interactive web dashboard for exploring marine acoustic monitoring data from the
 
 **Research Focus**: Can acoustic indices predict marine biodiversity patterns as an alternative to labor-intensive manual species detection?
 
+📚 **[View Full Documentation](https://waveform-analytics.github.io/mbon-dash-2025/)** - Complete guides for scientists, developers, and content editors
+
 ## Quick Start
 
 1. **Install dependencies**
@@ -30,7 +32,7 @@ Interactive web dashboard for exploring marine acoustic monitoring data from the
 
 ## Content Editing
 
-**For Scientists & Content Editors**: See the [Content Editing Guide](https://your-docs-site.github.io/for-scientists/content-editing) in our documentation for instructions on updating text content without programming knowledge.
+**For Scientists & Content Editors**: See the [Content Editing Guide](https://waveform-analytics.github.io/mbon-dash-2025/for-scientists/content-editing/) for instructions on updating text content without programming knowledge.
 
 ## For Scientists: Python + Web Dashboard Hybrid Approach
 
