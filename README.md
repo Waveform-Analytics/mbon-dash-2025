@@ -28,6 +28,10 @@ Interactive web dashboard for exploring marine acoustic monitoring data from the
    npm run dev      # Opens dashboard at http://localhost:3000
    ```
 
+## Content Editing
+
+**For Scientists & Content Editors**: See the [Content Editing Guide](https://your-docs-site.github.io/for-scientists/content-editing) in our documentation for instructions on updating text content without programming knowledge.
+
 ## For Scientists: Python + Web Dashboard Hybrid Approach
 
 This project uses a **hybrid architecture** designed for researchers:

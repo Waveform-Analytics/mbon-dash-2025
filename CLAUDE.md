@@ -62,7 +62,13 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 - Always use best practices and aim for tidiness and good documentation
 
 ## Development Guidelines
-- Don't write commit messages for me, or commit or push. 
+- Don't write commit messages for me, or commit or push.
+- **Content Helper Pattern**: All pages must use the content helper pattern for text management:
+  - Create a `page.content.tsx` file alongside each `page.tsx`
+  - Export a const object with all text content
+  - Include clear comments for non-programmer editors
+  - Keep text simple (no HTML formatting)
+  - Maintain all styling in the main page component
 
 ## Quick Start
 
@@ -326,6 +332,57 @@ npm run test:e2e          # End-to-end tests
 npm run test:coverage     # Test coverage report
 ```
 
+## Content Helper Pattern
+
+**IMPORTANT**: All pages MUST use this pattern for text content. See the MkDocs documentation at `docs_site/for-scientists/content-editing.md` and `docs_site/for-developers/content-helper-pattern.md` for full implementation details.
+
+**Purpose**: Separate text content from technical code to enable non-programmer collaboration.
+
+**Structure**: Each page has two files:
+- `page.tsx` - Technical dashboard code (components, logic, styling)
+- `page.content.tsx` - Text content only (safe for non-programmers to edit)
+
+**Key Rules**:
+- Never put user-facing text directly in `.tsx` files
+- Always create a corresponding `.content.tsx` file
+- Include clear editing instructions in content file comments
+- Keep content structure simple (strings only, no HTML/JSX)
+- Maintain all styling in the main component file
+
+**Example Content Helper** (`page.content.tsx`):
+```typescript
+/**
+ * CONTENT HELPER FILE - Safe for non-programmers to edit
+ * 
+ * EDITING RULES:
+ * - Only edit text between quotes: "like this text"
+ * - Do NOT change anything outside the quotes
+ * - Do NOT delete the commas or brackets
+ */
+
+export const PageContent = {
+  header: {
+    title: "Page Title",
+    subtitle: "Description of the page"
+  },
+  sections: {
+    main: "Main content text here"
+  }
+}
+```
+
+**Usage in Page** (`page.tsx`):
+```typescript
+import { PageContent } from './page.content';
+
+export default function Page() {
+  return (
+    <h1>{PageContent.header.title}</h1>
+    <p>{PageContent.header.subtitle}</p>
+  );
+}
+```
+
 ## Project Structure
 ```
 mbon-dashboard/
@@ -333,9 +390,13 @@ mbon-dashboard/
 │   ├── app/                    # Next.js 14 app directory
 │   │   ├── layout.tsx          # Root layout
 │   │   ├── page.tsx            # Homepage/overview
-│   │   ├── species/page.tsx    # Species analysis
-│   │   ├── stations/page.tsx   # Station comparison
-│   │   ├── temporal/page.tsx   # Temporal patterns
+│   │   ├── page.content.tsx    # Homepage text content
+│   │   ├── species/
+│   │   │   ├── page.tsx        # Species analysis
+│   │   │   └── page.content.tsx # Species text content
+│   │   ├── stations/
+│   │   │   ├── page.tsx        # Station comparison
+│   │   │   └── page.content.tsx # Station text content
 │   │   └── explorer/page.tsx   # Data explorer
 │   ├── components/
 │   │   ├── charts/             # Observable Plot visualizations

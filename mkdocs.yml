@@ -1,7 +1,7 @@
 site_name: MBON Marine Biodiversity Dashboard
 site_description: Interactive dashboard for exploring marine acoustic monitoring data and acoustic indices analysis
 site_author: MBON USC 2025 Project
-repo_url: https://github.com/yourusername/mbon-dash-2025  # Update with actual repo
+repo_url: https://github.com/Waveform-Analytics/mbon-dash-2025/
 repo_name: mbon-dash-2025
 docs_dir: docs_site
 site_dir: site
@@ -36,6 +36,9 @@ theme:
 plugins:
   - search
   - mermaid2
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
 
 markdown_extensions:
   - admonition
@@ -59,10 +62,10 @@ nav:
   - Home: index.md
   - For Scientists:
     - Getting Started: for-scientists/getting-started.md
+    - Content Editing: for-scientists/content-editing.md
     - Data Analysis Workflow: for-scientists/data-analysis.md
     - Research Questions: for-scientists/research-questions.md
     - Acoustic Indices: for-scientists/acoustic-indices.md
-    - Results Interpretation: for-scientists/results-interpretation.md
   - Data:
     - Data Structure: data/structure.md
     - Processing Pipeline: data/processing-pipeline.md
@@ -74,9 +77,11 @@ nav:
     - Missing Data Handling: analysis/missing-data.md
   - For Developers:
     - Architecture: for-developers/architecture.md
+    - Content Helper Pattern: for-developers/content-helper-pattern.md
     - API Reference: for-developers/api-reference.md
     - Contributing: for-developers/contributing.md
   - Deployment:
+    - GitHub Pages Setup: deployment/github-pages-setup.md
     - CDN Setup: deployment/cdn-setup.md
   - Reference:
     - Command Reference: reference/commands.md
@@ -86,4 +91,4 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/yourusername/mbon-dash-2025  # Update with actual repo
+      link: https://github.com/Waveform-Analytics/mbon-dash-2025/

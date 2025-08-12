@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useCoreData, useDeploymentMetadata, useTimelineData, DeploymentMetadata } from '@/lib/hooks/useData'
 import { StationMap } from '@/components/maps/StationMap';
+import { HomepageContent } from './page.content';
 import { SpeciesActivityHeatmap } from '@/components/charts/SpeciesActivityHeatmap';
 import { 
   MusicalNoteIcon, 
@@ -114,7 +115,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading marine biodiversity data...</p>
+          <p className="mt-4 text-slate-600">Loading acoustic annotations and indices...</p>
         </div>
       </div>
     )
@@ -125,12 +126,11 @@ export default function DashboardPage() {
       {/* Hero Section */}
       <div className="text-center mb-12">
         <h1 className="section-heading text-5xl">
-          Marine Biodiversity
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 to-coral-500"> Observatory</span>
+          {HomepageContent.hero.title}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 to-coral-500">{HomepageContent.hero.titleHighlight}</span>
         </h1>
         <p className="section-description">
-          Exploring relationships between computed acoustic indices and species presence using data collected at three
-          stations in May River, South Carolina.
+          {HomepageContent.hero.subtitle}
         </p>
       </div>
           
@@ -140,28 +140,28 @@ export default function DashboardPage() {
           <div className="text-3xl font-bold text-ocean-600 mb-2">
             {metadata?.data_summary.total_detections.toLocaleString() || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600">Total Detections</div>
+          <div className="text-sm font-medium text-slate-600">{HomepageContent.metrics.detections}</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-coral-500 mb-2">
             {species?.length || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600">Species Tracked</div>
+          <div className="text-sm font-medium text-slate-600">{HomepageContent.metrics.species}</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-ocean-600 mb-2">
             {stations?.length || '-'}
           </div>
-          <div className="text-sm font-medium text-slate-600">Monitoring Stations</div>
+          <div className="text-sm font-medium text-slate-600">{HomepageContent.metrics.stations}</div>
         </div>
         
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-slate-700 mb-2">
-            2018-2021
+            2018 & 2021
           </div>
-          <div className="text-sm font-medium text-slate-600">Study Period</div>
+          <div className="text-sm font-medium text-slate-600">{HomepageContent.metrics.studyPeriod}</div>
         </div>
       </div>
 
@@ -180,26 +180,26 @@ export default function DashboardPage() {
           ) : timelineLoading ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.speciesChart.title}</h3>
                 <span className="badge badge-ocean">Loading...</span>
               </div>
               <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-                  <div className="text-slate-500 font-medium mt-4">Loading species detection data...</div>
+                  <div className="text-slate-500 font-medium mt-4">{HomepageContent.speciesChart.loadingText}</div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">Species Activity Timeline</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.speciesChart.title}</h3>
                 <span className="badge badge-red">No Data</span>
               </div>
               <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
                 <div className="text-center">
                   <ChartBarIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
-                  <div className="text-slate-500 font-medium">No detection data available</div>
+                  <div className="text-slate-500 font-medium">{HomepageContent.speciesChart.noDataText}</div>
                 </div>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
       <div className="mb-12">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between p-6 pb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Station Distribution Map</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.stationMap.title}</h3>
             {deploymentsLoading && (
               <span className="badge badge-ocean">Loading...</span>
             )}
@@ -226,14 +226,14 @@ export default function DashboardPage() {
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-                <div className="text-slate-500 font-medium mt-4">Loading station locations...</div>
+                <div className="text-slate-500 font-medium mt-4">{HomepageContent.stationMap.loadingText}</div>
               </div>
             </div>
           ) : (
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
               <div className="text-center">
                 <MapPinIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
-                <div className="text-slate-500 font-medium">No station data available</div>
+                <div className="text-slate-500 font-medium">{HomepageContent.stationMap.noDataText}</div>
               </div>
             </div>
           )}
@@ -247,7 +247,7 @@ export default function DashboardPage() {
             <ExclamationTriangleIcon className="w-6 h-6 text-red-500 mr-3" />
             <div>
               <p className="text-red-800 font-medium">
-                Unable to connect to data source
+                {HomepageContent.statusMessages.connectionError}
               </p>
               <p className="text-red-600 text-sm mt-1">
                 {error.message}
@@ -263,10 +263,10 @@ export default function DashboardPage() {
             <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3" />
             <div>
               <p className="text-green-800 font-medium">
-                Data connection successful
+                {HomepageContent.statusMessages.connectionSuccess}
               </p>
               <p className="text-green-600 text-sm mt-1">
-                Last updated: {new Date(metadata.generated_at).toLocaleDateString()}
+                {HomepageContent.statusMessages.lastUpdated}{new Date(metadata.generated_at).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -277,32 +277,32 @@ export default function DashboardPage() {
       <div className="card-grid gap-4">
         <a href="/acoustic-biodiversity" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
           <MusicalNoteIcon className="w-8 h-8 text-ocean-500 mb-2" />
-          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Acoustic Analysis</h3>
-          <p className="text-sm text-slate-600 mt-1">Which acoustic indices best predict marine biodiversity?</p>
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">{HomepageContent.quickNavigation.acousticAnalysis.title}</h3>
+          <p className="text-sm text-slate-600 mt-1">{HomepageContent.quickNavigation.acousticAnalysis.description}</p>
         </a>
         
         <a href="/environmental-factors" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
           <SunIcon className="w-8 h-8 text-coral-500 mb-2" />
-          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Environmental Factors</h3>
-          <p className="text-sm text-slate-600 mt-1">How do temperature, depth, and seasonality affect indices?</p>
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">{HomepageContent.quickNavigation.environmentalFactors.title}</h3>
+          <p className="text-sm text-slate-600 mt-1">{HomepageContent.quickNavigation.environmentalFactors.description}</p>
         </a>
         
         <a href="/acoustic-glossary" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
           <BookOpenIcon className="w-8 h-8 text-ocean-500 mb-2" />
-          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Index Guide</h3>
-          <p className="text-sm text-slate-600 mt-1">Understanding acoustic indices and their biological meaning</p>
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">{HomepageContent.quickNavigation.indexGuide.title}</h3>
+          <p className="text-sm text-slate-600 mt-1">{HomepageContent.quickNavigation.indexGuide.description}</p>
         </a>
         
         <a href="/stations" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-coral-300 hover:shadow-md transition-all">
           <MapPinIcon className="w-8 h-8 text-coral-500 mb-2" />
-          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">Station Profiles</h3>
-          <p className="text-sm text-slate-600 mt-1">Spatial context and deployment details for 9M, 14M, 37M</p>
+          <h3 className="font-semibold text-slate-900 group-hover:text-coral-700">{HomepageContent.quickNavigation.stationProfiles.title}</h3>
+          <p className="text-sm text-slate-600 mt-1">{HomepageContent.quickNavigation.stationProfiles.description}</p>
         </a>
         
         <a href="/explorer" className="group p-6 bg-white rounded-xl border border-slate-200 hover:border-ocean-300 hover:shadow-md transition-all">
           <MagnifyingGlassIcon className="w-8 h-8 text-ocean-500 mb-2" />
-          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">Data Explorer</h3>
-          <p className="text-sm text-slate-600 mt-1">Filter and explore the full dataset</p>
+          <h3 className="font-semibold text-slate-900 group-hover:text-ocean-700">{HomepageContent.quickNavigation.dataExplorer.title}</h3>
+          <p className="text-sm text-slate-600 mt-1">{HomepageContent.quickNavigation.dataExplorer.description}</p>
         </a>
       </div>
     </div>
