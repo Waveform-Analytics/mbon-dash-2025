@@ -68,13 +68,8 @@ nav:
     - Acoustic Indices: for-scientists/acoustic-indices.md
   - Data:
     - Data Structure: data/structure.md
-    - Processing Pipeline: data/processing-pipeline.md
-    - File Formats: data/formats.md
-    - Quality Control: data/validation.md
   - Analysis:
     - PCA Workflow: analysis/pca-workflow.md
-    - Correlation Analysis: analysis/correlation-analysis.md
-    - Missing Data Handling: analysis/missing-data.md
   - For Developers:
     - Architecture: for-developers/architecture.md
     - Content Helper Pattern: for-developers/content-helper-pattern.md
@@ -85,8 +80,6 @@ nav:
     - CDN Setup: deployment/cdn-setup.md
   - Reference:
     - Command Reference: reference/commands.md
-    - Troubleshooting: reference/troubleshooting.md
-    - Glossary: reference/glossary.md
 
 extra:
   social:

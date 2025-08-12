@@ -250,7 +250,7 @@ Components often represent:
 ## Next Steps
 
 1. **[Validate with species data](../for-scientists/data-analysis.md#phase-4-correlation-analysis)** - Test component-species relationships
-2. **[Environmental correction](../data/structure.md#environmental-interactions)** - Account for temperature/depth effects
+2. **[Environmental correction](../data/structure.md)** - Account for temperature/depth effects
 3. **[Dashboard visualization](../for-developers/architecture.md)** - Explore results interactively
 
 The PCA workflow provides the foundation for identifying which acoustic indices are most informative for biodiversity assessment, enabling more efficient monitoring strategies.

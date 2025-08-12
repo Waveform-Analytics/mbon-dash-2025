@@ -225,4 +225,4 @@ theme:
 !!! success "Ready to Deploy"
     Your documentation site is now configured for automatic deployment to GitHub Pages! Every time you update documentation files and push to main, the site will rebuild automatically.
 
-*Next: [CDN Setup](cdn-setup.md) | Previous: [Deployment Overview](../deployment.md)*
+*Next: [CDN Setup](cdn-setup.md)*

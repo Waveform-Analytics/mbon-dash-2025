@@ -116,18 +116,15 @@ graph LR
 
 ### 📊 **Data & Analysis**
 - **[Data Structure](data/structure.md)**: How data is organized
-- **[Processing Pipeline](data/processing-pipeline.md)**: Step-by-step data processing
 - **[PCA Workflow](analysis/pca-workflow.md)**: Principal component analysis
-- **[Correlation Analysis](analysis/correlation-analysis.md)**: Index-species relationships
 
 ### 👨‍💻 **For Developers**
 - **[Architecture](for-developers/architecture.md)**: Technical overview
-- **[Dashboard Development](for-developers/dashboard.md)**: Frontend development guide
-- **[Deployment](for-developers/deployment.md)**: Hosting and CDN setup
+- **[Content Helper Pattern](for-developers/content-helper-pattern.md)**: Content editing system
+- **[GitHub Pages Setup](deployment/github-pages-setup.md)**: Documentation deployment
 
 ### 📚 **Reference**
 - **[Command Reference](reference/commands.md)**: Complete command list
-- **[Troubleshooting](reference/troubleshooting.md)**: Common issues and solutions
 
 ## Project Status
 
@@ -138,8 +135,8 @@ This project is actively under development with a focus on acoustic indices inte
 
 ## Getting Help
 
-- **Data Issues**: Check [validation guide](data/validation.md) or run `npm run validate-data`
-- **Analysis Questions**: See [research questions](for-scientists/research-questions.md) and [troubleshooting](reference/troubleshooting.md)
+- **Data Issues**: Run `npm run validate-data` or check the data structure guide
+- **Analysis Questions**: See [research questions](for-scientists/research-questions.md)
 - **Technical Issues**: Check [architecture guide](for-developers/architecture.md)
 
 ---

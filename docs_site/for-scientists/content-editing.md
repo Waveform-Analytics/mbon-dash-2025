@@ -190,4 +190,4 @@ Before saving any content file, verify:
 !!! success "Ready to Edit"
     You're now ready to safely edit dashboard content! Start with small changes and always double-check your syntax. The content helper pattern ensures your scientific expertise can improve the dashboard without technical risks.
 
-*For technical implementation details, see the [Developer Guide](../for-developers/architecture.md#content-helper-pattern).*
+*For technical implementation details, see the [Content Helper Pattern Guide](../for-developers/content-helper-pattern.md).*
