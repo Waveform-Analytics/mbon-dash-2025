@@ -113,63 +113,104 @@ def process_detection_files():
     return combined_df, column_lookup
 
 def process_environmental_files():
-    """Process temperature and depth files."""
+    """Process temperature and depth files - merge by timestamp where possible."""
     print("🌡️  Processing environmental data files...")
     
-    environmental_data = []
+    merged_data = []
     
     for year in YEARS_OF_INTEREST:  # Only 2018, 2021
         year_dir = RAW_DATA_DIR / year
         if not year_dir.exists():
             continue
-            
-        # Process temperature files
-        temp_files = list(year_dir.glob("Master_*_Temp_*.xlsx"))
-        for file in temp_files:
-            try:
-                year, station = extract_metadata_from_filename(file)
-                
-                # FILTER: Only process stations of interest
-                if station not in STATIONS_OF_INTEREST:
-                    print(f"  ⏭️  Skipping temperature {station} (not in stations of interest)")
-                    continue
-                    
-                # FIX: Use sheet 1 instead of sheet 0
-                df = pd.read_excel(file, sheet_name=1)
-                df['year'] = year
-                df['station'] = station
-                df['measurement_type'] = 'temperature'
-                df['source_file'] = file.name
-                environmental_data.append(df)
-                print(f"  📊 Processed temperature: {file.name}")
-            except Exception as e:
-                print(f"  ❌ Error processing {file.name}: {e}")
         
-        # Process depth files
-        depth_files = list(year_dir.glob("Master_*_Depth_*.xlsx"))
-        for file in depth_files:
-            try:
-                year, station = extract_metadata_from_filename(file)
+        for station in STATIONS_OF_INTEREST:
+            # Try to load both temperature and depth for this station/year
+            temp_file = year_dir / f"Master_{station}_Temp_{year}.xlsx"
+            depth_file = year_dir / f"Master_{station}_Depth_{year}.xlsx"
+            
+            temp_df = None
+            depth_df = None
+            
+            # Load temperature data
+            if temp_file.exists():
+                try:
+                    temp_df = pd.read_excel(temp_file, sheet_name=1)
+                    temp_df = temp_df.rename(columns={'Date and time': 'datetime'})
+                    # Round timestamps to nearest second to handle millisecond differences
+                    temp_df['datetime'] = pd.to_datetime(temp_df['datetime']).dt.round('s')
+                    print(f"  📊 Loaded temperature: {temp_file.name}")
+                except Exception as e:
+                    print(f"  ❌ Error processing {temp_file.name}: {e}")
+            
+            # Load depth data
+            if depth_file.exists():
+                try:
+                    depth_df = pd.read_excel(depth_file, sheet_name=1)
+                    depth_df = depth_df.rename(columns={'Date and time': 'datetime'})
+                    # Round timestamps to nearest second to handle millisecond differences
+                    depth_df['datetime'] = pd.to_datetime(depth_df['datetime']).dt.round('s')
+                    print(f"  📊 Loaded depth: {depth_file.name}")
+                except Exception as e:
+                    print(f"  ❌ Error processing {depth_file.name}: {e}")
+            
+            # Merge or append based on what's available
+            if temp_df is not None and depth_df is not None:
+                # Merge on datetime where possible
+                merged = pd.merge(temp_df, depth_df, on='datetime', how='outer', suffixes=('_temp', '_depth'))
                 
-                # FILTER: Only process stations of interest
-                if station not in STATIONS_OF_INTEREST:
-                    print(f"  ⏭️  Skipping depth {station} (not in stations of interest)")
-                    continue
-                    
-                # FIX: Use sheet 1 instead of sheet 0
-                df = pd.read_excel(file, sheet_name=1)
-                df['year'] = year
-                df['station'] = station
-                df['measurement_type'] = 'depth'
-                df['source_file'] = file.name
-                environmental_data.append(df)
-                print(f"  📊 Processed depth: {file.name}")
-            except Exception as e:
-                print(f"  ❌ Error processing {file.name}: {e}")
+                # Set measurement_type based on what data is actually present in each row
+                conditions = [
+                    (merged['Water temp (°C)'].notna() & merged['Water depth (m)'].notna()),
+                    (merged['Water temp (°C)'].notna() & merged['Water depth (m)'].isna()),
+                    (merged['Water temp (°C)'].isna() & merged['Water depth (m)'].notna())
+                ]
+                choices = ['combined', 'temperature', 'depth']
+                merged['measurement_type'] = np.select(conditions, choices, default='none')
+                
+                print(f"  🔗 Merged temp & depth for {station} {year}: {len(merged)} records")
+                
+                # Report merge quality
+                combined_count = (merged['measurement_type'] == 'combined').sum()
+                temp_only = (merged['measurement_type'] == 'temperature').sum()
+                depth_only = (merged['measurement_type'] == 'depth').sum()
+                print(f"     Combined: {combined_count}, Temp only: {temp_only}, Depth only: {depth_only}")
+                
+            elif temp_df is not None:
+                merged = temp_df
+                merged['measurement_type'] = 'temperature'
+                merged['Water depth (m)'] = None
+            elif depth_df is not None:
+                merged = depth_df
+                merged['measurement_type'] = 'depth'
+                merged['Water temp (°C)'] = None
+            else:
+                continue
+            
+            # Add metadata
+            merged['year'] = year
+            merged['station'] = station
+            # datetime is already converted and rounded above
+            merged_data.append(merged)
     
-    if environmental_data:
-        combined_env = pd.concat(environmental_data, ignore_index=True)
+    if merged_data:
+        combined_env = pd.concat(merged_data, ignore_index=True)
         print(f"✅ Combined {len(combined_env)} environmental records")
+        
+        # Report on data completeness using measurement_type field
+        combined_count = (combined_env['measurement_type'] == 'combined').sum()
+        temp_only = (combined_env['measurement_type'] == 'temperature').sum()
+        depth_only = (combined_env['measurement_type'] == 'depth').sum()
+        none_count = (combined_env['measurement_type'] == 'none').sum() if 'none' in combined_env['measurement_type'].values else 0
+        
+        print(f"  📊 Data completeness (by measurement_type):")
+        print(f"     - Combined (both): {combined_count:,} records")
+        print(f"     - Temperature only: {temp_only:,} records")
+        print(f"     - Depth only: {depth_only:,} records")
+        if none_count > 0:
+            print(f"     - None/missing: {none_count:,} records")
+        
+        # Rename datetime back for consistency
+        combined_env = combined_env.rename(columns={'datetime': 'Date and time'})
         return combined_env
     else:
         print("⚠️  No environmental data files found")
