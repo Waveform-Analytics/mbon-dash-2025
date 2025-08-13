@@ -1,14 +1,14 @@
 # Marine Biodiversity Dashboard (MBON-USC-2025)
 
 ## Project Overview
-Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as cost-effective proxies for complex biodiversity monitoring. The core research question: "Can computed acoustic indices help us understand and predict marine biodiversity patterns as an alternative to expensive, labor-intensive manual species detection methods?"
+Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as proxies for complex biodiversity monitoring. The core research question: "Can computed acoustic indices help us understand and predict marine biodiversity patterns as an alternative to labor-intensive manual species detection methods?"
 
 **Research Focus**: Analyzing relationships between 56+ acoustic indices and species presence across 3 stations in May River, South Carolina, with emphasis on identifying the most informative indices for biodiversity assessment and understanding environmental confounding factors.
 
 **Key Goals**:
 - Identify which acoustic indices best predict species detection patterns
 - Use PCA to reduce 56 indices to a smaller set of "super indices" 
-- Develop cost-effective alternatives to manual species annotation
+- Develop automated alternatives to manual species annotation
 - Understand spatial (between stations) and temporal patterns in acoustic environments
 
 ## Data Structure
@@ -658,10 +658,10 @@ npm run data-stats        # View data summary statistics
    - Should indices be environmentally corrected for better biodiversity assessment?
    - Which indices are most/least affected by environmental confounders?
 
-6. **Cost-Effectiveness Assessment**
+6. **Method Effectiveness Assessment**
    - Can a reduced index set provide equivalent biodiversity information to manual annotation?
-   - What is the processing time/computational cost trade-off for different index sets?
-   - ROI analysis: effort savings vs information loss
+   - What is the processing time/computational trade-off for different index sets?
+   - Analysis of information retention vs simplification
 
 ### **🔮 Future Research Questions (Phase 3)**
 7. **Practical Implementation**
@@ -676,7 +676,7 @@ npm run data-stats        # View data summary statistics
 
 ### **🎓 Science Communication Goals**
 - Make acoustic indices accessible to non-acoustics researchers
-- Demonstrate cost-effectiveness of acoustic monitoring for biodiversity assessment
+- Demonstrate effectiveness of acoustic monitoring for biodiversity assessment
 - Provide actionable recommendations for marine monitoring programs
 
 ## Implementation Timeline & Milestones
@@ -732,7 +732,7 @@ npm run data-stats        # View data summary statistics
 ### **Success Metrics**
 - **Technical**: Pipeline processes new acoustic index files automatically
 - **Scientific**: Identify <10 key indices that explain >70% of biodiversity variation
-- **Practical**: Demonstrate computational cost savings vs manual annotation
+- **Practical**: Demonstrate automated analysis capabilities vs manual annotation
 - **Communication**: Clear visualizations showing index-biodiversity relationships
 
 ## Development Notes

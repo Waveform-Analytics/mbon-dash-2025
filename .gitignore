@@ -71,3 +71,5 @@ public/data/
 # MkDocs generated site
 site/
 /.junie
+
+scripts/exploratory/*.png
