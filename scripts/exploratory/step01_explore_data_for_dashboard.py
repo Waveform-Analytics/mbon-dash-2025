@@ -7,7 +7,7 @@ modify visualizations, and experiment with different aggregations to
 find the most interesting patterns.
 
 Usage:
-    uv run scripts/exploratory/explore_data_for_dashboard.py
+    uv run scripts/exploratory/step01_explore_data_for_dashboard.py
 """
 
 import pandas as pd
@@ -181,9 +181,17 @@ def explore_temporal_patterns(df, species_cols):
         ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('temp_plots.png', dpi=150, bbox_inches='tight')
+    
+    # Create figures directory if it doesn't exist
+    script_dir = Path(__file__).resolve().parent
+    figures_dir = script_dir / "figures"
+    figures_dir.mkdir(exist_ok=True)
+    
+    # Save with informative filename
+    filename = figures_dir / "step01_monthly_detection_patterns_top_species.png"
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
-    print("  ✓ Saved plot")
+    print(f"  ✓ Saved plot: {filename.name}")
     
     # 3. Seasonal patterns
     seasonal = df.groupby(['season', 'station'])[species_cols].sum()
@@ -223,9 +231,17 @@ def explore_station_patterns(df, species_cols):
         ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('temp_plots.png', dpi=150, bbox_inches='tight')
+    
+    # Create figures directory if it doesn't exist
+    script_dir = Path(__file__).resolve().parent
+    figures_dir = script_dir / "figures"
+    figures_dir.mkdir(exist_ok=True)
+    
+    # Save with informative filename
+    filename = figures_dir / "step01_station_comparison_top10_species.png"
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
-    print("  ✓ Saved plot")
+    print(f"  ✓ Saved plot: {filename.name}")
     
     return station_activity
 
@@ -253,9 +269,17 @@ def explore_species_patterns(df, species_cols, biological, non_biological):
                 cbar_kws={'label': 'Co-occurrence Count'})
     plt.title('Species Co-occurrence Matrix (Top 15)')
     plt.tight_layout()
-    plt.savefig('temp_plots.png', dpi=150, bbox_inches='tight')
+    
+    # Create figures directory if it doesn't exist
+    script_dir = Path(__file__).resolve().parent
+    figures_dir = script_dir / "figures"
+    figures_dir.mkdir(exist_ok=True)
+    
+    # Save with informative filename
+    filename = figures_dir / "step01_species_cooccurrence_matrix_top15.png"
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
-    print("  ✓ Saved plot")
+    print(f"  ✓ Saved plot: {filename.name}")
     
     # Biological vs non-biological patterns
     bio_cols = [s['short_name'] for s in biological if s['short_name'] in species_cols]

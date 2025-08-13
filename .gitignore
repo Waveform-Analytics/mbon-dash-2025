@@ -72,4 +72,5 @@ public/data/
 site/
 /.junie
 
-scripts/exploratory/*.png
+# Generated plots from exploratory scripts
+scripts/**/*.png
