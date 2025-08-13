@@ -29,25 +29,24 @@ How to set up Cloudflare R2 for storing and serving data files.
 
 ### Directory Structure on CDN
 
-Mirror the local structure:
+Mirror your local `data/cdn/` structure:
 
 ```
 /processed/              # Dashboard JSON files
   detections.json
+  environmental.json
+  deployment_metadata.json
   stations.json
   species.json
   metadata.json
-  deployment_metadata.json
-  environmental.json
-  acoustic.json
 
-/raw-data/              # Raw data files (114MB+)
+/raw-data/              # Raw Excel files (114MB+)
   /2018/
-    Master_Manual_9M_2h_2018.xlsx
-    Master_9M_Temp_2018.xlsx
-    [other 2018 files...]
+    Master_Manual_[STATION]_2h_2018.xlsx
+    Master_[STATION]_Temp_2018.xlsx
+    Master_[STATION]_Depth_2018.xlsx
   /2021/
-    [2021 files...]
+    [Same structure for 2021]
   /indices/raw/
     Acoustic_Indices_9m_FullBW_v1.csv
   1_Montie Lab_metadata_deployments_2017 to 2022.xlsx

@@ -1,329 +1,250 @@
 # Command Reference
 
-Complete reference for all available commands in the MBON project.
-
-!!! tip "Two Command Interfaces"
-    All commands can be run either directly with Python (`uv run`) or through npm (`npm run`). Both use the same Python environment and produce identical results.
+All available commands for data processing, analysis, and dashboard operations.
 
 ## Quick Reference
 
-| Task | npm Command | Python Command |
-|------|-------------|----------------|
-| **Download raw data** | `npm run download-data` | `uv run scripts/download_raw_data.py` |
-| **Full pipeline** | `npm run build-data` | `uv run scripts/pipeline/run_full_pipeline.py` |
-| **PCA analysis** | `npm run build-analysis` | `uv run scripts/analysis/pca_analysis.py` |
-| **Data validation** | `npm run validate-data` | `uv run scripts/legacy/validate_data.py` |
-| **Data statistics** | `npm run data-stats` | `uv run scripts/legacy/data_stats.py` |
-| **Start dashboard** | `npm run dev` | N/A |
+| Task | Command | Purpose |
+|------|---------|---------|
+| **Download data** | `npm run download-data` | Get raw data from CDN |
+| **Process data** | `npm run process-data` | Excel → JSON for dashboard |
+| **Validate** | `npm run validate-data` | Check data quality |
+| **Statistics** | `npm run data-stats` | View data summary |
+| **Dashboard** | `npm run dev` | Start interactive dashboard |
 
-## Data Processing Commands
+## Data Processing
 
-### Download Raw Data
+### Core Workflow
 
-=== "npm"
-    ```bash
-    npm run download-data
-    ```
+```bash
+# 1. Download raw data from CDN
+npm run download-data
 
-=== "Python"
-    ```bash
-    uv run scripts/download_raw_data.py
-    ```
+# 2. Process Excel files to JSON
+npm run process-data
 
-Downloads raw data files from CDN to local `data/` directory. Required before running any processing commands.
+# 3. Validate results
+npm run validate-data
 
-**Why CDN storage**: Raw data files total 114MB+, too large for GitHub repository.
-
-**Files downloaded**:
-- Detection data (Excel files): ~6 files for 3 stations × 2 years
-- Environmental data (temperature/depth): ~12 files  
-- Acoustic indices: ~7 files (CSV and Excel)
-- Deployment metadata: 1 Excel file
-
-**Prerequisites**: Internet connection, CDN configured with raw data files.
-
-### Full Pipeline
-
-=== "npm"
-    ```bash
-    npm run build-data
-    ```
-
-=== "Python"
-    ```bash
-    uv run scripts/pipeline/run_full_pipeline.py
-    ```
-
-Runs the complete data processing pipeline:
-1. Process raw Excel/CSV files  
-2. Align temporal windows (hourly → 2-hour)
-3. Join detection + environmental + acoustic data
-4. Handle missing data with interpolation
-5. Run PCA analysis
-6. Prepare data for dashboard
-
-**Output**: Creates files in `processed/`, `analysis/`, and `cdn/` directories.
-
-### Individual Pipeline Steps
-
-Process data step-by-step for development and debugging:
-
-=== "npm"
-    ```bash
-    npm run pipeline:step1    # Process raw data
-    npm run pipeline:step2    # Temporal alignment  
-    npm run pipeline:step3    # Join datasets
-    npm run pipeline:step4    # Handle missing data
-    npm run pipeline:step5    # Run PCA analysis
-    npm run pipeline:step6    # Prepare dashboard data
-    ```
-
-=== "Python"
-    ```bash
-    uv run scripts/pipeline/steps/1_process_raw_data.py
-    uv run scripts/pipeline/steps/2_align_temporal_windows.py
-    uv run scripts/pipeline/steps/3_join_datasets.py
-    uv run scripts/pipeline/steps/4_handle_missing_data.py
-    uv run scripts/pipeline/steps/5_run_pca_analysis.py
-    uv run scripts/pipeline/steps/6_prepare_dashboard_data.py
-    ```
-
-**Use cases**:
-- Debugging processing issues
-- Running partial updates
-- Testing new processing logic
-
-## Analysis Commands
-
-### PCA and Correlation Analysis
-
-=== "npm"
-    ```bash
-    npm run build-analysis
-    ```
-
-=== "Python"
-    ```bash
-    uv run scripts/analysis/pca_analysis.py
-    uv run scripts/analysis/correlation_analysis.py
-    ```
-
-Runs statistical analysis:
-- Principal component analysis on acoustic indices
-- Index-species correlation matrices
-- Component interpretation and index ranking
-
-**Output**: Results saved to `analysis/pca/` and `analysis/correlations/`
-
-### Individual Analysis Scripts
-
-=== "Python"
-    ```bash
-    uv run scripts/analysis/pca_analysis.py           # PCA only
-    uv run scripts/analysis/correlation_analysis.py   # Correlations only
-    uv run scripts/analysis/biodiversity_models.py    # Predictive models
-    ```
-
-## Data Quality Commands
-
-### Validation
-
-=== "npm"
-    ```bash
-    npm run validate-data
-    ```
-
-=== "Python"
-    ```bash
-    uv run scripts/legacy/validate_data.py
-    ```
-
-Checks data integrity:
-- File existence and readability
-- Expected data structures
-- Missing data patterns
-- Cross-file consistency
-
-**Example output**:
-```
-✓ Detections: 26,280 records from 3 stations
-✓ Environmental: 237,334 records
-✓ Stations: 3 stations configured
-✓ Species: 28 species identified
+# 4. View statistics
+npm run data-stats
 ```
 
-### Statistics
+### Individual Commands
 
-=== "npm"
-    ```bash
-    npm run data-stats
-    ```
+#### `npm run download-data`
+Downloads raw Excel files from CDN to `data/cdn/raw-data/`
+- Detection files (6 Excel files)
+- Environmental data (12 Excel files)
+- Deployment metadata (1 Excel file)
 
-=== "Python"
-    ```bash
-    uv run scripts/legacy/data_stats.py
-    ```
+#### `npm run process-data`
+Transforms raw Excel → dashboard JSON in `data/cdn/processed/`
+- Creates: detections.json, environmental.json, stations.json, species.json
+- Output: 26,280 detection records, 237,334 environmental records
 
-Generates comprehensive data summaries:
-- Record counts by station and year
+#### `npm run validate-data`
+Checks data integrity and completeness
+- Verifies all required files exist
+- Validates JSON structure
+- Reports missing fields
+
+#### `npm run data-stats`
+Generates comprehensive data summary
+- Record counts by station/year
 - Species detection frequencies
-- File sizes and completeness
-- Top species by detection count
+- File sizes and data quality
 
-## Dashboard Commands
+#### `npm run check-freshness`
+Checks if data needs reprocessing based on file timestamps
 
-### Development Server
+## Dashboard Operations
+
+### Development
 
 ```bash
-npm run dev
+# Start development server
+npm run dev                 # http://localhost:3000
+
+# Process data + start server
+npm run dev:fresh
+
+# Clean build + start
+npm run dev:clean
 ```
 
-Starts the interactive dashboard at `http://localhost:3000`.
-
-**Prerequisites**:
-- Processed data available in `cdn/` directory
-- Environment configured in `.env.local`
-
-### Production Build
+### Production
 
 ```bash
+# Build for production
 npm run build
+
+# Start production server
 npm run start
 ```
-
-Builds optimized dashboard for production deployment.
-
-## Legacy Commands
-
-Original processing scripts maintained for backward compatibility:
-
-=== "npm"
-    ```bash
-    npm run build-data-legacy    # Original Excel → JSON processing
-    ```
-
-=== "Python"
-    ```bash
-    uv run scripts/legacy/process_data.py
-    uv run scripts/legacy/check_data_freshness.py
-    ```
-
-**Use cases**:
-- Comparing with new pipeline results
-- Processing data without acoustic indices
-- Troubleshooting pipeline issues
-
-## Environment Commands
-
-### Python Environment
-
-```bash
-# Install/update Python dependencies
-uv sync
-
-# Add new Python package
-uv add package-name
-
-# Check Python environment
-uv run python --version
-```
-
-### Node.js Environment
-
-```bash
-# Install/update Node.js dependencies  
-npm install
-
-# Add new Node.js package
-npm install package-name
-
-# Check versions
-npm run type-check    # TypeScript checking
-npm run lint          # Code linting
-```
-
-## Development Commands
 
 ### Code Quality
 
 ```bash
-npm run lint          # ESLint checking
-npm run type-check    # TypeScript validation
+# TypeScript checking
+npm run type-check
+
+# ESLint validation
+npm run lint
 ```
 
-### Documentation
+## Data Analysis (Python)
+
+### Direct Python Scripts
 
 ```bash
-# Build documentation site (this site!)
-uv run mkdocs serve
+# Run any script directly
+uv run scripts/exploratory/your_analysis.py
 
-# Deploy documentation
+# Dashboard data preparation
+uv run scripts/dashboard_prep/process_excel_to_json.py
+
+# Utilities
+uv run scripts/utils/validate_data.py
+uv run scripts/utils/data_statistics.py
+```
+
+### Working with Data
+
+```python
+# Load processed data in Python
+import pandas as pd
+import json
+
+with open('data/cdn/processed/detections.json') as f:
+    detections = pd.DataFrame(json.load(f))
+
+# Your analysis here
+detections.groupby('station').size()
+```
+
+## Documentation
+
+```bash
+# Serve documentation locally
+uv run mkdocs serve         # http://localhost:8000
+
+# Build documentation
 uv run mkdocs build
 ```
 
-## Troubleshooting Commands
+## Environment Management
 
-### Check Installation
+### Python (uv)
 
 ```bash
-# Verify Python environment
-uv run python -c "import pandas, numpy, sklearn; print('Python OK')"
+# Install/update dependencies
+uv sync
 
-# Verify Node.js environment
-npm run --version
+# Add new package
+uv add pandas
 
-# Check data availability  
-ls -la data/indices/raw/
+# Check environment
+uv run python --version
 ```
 
-### Debug Data Issues
+### Node.js
 
 ```bash
-# Detailed validation with debug info
-uv run scripts/legacy/validate_data.py --verbose
+# Install dependencies
+npm install
 
-# Check specific file
-uv run python -c "import pandas as pd; print(pd.read_csv('data/indices/raw/Acoustic_Indices_9M_FullBW_v1.csv').info())"
+# Add new package
+npm install package-name
+
+# Update all packages
+npm update
 ```
 
-### Reset Environment
+## Troubleshooting
+
+### Data Issues
 
 ```bash
-# Clean generated files
-rm -rf processed/ analysis/ cdn/
+# If data is missing
+npm run download-data
+npm run process-data
 
-# Reinstall dependencies
+# If validation fails
+npm run validate-data
+# Check error messages for specific issues
+```
+
+### Environment Issues
+
+```bash
+# Reset Python environment
 uv sync --reinstall
-npm install --force
 
-# Rebuild from scratch
-npm run build-data
+# Reset Node modules
+rm -rf node_modules
+npm install
 ```
 
-## Command Options
+### Clean Slate
 
-Some commands accept optional parameters:
-
-### Pipeline Options
 ```bash
-# Run specific pipeline steps
-uv run scripts/pipeline/run_partial_pipeline.py --steps 1,2,3
+# Remove all generated data
+rm -rf data/
 
-# Skip certain validations
-uv run scripts/pipeline/run_full_pipeline.py --skip-validation
+# Rebuild everything
+npm run download-data
+npm run process-data
+npm run dev
 ```
 
-### Analysis Options
+## File Locations
+
+| Data Type | Location |
+|-----------|----------|
+| Raw data | `data/cdn/raw-data/` |
+| Processed JSON | `data/cdn/processed/` |
+| Analysis results | `data/intermediate_results/` |
+| Scripts | `scripts/` |
+| Dashboard | `src/` |
+
+## Common Workflows
+
+### New Analysis
+
 ```bash
-# PCA with specific number of components
-uv run scripts/analysis/pca_analysis.py --n-components 5
+# 1. Create script in exploratory folder
+touch scripts/exploratory/my_analysis.py
 
-# Correlation analysis with specific method
-uv run scripts/analysis/correlation_analysis.py --method spearman
+# 2. Run your analysis
+uv run scripts/exploratory/my_analysis.py
+
+# 3. Save results
+# Output to data/intermediate_results/
 ```
 
-!!! note "Parameter Documentation"
-    Detailed parameter documentation for each script can be viewed with:
-    ```bash
-    uv run scripts/script_name.py --help
-    ```
+### Update Dashboard Data
+
+```bash
+# 1. Get latest raw data
+npm run download-data
+
+# 2. Process for dashboard
+npm run process-data
+
+# 3. Upload to CDN (manual)
+# Copy data/cdn/processed/* to CDN
+```
+
+### Development Cycle
+
+```bash
+# 1. Process data
+npm run process-data
+
+# 2. Start dashboard
+npm run dev
+
+# 3. Make changes (hot reload)
+# 4. View at http://localhost:3000
+```

@@ -10,16 +10,16 @@ Guidelines for contributing to the MBON dashboard project.
 git clone [repository-url]
 cd mbon-dash-2025
 
-# Install Python dependencies  
-uv sync
+# Install dependencies
+uv sync              # Python
+npm install          # Node.js
 
-# Install Node.js dependencies
-npm install
-
-# Run data validation
+# Get and process data
+npm run download-data
+npm run process-data
 npm run validate-data
 
-# Start development server
+# Start development
 npm run dev
 ```
 

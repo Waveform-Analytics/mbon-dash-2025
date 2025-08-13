@@ -43,31 +43,16 @@ npm install      # Node.js dependencies for web dashboard
 
 ### Basic Workflow
 
-=== "Python Approach"
+```bash
+# Process data
+npm run process-data
 
-    ```bash
-    # Process data
-    uv run scripts/pipeline/run_full_pipeline.py
-    
-    # Run analysis
-    uv run scripts/analysis/pca_analysis.py
-    
-    # Check data quality
-    uv run scripts/legacy/validate_data.py
-    ```
+# Check data quality  
+npm run validate-data
 
-=== "Unified Commands"
-
-    ```bash
-    # Process data
-    npm run build-data
-    
-    # Run analysis
-    npm run build-analysis
-    
-    # Check data quality  
-    npm run validate-data
-    ```
+# View statistics
+npm run data-stats
+```
 
 ### Start Dashboard
 

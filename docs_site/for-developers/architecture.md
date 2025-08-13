@@ -68,36 +68,38 @@ graph TB
 
 ## Data Processing Architecture
 
-### Pipeline Structure
+### Script Organization
 ```
 scripts/
-├── pipeline/                 # New modular pipeline
-│   ├── run_full_pipeline.py # Main pipeline orchestrator
-│   └── steps/               # Individual processing steps
-│       ├── 1_process_raw_data.py
-│       ├── 2_align_temporal_windows.py
-│       ├── 3_join_datasets.py
-│       ├── 4_handle_missing_data.py
-│       ├── 5_run_pca_analysis.py
-│       └── 6_prepare_dashboard_data.py
-├── analysis/                # Statistical analysis scripts
-│   ├── pca_analysis.py
-│   └── correlation_analysis.py
-└── legacy/                  # Original processing scripts
-    ├── process_data.py
-    └── validate_data.py
+├── dashboard_prep/          # Dashboard data generation
+│   └── process_excel_to_json.py
+├── exploratory/             # Analysis experiments
+├── data_management/         # CDN operations
+│   └── download_raw_data.py
+└── utils/                   # Validation and statistics
+    ├── validate_data.py
+    ├── data_statistics.py
+    └── check_data_freshness.py
 ```
 
 ### Processing Flow
-1. **Raw Data Ingestion**: Read Excel/CSV files with flexible naming
-2. **Quality Validation**: Check data integrity and completeness  
-3. **Temporal Alignment**: Aggregate hourly indices to 2-hour detection windows
-4. **Data Joining**: Combine acoustic indices with species and environmental data
-5. **Missing Data Handling**: Interpolation and quality flagging
-6. **Statistical Analysis**: PCA, correlation analysis, model fitting
-7. **Dashboard Preparation**: Export optimized JSON for web consumption
+1. **Download from CDN**: Get raw Excel files from cloud storage
+2. **Process Excel Files**: Transform to standardized JSON format
+3. **Quality Validation**: Check data integrity and completeness
+4. **Dashboard Preparation**: Export optimized JSON for web consumption
+5. **Upload to CDN**: Deploy processed data for dashboard access
+
+*Note: Acoustic indices integration and statistical analysis planned for future development.*
 
 ### Data Storage Strategy
+
+```
+data/                        # Git-ignored, CDN-based
+├── cdn/
+│   ├── raw-data/           # Mirror of CDN raw files
+│   └── processed/          # Dashboard-ready JSON
+└── intermediate_results/    # Local analysis workspace
+```
 ```
 data/                     # Raw data (version controlled)
 ├── indices/raw/         # Acoustic indices CSV files
