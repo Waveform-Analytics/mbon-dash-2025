@@ -2,8 +2,8 @@
 
 Step-by-step guide for analyzing acoustic indices and species detection data.
 
-!!! info "Work in Progress"
-    This workflow is being refined as we develop the acoustic indices analysis methods. The documentation will be updated as approaches are tested and validated.
+!!! tip "Flexible Approach"
+    This workflow provides a foundation you can adapt based on your specific research questions.
 
 ## Overview
 
@@ -15,32 +15,24 @@ The analysis workflow follows these major phases:
 4. **Correlation Analysis** - Relate indices to species detection patterns
 5. **Result Interpretation** - Extract actionable insights
 
-## Phase 1: Data Integration
+## Phase 1: Data Preparation
 
-### Run the Processing Pipeline
-
-=== "Python Approach"
-    ```bash
-    uv run scripts/pipeline/run_full_pipeline.py
-    ```
-
-=== "Unified Commands"
-    ```bash
-    npm run build-data
-    ```
-
-This combines:
-- **Acoustic indices** (hourly measurements → 2-hour windows)
-- **Species detections** (manual annotations, 2-hour windows)
-- **Environmental data** (temperature, depth)
-
-### Verify Integration Success
+### Process Raw Data
 
 ```bash
+# Transform Excel files → analysis-ready JSON
+npm run process-data
+
+# Verify data quality
 npm run validate-data
 ```
 
-Expected output shows successful data joining across all three data types.
+This creates standardized datasets from:
+- **Species detections** (manual annotations, 2-hour windows)
+- **Environmental data** (temperature, depth measurements)
+- **Deployment metadata** (station locations, timing)
+
+*Note: Acoustic indices integration is planned for future development.*
 
 ## Phase 2: Quality Assessment
 
@@ -64,25 +56,23 @@ Look for:
 - Species with very low detection rates
 - Environmental measurement gaps
 
-## Phase 3: Dimensionality Reduction
+## Phase 3: Exploratory Analysis
 
-### Run PCA Analysis
+### Custom Analysis Scripts
 
-=== "Python Approach"
-    ```bash
-    uv run scripts/analysis/pca_analysis.py
-    ```
+```bash
+# Use the exploratory folder for your analysis
+cd scripts/exploratory/
 
-=== "Unified Commands"  
-    ```bash
-    npm run build-analysis
-    ```
+# Run your analysis scripts
+uv run your_analysis_script.py
+```
 
-This generates:
-- Principal component loadings
-- Explained variance by component
-- Index contribution rankings
-- Component interpretation
+Develop analysis approaches for:
+- Species detection patterns
+- Environmental correlations
+- Temporal trends
+- Spatial variations
 
 ### Interpret PCA Results
 
@@ -92,38 +82,38 @@ Key questions to address:
 - Do components have clear biological interpretation?
 - Are there natural index groupings?
 
-## Phase 4: Correlation Analysis
+## Phase 4: Statistical Analysis
 
-### Index-Species Correlations
+### Species-Environment Relationships
 
-The correlation analysis examines relationships between:
-- Individual acoustic indices and species detection rates
-- PCA component scores and biodiversity metrics
-- Environmental factors and both indices and species
+Examine correlations between:
+- Species detection rates and environmental factors
+- Temporal patterns in species activity
+- Spatial differences across stations
 
-### Environmental Context
+### Prepare for Acoustic Indices
 
-Assess how temperature and depth cycles affect:
-- Acoustic index patterns
-- Species detection patterns
-- Index-species relationships
+Once acoustic indices are integrated:
+- Correlation analysis between indices and species
+- Dimensionality reduction (PCA)
+- Predictive modeling
 
-## Phase 5: Result Interpretation
+## Phase 5: Results & Visualization
 
-### Key Outputs
+### Dashboard Integration
 
-1. **Reduced Index Set** - Top performing indices for biodiversity assessment
-2. **Prediction Models** - How well indices predict species presence
-3. **Environmental Corrections** - Accounting for temperature/depth effects
-4. **Cost-Benefit Analysis** - Effort savings vs information loss
+```bash
+# Update dashboard with your findings
+npm run process-data  # Include new analysis results
+npm run dev          # View in interactive dashboard
+```
 
-### Validation
+### Export Results
 
-Cross-validate results using:
-- Different time periods
-- Different stations
-- Different species groups
-- Statistical resampling methods
+Save your analysis outputs to `data/intermediate_results/` for:
+- Further statistical analysis
+- Publication figures
+- Sharing with collaborators
 
 ## Interactive Exploration
 
@@ -143,39 +133,35 @@ Use the dashboard to:
 
 ## Custom Analysis
 
-### Working with Results in Python
+### Working with Data in Python
 
-All analysis results are saved as JSON files that can be loaded into pandas:
+Load processed data for custom analysis:
 
 ```python
 import pandas as pd
 import json
 
-# Load PCA results
-with open('analysis/pca/pca_loadings.json', 'r') as f:
-    loadings = json.load(f)
+# Load dashboard data
+with open('data/cdn/processed/detections.json', 'r') as f:
+    detections = pd.DataFrame(json.load(f))
 
-# Convert to DataFrame for analysis
-loadings_df = pd.DataFrame(loadings)
+with open('data/cdn/processed/environmental.json', 'r') as f:
+    environmental = pd.DataFrame(json.load(f))
 
-# Your custom analysis here
+# Your analysis here
 ```
 
-### Extending the Analysis
+### Extending the Workflow
 
-The modular structure allows you to:
-- Add custom analysis scripts to `scripts/analysis/`
-- Modify processing steps in `scripts/pipeline/steps/`
-- Create custom visualizations
-- Export results in different formats
+- Add scripts to `scripts/exploratory/` for experiments
+- Use `scripts/dashboard_prep/` for production data processing
+- Save intermediate results to `data/intermediate_results/`
 
 ## Next Steps
 
-Once you've completed the basic workflow:
+1. **[Review research questions](research-questions.md)** - Understand the scientific objectives
+2. **[Learn about acoustic indices](acoustic-indices.md)** - Prepare for future acoustic analysis
+3. **[Edit dashboard content](content-editing.md)** - Update text with your findings
 
-1. **[Review research questions](research-questions.md)** to ensure analysis addresses key objectives
-2. **[Understand acoustic indices](acoustic-indices.md)** to interpret biological meaning
-3. **[Explore PCA workflow details](../analysis/pca-workflow.md)** for advanced PCA options
-
-!!! note "Iterative Process"
-    This workflow is designed to be iterative. As you discover patterns and refine questions, you can re-run analysis steps with different parameters or additional data.
+!!! success "Ready to Analyze"
+    The data processing foundation is ready - start exploring patterns in the species detection and environmental data!

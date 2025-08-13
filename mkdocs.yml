@@ -66,15 +66,15 @@ nav:
     - Data Analysis Workflow: for-scientists/data-analysis.md
     - Research Questions: for-scientists/research-questions.md
     - Acoustic Indices: for-scientists/acoustic-indices.md
+  - For Developers:
+      - Architecture: for-developers/architecture.md
+      - Content Helper Pattern: for-developers/content-helper-pattern.md
+      - API Reference: for-developers/api-reference.md
+      - Contributing: for-developers/contributing.md
   - Data:
     - Data Structure: data/structure.md
   - Analysis:
     - PCA Workflow: analysis/pca-workflow.md
-  - For Developers:
-    - Architecture: for-developers/architecture.md
-    - Content Helper Pattern: for-developers/content-helper-pattern.md
-    - API Reference: for-developers/api-reference.md
-    - Contributing: for-developers/contributing.md
   - Deployment:
     - GitHub Pages Setup: deployment/github-pages-setup.md
     - CDN Setup: deployment/cdn-setup.md

@@ -4,15 +4,15 @@ This project addresses fundamental questions about using acoustic indices as pro
 
 ## Primary Research Questions
 
-### 1. Index Dimensionality Reduction
-- Can we reduce 56+ acoustic indices to 3-5 "super indices" that capture most environmental variation?
-- Which indices contribute most to the first 3 principal components?
+### 1. Index Dimensionality Reduction *(Future Work)*
+- Can we reduce 56+ acoustic indices to 3-5 "super indices" that capture most soundscape variation?
+- Which indices contribute most to principal components?
 - What percentage of variance do the top components explain?
 
-### 2. Biodiversity Prediction Capability
-- Which acoustic indices (or index combinations) best predict species detection patterns?
-- Can PCA-derived components predict biodiversity better than individual indices?
+### 2. Biodiversity Prediction Capability *(Future Work)*
+- Which acoustic indices best predict species detection patterns?
 - How do index-based predictions compare to environmental predictors (temperature/depth)?
+- Can we develop cost-effective alternatives to manual species annotation?
 
 ### 3. Index Category Performance
 - Do certain index categories (diversity, complexity, bioacoustic) outperform others?
@@ -38,32 +38,33 @@ This project addresses fundamental questions about using acoustic indices as pro
 
 ## Analysis Approach
 
-### Phase 1: Data Integration & Basic Analysis
-1. **Temporal Alignment**: Aggregate hourly acoustic indices to 2-hour windows matching detection data
-2. **Data Joining**: Combine acoustic indices with species detections and environmental measurements
-3. **Quality Assessment**: Evaluate missing data patterns and interpolation needs
+### Phase 1: Foundation Data Analysis *(Current)*
+1. **Data Processing**: Transform Excel files into analysis-ready format
+2. **Species Patterns**: Analyze detection patterns across stations and time
+3. **Environmental Context**: Understand temperature/depth relationships
 
-### Phase 2: Principal Component Analysis
-1. **Index Filtering**: Remove low-variance and highly correlated indices
-2. **PCA Implementation**: Identify components explaining majority of variance
-3. **Component Interpretation**: Understand what each component represents biologically
+### Phase 2: Acoustic Integration *(Planned)*
+1. **Index Integration**: Combine acoustic indices with existing datasets
+2. **Temporal Alignment**: Match acoustic measurements with species detections
+3. **Quality Assessment**: Evaluate data completeness and processing needs
 
-### Phase 3: Biodiversity Prediction
-1. **Correlation Analysis**: Quantify relationships between indices and species detections
-2. **Predictive Modeling**: Test index combinations for biodiversity prediction
-3. **Environmental Correction**: Account for temperature/depth effects
+### Phase 3: Predictive Analysis *(Future)*
+1. **Dimensionality Reduction**: PCA analysis of acoustic indices
+2. **Correlation Analysis**: Index-species relationships
+3. **Predictive Modeling**: Develop biodiversity prediction tools
 
 ## Success Metrics
 
 ### Technical Success
-- Process new acoustic index files automatically with flexible pipeline
-- Handle naming variations and missing data gracefully
-- Scale to additional datasets as they become available
+- ✅ Robust data processing pipeline for Excel files and manual annotations
+- ✅ Handle naming variations and missing data patterns
+- 🔄 Integrate acoustic indices when available
+- 🔄 Scale to additional datasets and time periods
 
 ### Scientific Success
 - **Target**: Identify <10 key indices explaining >70% of biodiversity variation
-- Demonstrate clear index-species relationships with statistical significance
-- Quantify cost savings compared to manual annotation methods
+- Demonstrate statistically significant index-species relationships
+- Quantify cost-effectiveness vs manual annotation approaches
 
 ### Practical Applications
 - Provide actionable recommendations for marine monitoring programs
@@ -75,9 +76,10 @@ This project addresses fundamental questions about using acoustic indices as pro
 ### Current Dataset
 - **Stations**: 9M, 14M, 37M (May River, South Carolina)
 - **Years**: 2018, 2021
-- **Temporal Resolution**: 2-hour detection windows, hourly acoustic indices
+- **Detection Data**: 26,280 records (2-hour windows)
+- **Environmental Data**: 237,334 temperature/depth measurements
 - **Species**: 28 tracked species from manual annotations
-- **Indices**: 56 acoustic indices across multiple categories
+- **Acoustic Indices**: In development (56 planned indices)
 
 ### Index Categories
 - **Temporal Domain**: ZCR, MEANt, VARt, SKEWt, KURTt, LEQt

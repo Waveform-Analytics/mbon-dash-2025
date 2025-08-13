@@ -2,8 +2,8 @@
 
 Understanding the acoustic indices used in biodiversity monitoring and their biological significance.
 
-!!! info "Collaborator Data"
-    The acoustic indices in this project come from collaborator analysis using established acoustic ecology methods. This page explains what each index measures and how it relates to biodiversity assessment.
+!!! info "Acoustic Indices Integration - Planned"
+    The acoustic indices described here are being prepared for integration with the existing species detection and environmental datasets. This page explains what each index measures and how it will support biodiversity assessment.
 
 ## What Are Acoustic Indices?
 

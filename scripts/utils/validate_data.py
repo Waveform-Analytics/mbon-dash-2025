@@ -11,7 +11,7 @@ from typing import Dict, List, Any
 import sys
 
 class DataValidator:
-    def __init__(self, data_dir: str = "data/cdn"):
+    def __init__(self, data_dir: str = "data/cdn/processed"):
         self.data_dir = Path(data_dir)
         self.errors: List[str] = []
         self.warnings: List[str] = []

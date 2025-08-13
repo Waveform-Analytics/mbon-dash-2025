@@ -12,7 +12,7 @@ from datetime import datetime
 import pandas as pd
 
 class DataStatistics:
-    def __init__(self, data_dir: str = "data/cdn"):
+    def __init__(self, data_dir: str = "data/cdn/processed"):
         self.data_dir = Path(data_dir)
         self.stats = {}
         

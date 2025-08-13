@@ -18,8 +18,8 @@ from datetime import datetime
 import numpy as np
 
 # Configuration - Updated for new structure
-RAW_DATA_DIR = Path("data/raw-data")
-OUTPUT_DIR = Path("data/cdn")  # Changed from public/data to data/cdn
+RAW_DATA_DIR = Path("data/cdn/raw-data")
+OUTPUT_DIR = Path("data/cdn/processed")  # Output to CDN processed folder
 COLUMN_MAPPING_FILE = RAW_DATA_DIR / "det_column_names.csv"
 
 # FOCUSED SCOPE: Only process these years and stations

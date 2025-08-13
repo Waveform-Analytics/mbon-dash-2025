@@ -142,4 +142,4 @@ This project is actively under development with a focus on acoustic indices inte
 
 ---
 
-*This project bridges marine biology and data science to make acoustic monitoring more accessible and cost-effective for biodiversity assessment.*
+*This project bridges marine biology and data science to support environmental monitoring and biodiversity research.*

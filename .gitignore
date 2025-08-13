@@ -59,23 +59,11 @@ Thumbs.db
 *.temp
 combined_df_export.csv
 
-# Data files - Organized CDN-mirror structure
-# Raw data too large for git (114MB+) - stored on CDN
+# Data files - CDN-first approach
+# All data stored on CDN, reproduced locally via scripts
 
-# Ignore all generated/processed data
-data/processed/
-data/analysis/
-data/cdn/
-
-# Ignore raw data EXCEPT for small reference files
-data/raw-data/**/*.xlsx
-data/raw-data/**/*.xls
-data/raw-data/**/*.csv
-
-# But keep these small reference files
-!data/raw-data/det_column_names.csv
-!data/raw-data/Updated_Index_Categories_v2.csv
-!data/raw-data/.gitkeep
+# Ignore entire data folder - everything is CDN-based
+data/
 
 # Legacy: Remove old public/data structure (data now served from CDN)
 public/data/
