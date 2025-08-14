@@ -17,7 +17,7 @@ CDN_BASE_URL = "https://pub-71436b8d94864ba1ace2ef29fa28f0f1.r2.dev/raw-data"
 # Raw data file manifest (nested paths)
 RAW_DATA_FILES = [
     # Acoustic indices
-    "indices/raw/Acoustic_Indices_9m_FullBW_v1.csv",
+    "indices/Acoustic_Indices_9m_FullBW_v1.csv",
     
     # Detection data (2018)
     "2018/Master_Manual_9M_2h_2018.xlsx",
