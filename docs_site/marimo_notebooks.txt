@@ -1,0 +1,21 @@
+# MBON Marimo Notebooks
+# 
+# This file contains URLs to static marimo notebooks for embedding in documentation.
+# Format: title | description | static_url | local_file (optional)
+#
+# When you create a new notebook:
+# 1. Upload to static.marimo.app
+# 2. Add the URL here with title and description
+# 3. Run: uv run scripts/build_notebook_docs.py (or it runs automatically during mkdocs build)
+#
+
+Data Loading Example | Basic data loading patterns with mbon_analysis | https://static.marimo.app/static/data-loading-w4nz | scripts/notebooks/0.0_loading_data.py
+
+Basic Analysis Example | A few examples of doing basic aggregation and analysis on the detections data | https://static.marimo.app/static/analysis-8wis | scripts/notebooks/1.0_analysis_workflow_example.py
+
+# Add more notebooks here:
+# Temporal Analysis | Exploring temporal patterns in detection data | https://static.marimo.app/static/temporal-example | scripts/notebooks/1.0_temporal_analysis.py
+# Spatial Analysis | Station comparisons and spatial patterns | https://static.marimo.app/static/spatial-example | scripts/notebooks/2.0_spatial_analysis.py
+
+
+

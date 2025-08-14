@@ -63,6 +63,7 @@ nav:
   - For Scientists: scientists.md
   - For Developers: developers.md
   - Data Structure: data.md
+  - Interactive Notebooks: notebooks.md
 
 extra:
   social:
