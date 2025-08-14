@@ -36,7 +36,19 @@ def load_column_mapping():
     """Load column name mapping from CSV file."""
     print("📋 Loading column mappings...")
     df = pd.read_csv(COLUMN_MAPPING_FILE)
-    return dict(zip(df["short_name"], df["long_name"]))
+    
+    # Create mapping from short_name to long_name
+    name_mapping = dict(zip(df["short_name"], df["long_name"]))
+    
+    # Also create mapping with type information for metadata
+    type_mapping = {}
+    for _, row in df.iterrows():
+        type_mapping[row["short_name"]] = {
+            "long_name": row["long_name"],
+            "type": row["type"]
+        }
+    
+    return name_mapping, type_mapping
 
 def extract_metadata_from_filename(filepath):
     """Extract year and station information from filename."""
@@ -56,7 +68,7 @@ def process_detection_files():
     """Process all detection files and combine into single dataset."""
     print("🐟 Processing species detection files...")
     
-    column_lookup = load_column_mapping()
+    column_lookup, type_mapping = load_column_mapping()
     short_column_names = list(column_lookup.keys())
     
     # Find all detection files (FILTERED TO YEARS OF INTEREST)
@@ -110,7 +122,7 @@ def process_detection_files():
     combined_df = combined_df.dropna(subset=['date'])  # Remove rows with invalid dates
     
     print(f"✅ Combined {len(combined_df)} detection records from {len(all_dfs)} files")
-    return combined_df, column_lookup
+    return combined_df, column_lookup, type_mapping
 
 def process_environmental_files():
     """Process temperature and depth files - merge by timestamp where possible."""
@@ -255,6 +267,89 @@ def process_acoustic_files():
         print("⚠️  No acoustic data files found")
         return pd.DataFrame()
 
+def process_acoustic_indices_files():
+    """Process acoustic indices CSV files."""
+    print("🎵 Processing acoustic indices files...")
+    
+    indices_dir = RAW_DATA_DIR / "indices"
+    if not indices_dir.exists():
+        print("⚠️  Indices directory not found")
+        return pd.DataFrame()
+    
+    # Find all CSV files in indices directory
+    indices_files = list(indices_dir.glob("*.csv"))
+    if not indices_files:
+        print("⚠️  No indices CSV files found")
+        return pd.DataFrame()
+    
+    print(f"Found {len(indices_files)} indices files")
+    
+    all_indices_data = []
+    
+    for file in indices_files:
+        try:
+            print(f"  Processing: {file.name}")
+            
+            # Parse filename to extract metadata
+            # Expected format: Acoustic_Indices_[STATION]_[YEAR]_[BANDWIDTH]_v[VERSION]_Final.csv
+            filename_parts = file.stem.split('_')
+            
+            if len(filename_parts) >= 5:
+                station = filename_parts[2]  # e.g., "9M"
+                year = filename_parts[3]     # e.g., "2021"
+                bandwidth = filename_parts[4] # e.g., "FullBW" or "8kHz"
+                
+                # Filter by stations and years of interest
+                if station not in STATIONS_OF_INTEREST:
+                    print(f"  ⏭️  Skipping station {station} (not in stations of interest)")
+                    continue
+                    
+                if year not in YEARS_OF_INTEREST:
+                    print(f"  ⏭️  Skipping year {year} (not in years of interest)")
+                    continue
+                
+                # Read CSV file
+                df = pd.read_csv(file)
+                
+                # Add metadata columns
+                df['year'] = year
+                df['station'] = station
+                df['bandwidth'] = bandwidth
+                df['source_file'] = file.name
+                
+                # Parse date column if it exists
+                if 'Date' in df.columns:
+                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                    df = df.dropna(subset=['Date'])  # Remove rows with invalid dates
+                
+                all_indices_data.append(df)
+                print(f"  🎵 Processed {len(df)} indices records from {file.name}")
+                
+            else:
+                print(f"  ⚠️  Unexpected filename format: {file.name}")
+                
+        except Exception as e:
+            print(f"  ❌ Error processing {file.name}: {e}")
+    
+    if all_indices_data:
+        combined_indices = pd.concat(all_indices_data, ignore_index=True)
+        print(f"✅ Combined {len(combined_indices)} acoustic indices records")
+        
+        # Report on what we processed
+        stations_processed = combined_indices['station'].unique()
+        years_processed = combined_indices['year'].unique()
+        bandwidths_processed = combined_indices['bandwidth'].unique()
+        
+        print(f"  📊 Processed data:")
+        print(f"     - Stations: {', '.join(sorted(stations_processed))}")
+        print(f"     - Years: {', '.join(sorted(years_processed))}")
+        print(f"     - Bandwidths: {', '.join(sorted(bandwidths_processed))}")
+        
+        return combined_indices
+    else:
+        print("⚠️  No acoustic indices data was successfully processed")
+        return pd.DataFrame()
+
 def process_deployment_metadata():
     """Process deployment metadata Excel file."""
     print("📋 Processing deployment metadata...")
@@ -372,16 +467,17 @@ def get_station_coordinates(station):
     }
     return coordinate_map.get(station, {'lat': 33.5, 'lon': -118.5})
 
-def generate_species_metadata(detections_df, column_lookup):
-    """Generate species metadata with detection counts."""
-    print("🐠 Generating species metadata...")
+def generate_species_metadata(detections_df, column_lookup, type_mapping):
+    """Generate detection metadata with detection counts and proper categorization."""
+    print("🐠 Generating detection metadata...")
     
-    species_columns = [col for col in detections_df.columns 
-                      if col in column_lookup and col not in ['id', 'file', 'date', 'time', 'analyzer']]
+    detection_columns = [col for col in detections_df.columns 
+                        if col in column_lookup and col not in ['id', 'file', 'date', 'time', 'analyzer']]
     
-    species_list = []
-    for short_name in species_columns:
+    detection_list = []
+    for short_name in detection_columns:
         long_name = column_lookup.get(short_name, short_name)
+        detection_type = type_mapping.get(short_name, {}).get('type', 'unknown')
         
         # Calculate detection counts (handle mixed data types)
         if short_name in detections_df.columns:
@@ -390,18 +486,27 @@ def generate_species_metadata(detections_df, column_lookup):
         else:
             total_detections = 0
         
-        species_info = {
+        # Map type to category for backwards compatibility
+        category_mapping = {
+            'bio': 'biological',
+            'anthro': 'anthropogenic_environmental',
+            'info': 'metadata',
+            'none': 'other'
+        }
+        
+        detection_info = {
             'short_name': short_name,
             'long_name': long_name,
-            'total_detections': int(total_detections) if pd.notna(total_detections) else 0,
-            'category': categorize_species(long_name)
+            'type': detection_type,
+            'category': category_mapping.get(detection_type, 'other'),
+            'total_detections': int(total_detections) if pd.notna(total_detections) else 0
         }
-        species_list.append(species_info)
+        detection_list.append(detection_info)
     
     # Sort by detection count
-    species_list.sort(key=lambda x: x['total_detections'], reverse=True)
-    print(f"✅ Generated metadata for {len(species_list)} species")
-    return species_list
+    detection_list.sort(key=lambda x: x['total_detections'], reverse=True)
+    print(f"✅ Generated metadata for {len(detection_list)} detections/annotations")
+    return detection_list
 
 def categorize_species(species_name):
     """Categorize species by type."""
@@ -421,7 +526,7 @@ def categorize_species(species_name):
     else:
         return 'other'
 
-def save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup, deployment_metadata_df):
+def save_json_files(detections_df, environmental_df, acoustic_df, acoustic_indices_df, stations, species, column_lookup, deployment_metadata_df):
     """Save all processed data as JSON files."""
     print("💾 Saving JSON files...")
     
@@ -448,7 +553,8 @@ def save_json_files(detections_df, environmental_df, acoustic_df, stations, spec
         'detections.json': clean_for_json(detections_df),
         'environmental.json': clean_for_json(environmental_df),
         'acoustic.json': clean_for_json(acoustic_df),
-        'deployment_metadata.json': clean_for_json(deployment_metadata_df),  # New file
+        'acoustic_indices.json': clean_for_json(acoustic_indices_df),  # New file
+        'deployment_metadata.json': clean_for_json(deployment_metadata_df),
         'stations.json': stations,
         'species.json': species,
         'metadata.json': {
@@ -458,7 +564,8 @@ def save_json_files(detections_df, environmental_df, acoustic_df, stations, spec
                 'total_detections': len(detections_df),
                 'total_environmental_records': len(environmental_df),
                 'total_acoustic_records': len(acoustic_df),
-                'total_deployment_metadata_records': len(deployment_metadata_df),  # New line
+                'total_acoustic_indices_records': len(acoustic_indices_df),  # New line
+                'total_deployment_metadata_records': len(deployment_metadata_df),
                 'stations_count': len(stations),
                 'species_count': len(species),
                 'date_range': {
@@ -485,7 +592,7 @@ def main():
     
     try:
         # Process detection files (main dataset)
-        detections_df, column_lookup = process_detection_files()
+        detections_df, column_lookup, type_mapping = process_detection_files()
         
         # Process environmental data
         environmental_df = process_environmental_files()
@@ -493,22 +600,26 @@ def main():
         # Process acoustic data
         acoustic_df = process_acoustic_files()
         
-        # Process deployment metadata (new)
+        # Process acoustic indices data (new)
+        acoustic_indices_df = process_acoustic_indices_files()
+        
+        # Process deployment metadata
         deployment_metadata_df = process_deployment_metadata()
         
         # Generate metadata
         stations = generate_station_metadata(detections_df, environmental_df, acoustic_df, deployment_metadata_df)
-        species = generate_species_metadata(detections_df, column_lookup)
+        species = generate_species_metadata(detections_df, column_lookup, type_mapping)
         
         # Save all data as JSON
-        save_json_files(detections_df, environmental_df, acoustic_df, stations, species, column_lookup, deployment_metadata_df)
+        save_json_files(detections_df, environmental_df, acoustic_df, acoustic_indices_df, stations, species, column_lookup, deployment_metadata_df)
         
         print("\n🎉 Data processing completed successfully!")
         print(f"📊 Summary:")
         print(f"   • {len(detections_df):,} detection records")
         print(f"   • {len(environmental_df):,} environmental records")  
         print(f"   • {len(acoustic_df):,} acoustic records")
-        print(f"   • {len(deployment_metadata_df):,} deployment metadata records")  # New line
+        print(f"   • {len(acoustic_indices_df):,} acoustic indices records")  # New line
+        print(f"   • {len(deployment_metadata_df):,} deployment metadata records")
         print(f"   • {len(stations)} stations")
         print(f"   • {len(species)} species")
         print(f"\n💡 Next step: Run 'npm run dev' to start the dashboard!")

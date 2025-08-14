@@ -1,130 +1,56 @@
 # MBON Marine Biodiversity Dashboard
 
-Interactive web dashboard for exploring marine acoustic monitoring data from the OSA MBON project (2018-2021).
-
-**Research Focus**: Can acoustic indices predict marine biodiversity patterns as an alternative to labor-intensive manual species detection?
+## Research Question
+Can acoustic indices predict marine biodiversity patterns as an alternative to manual species detection?
 
 ## Project Overview
+Interactive dashboard analyzing 56+ acoustic indices against species detections from 3 monitoring stations in May River, South Carolina (2018 & 2021 data).
 
-This project integrates comprehensive acoustic indices data with species detection and environmental measurements to identify cost-effective alternatives to manual species annotation. The analysis focuses on 3 monitoring stations in May River, South Carolina, with 56 acoustic indices analyzed against manual species detection data.
+### Key Goals
+- Reduce 56 acoustic indices to 3-5 "super indices" via PCA
+- Identify which indices best predict species detection patterns
+- Develop automated alternatives to manual annotation
+- Understand environmental confounding factors
 
-### Current Dataset
-
-- **26,280** detection records (manual species annotations)
-- **237,334** environmental records (temperature, depth)  
-- **3** monitoring stations (9M, 14M, 37M in May River, SC)
-- **56** acoustic indices (from collaborator)
+### Dataset
+- **26,280** manual species annotations
+- **237,334** environmental measurements (temperature, depth)
+- **3** stations (9M, 14M, 37M)
+- **56** acoustic indices per hour
 - **2** years of data (2018, 2021)
-- **28** species tracked
-
-### Research Goals
-
-1. **Index Reduction**: Can we reduce 56 acoustic indices to 3-5 "super indices"?
-2. **Biodiversity Prediction**: Which indices best predict species detection patterns?  
-3. **Cost-Effectiveness**: Can acoustic indices replace expensive manual annotation?
-4. **Environmental Context**: How do temperature/depth affect acoustic patterns?
 
 ## Quick Start
 
-!!! tip "Two Ways to Work"
-    This project supports both **Python-first** workflows (familiar to scientists) and **unified commands** (convenient for teams). Use whichever approach feels comfortable.
-
 ### Installation
-
 ```bash
-# Clone the repository
+# Clone repository
 git clone [repository-url]
 cd mbon-dash-2025
 
 # Install dependencies
-uv sync          # Python dependencies for data processing
-npm install      # Node.js dependencies for web dashboard
+uv sync          # Python analysis
+npm install      # Web dashboard
 ```
 
 ### Basic Workflow
-
 ```bash
 # Process data
 npm run process-data
 
-# Check data quality  
-npm run validate-data
-
-# View statistics
-npm run data-stats
-```
-
-### Start Dashboard
-
-```bash
-# Configure environment (first time only)
-cp .env.example .env.local
-# Edit .env.local with your settings
-
 # Start dashboard
-npm run dev      # Opens at http://localhost:3000
+npm run dev      # http://localhost:3000
 ```
 
-## Architecture Overview
+## Documentation
 
-```mermaid
-graph LR
-    A[Raw Data<br/>Excel/CSV] --> B[Python Pipeline<br/>Processing]
-    B --> C[Analysis Results<br/>PCA, Correlations]
-    C --> D[CDN Storage<br/>Cloudflare R2]
-    D --> E[Web Dashboard<br/>Interactive Viz]
-    
-    B --> F[Processed Data<br/>JSON Files]
-    F --> D
-```
+### [For Scientists](scientists.md)
+Data analysis workflow, research methods, and acoustic indices guide.
 
-### Data Flow
+### [For Developers](developers.md)
+Technical architecture, code structure, and contribution guide.
 
-1. **Raw Data**: Excel files (detections, environmental) + CSV files (acoustic indices)
-2. **Python Processing**: Clean, align temporal windows, join datasets
-3. **Analysis**: PCA, correlation analysis, biodiversity modeling
-4. **Web Dashboard**: Interactive visualization of results
-
-### Key Technologies
-
-- **Data Analysis**: Python (pandas, numpy, scikit-learn)
-- **Web Dashboard**: Next.js, TypeScript, Observable Plot
-- **Deployment**: Vercel + Cloudflare R2 CDN
-
-## Navigation Guide
-
-### 👩‍🔬 **For Scientists**
-- **[Getting Started](for-scientists/getting-started.md)**: Installation and first analysis
-- **[Editing Content](for-scientists/content-editing.md)**: How to update 
-- **[Data Analysis Workflow](for-scientists/data-analysis.md)**: Step-by-step analysis guide
-- **[Research Questions](for-scientists/research-questions.md)**: Scientific objectives and methods
-- **[Acoustic Indices](for-scientists/acoustic-indices.md)**: Understanding the 56 indices
-
-### 📊 **Data & Analysis**
-- **[Data Structure](data/structure.md)**: How data is organized
-- **[PCA Workflow](analysis/pca-workflow.md)**: Principal component analysis
-
-### 👨‍💻 **For Developers**
-- **[Architecture](for-developers/architecture.md)**: Technical overview
-- **[Content Helper Pattern](for-developers/content-helper-pattern.md)**: Content editing system
-- **[GitHub Pages Setup](deployment/github-pages-setup.md)**: Documentation deployment
-
-### 📚 **Reference**
-- **[Command Reference](reference/commands.md)**: Complete command list
+### [Data Structure](data.md)
+Dataset organization, file formats, and processing pipeline.
 
 ## Project Status
-
-This project is actively under development with a focus on acoustic indices integration and PCA analysis. The documentation will evolve as analysis methods are refined and new discoveries are made.
-
-!!! note "Living Documentation"
-    This documentation grows with the project. As we discover effective analysis approaches and refine our methods, the guides will be updated to reflect best practices.
-
-## Getting Help
-
-- **Data Issues**: Run `npm run validate-data` or check the data structure guide
-- **Analysis Questions**: See [research questions](for-scientists/research-questions.md)
-- **Technical Issues**: Check [architecture guide](for-developers/architecture.md)
-
----
-
-*This project bridges marine biology and data science to support environmental monitoring and biodiversity research.*
+Active development focusing on acoustic indices integration and PCA analysis for biodiversity prediction.

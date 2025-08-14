@@ -13,10 +13,16 @@ Usage:
 import pandas as pd
 import numpy as np
 import json
+import sys
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
+
+# Package is installed in editable mode, no path manipulation needed
+
+# Import from mbon_analysis package
+from mbon_analysis.core import load_processed_data
 
 # Set up visualization defaults - use non-interactive backend
 import matplotlib
@@ -28,44 +34,7 @@ plt.rcParams['figure.figsize'] = (12, 6)
 # ============================================================================
 # DATA LOADING
 # ============================================================================
-
-def load_data():
-    """Load all available datasets from processed JSON files."""
-    
-    # Get the project root directory (2 levels up from this script)
-    script_dir = Path(__file__).resolve().parent
-    project_root = script_dir.parent.parent
-    data_dir = project_root / "data" / "cdn" / "processed"
-    
-    print(f"Loading data from: {data_dir}")
-    
-    # Check if directory exists
-    if not data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
-    
-    print("Loading data...")
-    
-    # Load detection data
-    with open(data_dir / "detections.json", 'r') as f:
-        detections = pd.DataFrame(json.load(f))
-    print(f"  ✓ Loaded {len(detections):,} detection records")
-    
-    # Load environmental data
-    with open(data_dir / "environmental.json", 'r') as f:
-        environmental = pd.DataFrame(json.load(f))
-    print(f"  ✓ Loaded {len(environmental):,} environmental records")
-    
-    # Load species metadata
-    with open(data_dir / "species.json", 'r') as f:
-        species_meta = json.load(f)
-    print(f"  ✓ Loaded {len(species_meta)} species definitions")
-    
-    # Load station metadata
-    with open(data_dir / "stations.json", 'r') as f:
-        stations = json.load(f)
-    print(f"  ✓ Loaded {len(stations)} station definitions")
-    
-    return detections, environmental, species_meta, stations
+# Data loading is now handled by mbon_analysis.core.load_processed_data
 
 
 # ============================================================================
@@ -103,46 +72,48 @@ def prepare_detection_data(df):
     return df
 
 
-def get_species_columns(df, species_meta):
-    """Identify which columns are species/detection columns."""
+def get_detection_columns(df, detection_meta):
+    """Identify which columns are detection/annotation columns based on updated metadata."""
     
-    # Get short names from species metadata
-    species_cols = [s['short_name'] for s in species_meta]
-    
-    # Find which columns exist in the dataframe AND are numeric
-    available_species = []
-    for col in species_cols:
-        if col in df.columns:
-            # Only include if column is numeric
-            if pd.api.types.is_numeric_dtype(df[col]):
-                available_species.append(col)
-            else:
-                print(f"  ! Skipping {col}: not numeric (type: {df[col].dtype})")
-    
-    print(f"\nFound {len(available_species)} numeric species/detection columns:")
-    
-    # Separate biological vs non-biological
+    # Get short names from detection metadata and filter for bio/anthro types only
+    detection_cols = []
     biological = []
-    non_biological = []
+    anthropogenic = []
     
-    for sp in species_meta:
-        if sp['short_name'] in available_species:
-            if sp['category'] in ['anthropogenic_environmental', 'other']:
-                non_biological.append(sp)
+    for item in detection_meta:
+        short_name = item['short_name']
+        detection_type = item.get('type', item.get('category', 'unknown'))  # Prefer new 'type' field over old 'category'
+        
+        # Only include bio and anthro types as detections
+        if detection_type in ['bio', 'anthro'] and short_name in df.columns:
+            # Only include if column is numeric
+            if pd.api.types.is_numeric_dtype(df[short_name]):
+                detection_cols.append(short_name)
+                
+                if detection_type == 'bio':
+                    biological.append(item)
+                elif detection_type == 'anthro':
+                    anthropogenic.append(item)
             else:
-                biological.append(sp)
+                print(f"  ! Skipping {short_name}: not numeric (type: {df[short_name].dtype})")
+        elif detection_type in ['info', 'none']:
+            # Skip info and none columns - these are metadata or empty
+            continue
+        elif short_name in df.columns:
+            print(f"  ! Skipping {short_name}: type '{detection_type}' not bio/anthro")
     
+    print(f"\nFound {len(detection_cols)} detection/annotation columns:")
     print(f"  - {len(biological)} biological species")
-    print(f"  - {len(non_biological)} non-biological sounds (vessels, etc.)")
+    print(f"  - {len(anthropogenic)} anthropogenic sounds (vessels, etc.)")
     
-    return available_species, biological, non_biological
+    return detection_cols, biological, anthropogenic
 
 
 # ============================================================================
 # EXPLORATORY ANALYSIS
 # ============================================================================
 
-def explore_temporal_patterns(df, species_cols):
+def explore_temporal_patterns(df, detection_cols):
     """Explore different temporal aggregations to find interesting patterns."""
     
     print("\n" + "="*60)
@@ -161,20 +132,20 @@ def explore_temporal_patterns(df, species_cols):
     # 2. Monthly patterns
     monthly = df.groupby(['year', 'month', 'station']).sum(numeric_only=True)
     
-    # Plot monthly patterns for top species
-    top_species = df[species_cols].sum().nlargest(5).index
+    # Plot monthly patterns for top annotations/detections (both bio and anthro)
+    top_detections = df[detection_cols].sum().nlargest(5).index
     
     fig, axes = plt.subplots(2, 3, figsize=(15, 8))
-    fig.suptitle("Monthly Detection Patterns - Top Species")
+    fig.suptitle("Monthly Detection Patterns - Top Annotations")
     
-    for idx, species in enumerate(top_species[:6]):
+    for idx, detection in enumerate(top_detections[:6]):
         ax = axes[idx // 3, idx % 3]
         
         for station in df['station'].unique():
-            station_data = df[df['station'] == station].groupby('month')[species].sum()
+            station_data = df[df['station'] == station].groupby('month')[detection].sum()
             ax.plot(station_data.index, station_data.values, marker='o', label=station)
         
-        ax.set_title(species)
+        ax.set_title(detection)
         ax.set_xlabel('Month')
         ax.set_ylabel('Detections')
         ax.legend()
@@ -188,23 +159,23 @@ def explore_temporal_patterns(df, species_cols):
     figures_dir.mkdir(exist_ok=True)
     
     # Save with informative filename
-    filename = figures_dir / "step01_monthly_detection_patterns_top_species.png"
+    filename = figures_dir / "step01_monthly_detection_patterns_top_annotations.png"
     plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"  ✓ Saved plot: {filename.name}")
     
     # 3. Seasonal patterns
-    seasonal = df.groupby(['season', 'station'])[species_cols].sum()
+    seasonal = df.groupby(['season', 'station'])[detection_cols].sum()
     print(f"\nSeasonal summary shape: {seasonal.shape}")
     
     # 4. Year-over-year comparison
-    yearly = df.groupby(['year', 'station'])[species_cols].sum()
+    yearly = df.groupby(['year', 'station'])[detection_cols].sum()
     print(f"\nYearly summary shape: {yearly.shape}")
     
     return monthly, seasonal, yearly
 
 
-def explore_station_patterns(df, species_cols):
+def explore_station_patterns(df, detection_cols):
     """Explore differences between stations."""
     
     print("\n" + "="*60)
@@ -212,7 +183,7 @@ def explore_station_patterns(df, species_cols):
     print("="*60)
     
     # Station activity levels
-    station_activity = df.groupby('station')[species_cols].sum()
+    station_activity = df.groupby('station')[detection_cols].sum()
     
     # Plot station comparison
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -220,14 +191,14 @@ def explore_station_patterns(df, species_cols):
     for idx, station in enumerate(station_activity.index):
         ax = axes[idx]
         
-        # Get top 10 species for this station
+        # Get top 10 annotations for this station (bio + anthro)
         top_10 = station_activity.loc[station].nlargest(10)
         
         ax.barh(range(len(top_10)), top_10.values)
         ax.set_yticks(range(len(top_10)))
         ax.set_yticklabels(top_10.index)
         ax.set_xlabel('Total Detections')
-        ax.set_title(f'Station {station} - Top 10 Species')
+        ax.set_title(f'Station {station} - Top 10 Annotations')
         ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
@@ -238,7 +209,7 @@ def explore_station_patterns(df, species_cols):
     figures_dir.mkdir(exist_ok=True)
     
     # Save with informative filename
-    filename = figures_dir / "step01_station_comparison_top10_species.png"
+    filename = figures_dir / "step01_station_comparison_top10_annotations.png"
     plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"  ✓ Saved plot: {filename.name}")
@@ -246,28 +217,28 @@ def explore_station_patterns(df, species_cols):
     return station_activity
 
 
-def explore_species_patterns(df, species_cols, biological, non_biological):
-    """Explore species co-occurrence and patterns."""
+def explore_detection_patterns(df, detection_cols, biological, anthropogenic):
+    """Explore detection co-occurrence and patterns for both biological species and anthropogenic sounds."""
     
     print("\n" + "="*60)
-    print("SPECIES PATTERN EXPLORATION")
+    print("DETECTION PATTERN EXPLORATION")
     print("="*60)
     
-    # Species co-occurrence matrix
-    species_data = df[species_cols]
+    # Detection co-occurrence matrix (includes both biological and anthropogenic)
+    detection_data = df[detection_cols]
     
     # Convert to binary presence/absence for co-occurrence
-    species_binary = (species_data > 0).astype(int)
-    co_occurrence = species_binary.T.dot(species_binary)
+    detection_binary = (detection_data > 0).astype(int)
+    co_occurrence = detection_binary.T.dot(detection_binary)
     
-    # Plot co-occurrence heatmap for top species
-    top_species = species_data.sum().nlargest(15).index
-    co_occur_subset = co_occurrence.loc[top_species, top_species]
+    # Plot co-occurrence heatmap for top detections
+    top_detections = detection_data.sum().nlargest(15).index
+    co_occur_subset = co_occurrence.loc[top_detections, top_detections]
     
     plt.figure(figsize=(10, 8))
     sns.heatmap(co_occur_subset, annot=True, fmt='d', cmap='YlOrRd', 
                 cbar_kws={'label': 'Co-occurrence Count'})
-    plt.title('Species Co-occurrence Matrix (Top 15)')
+    plt.title('Detection Co-occurrence Matrix (Top 15)')
     plt.tight_layout()
     
     # Create figures directory if it doesn't exist
@@ -276,21 +247,21 @@ def explore_species_patterns(df, species_cols, biological, non_biological):
     figures_dir.mkdir(exist_ok=True)
     
     # Save with informative filename
-    filename = figures_dir / "step01_species_cooccurrence_matrix_top15.png"
+    filename = figures_dir / "step01_detection_cooccurrence_matrix_top15.png"
     plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"  ✓ Saved plot: {filename.name}")
     
-    # Biological vs non-biological patterns
-    bio_cols = [s['short_name'] for s in biological if s['short_name'] in species_cols]
-    non_bio_cols = [s['short_name'] for s in non_biological if s['short_name'] in species_cols]
+    # Biological vs anthropogenic patterns
+    bio_cols = [item['short_name'] for item in biological if item['short_name'] in detection_cols]
+    anthro_cols = [item['short_name'] for item in anthropogenic if item['short_name'] in detection_cols]
     
     bio_activity = df[bio_cols].sum().sum()
-    non_bio_activity = df[non_bio_cols].sum().sum()
+    anthro_activity = df[anthro_cols].sum().sum()
     
     print(f"\nActivity breakdown:")
-    print(f"  Biological sounds: {bio_activity:,.0f} detections")
-    print(f"  Non-biological sounds: {non_bio_activity:,.0f} detections")
+    print(f"  Biological species: {bio_activity:,.0f} detections")
+    print(f"  Anthropogenic sounds: {anthro_activity:,.0f} detections")
     
     return co_occurrence
 
@@ -319,7 +290,7 @@ def explore_environmental_relationships(df, environmental):
 # DATA AGGREGATION FOR DASHBOARD
 # ============================================================================
 
-def create_dashboard_views(df, species_cols):
+def create_dashboard_views(df, detection_cols):
     """Create pre-aggregated views optimized for dashboard display."""
     
     print("\n" + "="*60)
@@ -334,17 +305,17 @@ def create_dashboard_views(df, species_cols):
     print(f"  ✓ Daily aggregation: {len(daily)} records")
     
     # 2. Monthly aggregation (for broader patterns)
-    monthly = df.set_index('date').groupby([pd.Grouper(freq='M'), 'station']).sum(numeric_only=True)
+    monthly = df.set_index('date').groupby([pd.Grouper(freq='ME'), 'station']).sum(numeric_only=True)
     views['monthly_by_station'] = monthly.reset_index().to_dict('records')
     print(f"  ✓ Monthly aggregation: {len(monthly)} records")
     
-    # 3. Species rankings
-    species_totals = df[species_cols].sum().sort_values(ascending=False)
-    views['species_rankings'] = [
-        {'species': sp, 'total': int(total)} 
-        for sp, total in species_totals.items()
+    # 3. Detection rankings (both biological and anthropogenic)
+    detection_totals = df[detection_cols].sum().sort_values(ascending=False)
+    views['detection_rankings'] = [
+        {'detection': det, 'total': int(total)} 
+        for det, total in detection_totals.items()
     ]
-    print(f"  ✓ Species rankings: {len(species_totals)} species")
+    print(f"  ✓ Detection rankings: {len(detection_totals)} detections")
     
     # 4. Station summaries
     station_summaries = []
@@ -352,7 +323,7 @@ def create_dashboard_views(df, species_cols):
         station_data = df[df['station'] == station]
         station_summaries.append({
             'station': station,
-            'total_detections': int(station_data[species_cols].sum().sum()),
+            'total_detections': int(station_data[detection_cols].sum().sum()),
             'active_days': int(station_data['date'].nunique()),
             'date_range': {
                 'start': station_data['date'].min().isoformat(),
@@ -372,33 +343,33 @@ def create_dashboard_views(df, species_cols):
 def main():
     """Main exploration workflow."""
     
-    # Load data
-    detections, environmental, species_meta, stations = load_data()
+    # Load data using mbon_analysis package
+    detections, environmental, detection_meta, stations = load_processed_data()
     
     # Prepare detection data
     detections = prepare_detection_data(detections)
     
-    # Get species columns
-    species_cols, biological, non_biological = get_species_columns(detections, species_meta)
+    # Get detection columns (bio and anthro only)
+    detection_cols, biological, anthropogenic = get_detection_columns(detections, detection_meta)
     
     # Add a breakpoint here to explore the prepared data
     print("\n🔍 Data loaded and prepared. Add breakpoint here to explore.")
     # breakpoint()
     
     # Explore temporal patterns
-    monthly, seasonal, yearly = explore_temporal_patterns(detections, species_cols)
+    monthly, seasonal, yearly = explore_temporal_patterns(detections, detection_cols)
     
     # Explore station patterns
-    station_activity = explore_station_patterns(detections, species_cols)
+    station_activity = explore_station_patterns(detections, detection_cols)
     
-    # Explore species patterns
-    co_occurrence = explore_species_patterns(detections, species_cols, biological, non_biological)
+    # Explore detection patterns (both biological and anthropogenic)
+    co_occurrence = explore_detection_patterns(detections, detection_cols, biological, anthropogenic)
     
     # Explore environmental relationships
     explore_environmental_relationships(detections, environmental)
     
     # Create dashboard views
-    dashboard_views = create_dashboard_views(detections, species_cols)
+    dashboard_views = create_dashboard_views(detections, detection_cols)
     
     # Save dashboard views
     script_dir = Path(__file__).resolve().parent
@@ -425,7 +396,7 @@ if __name__ == "__main__":
     print("EXPLORATION COMPLETE")
     print("="*60)
     print("\nVariables available for further exploration:")
-    print("  - detections: Full detection dataframe")
+    print("  - detections: Full detection/annotation dataframe")
     print("  - environmental: Environmental data")
     print("  - dashboard_views: Pre-aggregated views for dashboard")
     print("\nAdd breakpoints or modify visualizations as needed!")

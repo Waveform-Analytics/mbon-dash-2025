@@ -59,27 +59,10 @@ markdown_extensions:
   - md_in_html
 
 nav:
-  - Home: index.md
-  - For Scientists:
-    - Getting Started: for-scientists/getting-started.md
-    - Content Editing: for-scientists/content-editing.md
-    - Data Analysis Workflow: for-scientists/data-analysis.md
-    - Research Questions: for-scientists/research-questions.md
-    - Acoustic Indices: for-scientists/acoustic-indices.md
-  - For Developers:
-      - Architecture: for-developers/architecture.md
-      - Content Helper Pattern: for-developers/content-helper-pattern.md
-      - API Reference: for-developers/api-reference.md
-      - Contributing: for-developers/contributing.md
-  - Data:
-    - Data Structure: data/structure.md
-  - Analysis:
-    - PCA Workflow: analysis/pca-workflow.md
-  - Deployment:
-    - GitHub Pages Setup: deployment/github-pages-setup.md
-    - CDN Setup: deployment/cdn-setup.md
-  - Reference:
-    - Command Reference: reference/commands.md
+  - Overview: index.md
+  - For Scientists: scientists.md
+  - For Developers: developers.md
+  - Data Structure: data.md
 
 extra:
   social:

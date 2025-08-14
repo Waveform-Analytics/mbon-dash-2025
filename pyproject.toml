@@ -1,7 +1,7 @@
 [project]
 name = "mbon-dash-2025"
 version = "0.1.0"
-description = "Add your description here"
+description = "Marine Biodiversity Observatory Dashboard - Acoustic indices analysis for soundscape biodiversity assessment"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -13,4 +13,9 @@ dependencies = [
     "pandas>=2.3.1",
     "matplotlib>=3.10.5",
     "seaborn>=0.13.2",
+    "marimo>=0.14.17",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mbon_analysis*", "scripts*"]

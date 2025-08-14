@@ -13,50 +13,47 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 
 ## Data Structure
 
-### **Primary Data (Core Focus)**
-- **Detection Data**: Manual species annotations from hydrophone recordings
-  - **Years**: 2018, 2021 ONLY
-  - **Stations**: 9M, 14M, 37M ONLY
-  - **Files**: Master_Manual_[STATION]_2h_[YEAR].xlsx (sheet 1)
-  - **Purpose**: Primary dataset for species detection analysis
+### **Detection Data**
+- Manual species annotations from hydrophone recordings
+- **Years**: 2018, 2021 (3 stations, 2 years scope)
+- **Stations**: 9M, 14M, 37M 
+- **Files**: Master_Manual_[STATION]_2h_[YEAR].xlsx (sheet 1)
+- **Categories**: Biological species, anthropogenic sounds, environmental sounds
 
-### **Secondary Data (For Correlations)**
-- **Environmental Data**: Temperature and depth measurements
-  - **Temperature**: Master_[STATION]_Temp_[YEAR].xlsx (sheet 1)
-  - **Depth**: Master_[STATION]_Depth_[YEAR].xlsx (sheet 1)
-- **Legacy Acoustic Data**: RMS Sound Pressure Level (rmsSPL) measurements  
-  - **Files**: Master_rmsSPL_[STATION]_1h_[YEAR].xlsx (sheet 1)
-  - **Note**: Being replaced by comprehensive acoustic indices (see below)
-- **Deployment Metadata**: Filtered to relevant deployments only (2018, 2021, 9M/14M/37M)
+### **Environmental Data**
+- Temperature and depth measurements from hydrophone locations
+- **Files**: Master_[STATION]_Temp_[YEAR].xlsx, Master_[STATION]_Depth_[YEAR].xlsx (sheet 1)
+- **Resolution**: Hourly measurements
 
-### **NEW: Comprehensive Acoustic Indices (Primary Analysis Focus)**
-- **Source**: Collaborator-provided CSV files with 56 acoustic indices
+### **Acoustic Indices** (Core Analysis Focus)
+- **Source**: Collaborator-provided CSV files with 56+ acoustic indices
 - **Temporal Resolution**: Hourly (aggregated to 2-hour windows to match detections)
-- **Expected Files**: 
-  - `AcousticIndices_[STATION]_FullBW_v1.csv` (Full bandwidth)
-  - `AcousticIndices_[STATION]_[OTHER_BW]_v1.csv` (Additional bandwidth - TBD)
-- **Stations**: 9M (received), 14M & 37M (expected)
-- **Years**: 2021 (received), 2018 (expected)
+- **Current Files**: `Acoustic_Indices_9M_2021_FullBW_v2_Final.csv`, `Acoustic_Indices_9M_2021_8kHz_v2_Final.csv`
 - **Index Categories**:
-  - Temporal domain: ZCR, MEANt, VARt, SKEWt, KURTt, LEQt, etc.
-  - Frequency domain: MEANf, VARf, SKEWf, KURTf, NBPEAKS, etc.
+  - Temporal domain: ZCR, MEANt, VARt, SKEWt, KURTt, LEQt
+  - Frequency domain: MEANf, VARf, SKEWf, KURTf, NBPEAKS
   - Acoustic complexity: ACI, NDSI, ADI, AEI
-  - Diversity indices: H_Havrda, H_Renyi, H_pairedShannon, RAOQ, etc.
+  - Diversity indices: H_Havrda, H_Renyi, H_pairedShannon, RAOQ
   - Bioacoustic: BioEnergy, AnthroEnergy, BI, rBA
   - Spectral coverage: LFC, MFC, HFC
 
-### **Important Notes**
-- **Only 3 stations of interest**: 9M, 14M, 37M (ignore B, C, CC4, CR1, D, WB)
-- **Only 2 years of interest**: 2018, 2021 (ignore other years)
-- **Sheet selection**: Manual files use sheet 1, all others use sheet 1 (NOT sheet 0)
-- **Data priority**: Manual detection files are PRIMARY, others are secondary for correlation analysis
+### **Legacy & Metadata**
+- **Legacy Acoustic**: RMS Sound Pressure Level measurements (being replaced by indices)
+- **Deployment Metadata**: Station locations, equipment specs, deployment periods
 
 ## Technology Stack
 - **Frontend**: Next.js 14 with TypeScript, Tailwind CSS
 - **Visualization**: Observable Plot (primary), Mapbox GL JS, D3.js utilities
 - **State Management**: Zustand
-- **Data Processing**: Python (uv) for local processing, Cloudflare R2 CDN for storage
+- **Data Processing**: Python with uv (preferred package manager)
+- **Python Package**: Integrated acoustic analysis utilities (`mbon_analysis/` subpackage)
+- **Data Storage**: Cloudflare R2 CDN
 - **Deployment**: Vercel (frontend only)
+
+**Architecture**: Split into three tightly integrated components:
+- **Python Package (`mbon_analysis/`)**: Reusable core utilities for acoustic analysis (subpackage of main project)
+- **Python Scripts (`scripts/`)**: Application-specific processing and exploratory analysis
+- **Web Visualization (`src/`)**: Interactive dashboard, user interface, real-time filtering
 
 ## Principles and Best Practices
 - Always use best practices and aim for tidiness and good documentation
@@ -117,149 +114,87 @@ NEXT_PUBLIC_MAPBOX_TOKEN=mapbox_token_here
 
 ## Data Processing Workflow
 
-### UPDATED: Data Structure (Post-Acoustic Indices Integration)
+### Current Data Structure
 
 ```
 mbon-dash-2025/
 ├── data/                           # Raw data (committed to git)
-│   ├── indices/
-│   │   └── raw/                   # Raw acoustic indices from collaborator
-│   │       ├── AcousticIndices_9M_FullBW_v1.csv      # ✅ Received
-│   │       ├── AcousticIndices_14M_FullBW_v1.csv     # 🔄 Expected
-│   │       ├── AcousticIndices_37M_FullBW_v1.csv     # 🔄 Expected  
-│   │       ├── AcousticIndices_9M_[OTHER_BW]_v1.csv  # 🔄 Expected
-│   │       └── ... (additional stations/years/bandwidths)
-│   ├── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx
-│   ├── 2018/                      # Legacy detection/environmental data
+│   ├── cdn/
+│   │   └── raw-data/              # Column mappings and metadata
+│   │       └── det_column_names.csv  # Species/sound classifications
+│   ├── 2018/                      # Detection and environmental data
 │   │   ├── Master_Manual_[STATION]_2h_2018.xlsx
 │   │   ├── Master_[STATION]_Temp_2018.xlsx
-│   │   ├── Master_[STATION]_Depth_2018.xlsx
-│   │   └── Master_rmsSPL_[STATION]_1h_2018.xlsx  # Legacy - keep for comparison
-│   └── 2021/                      # [similar structure]
+│   │   └── Master_[STATION]_Depth_2018.xlsx
+│   ├── 2021/                      # [similar structure]
+│   ├── indices/                   # Acoustic indices from collaborator
+│   │   ├── Acoustic_Indices_9M_2021_FullBW_v2_Final.csv
+│   │   └── Acoustic_Indices_9M_2021_8kHz_v2_Final.csv
+│   └── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx
 │
-├── processed/                      # Intermediate processing (gitignored)
-│   ├── indices/                   # Cleaned index data
-│   │   ├── indices_9M_2021.json
-│   │   ├── indices_14M_2021.json  
-│   │   └── indices_combined.json   # All stations/years/bandwidths
-│   ├── detections/               # Processed detection data
-│   ├── environmental/            # Processed environmental data  
-│   └── combined/                 # Temporally aligned datasets
-│       ├── full_dataset.json     # All data types joined
-│       └── analysis_ready.json   # Filtered for PCA
+├── data/cdn/processed/            # Dashboard-ready JSON (gitignored)
+│   ├── detections.json           # All detection data
+│   ├── environmental.json        # Temperature/depth data
+│   ├── acoustic_indices.json     # Acoustic indices data
+│   ├── species.json              # Species metadata with bio/anthro types
+│   ├── stations.json             # Station information
+│   └── metadata.json             # Data summary and column mappings
 │
-├── analysis/                      # Analysis results (gitignored) 
-│   ├── pca/                      # PCA results, loadings, component scores
-│   │   ├── pca_loadings.json
-│   │   ├── pca_scores.json
-│   │   └── explained_variance.json
-│   ├── correlations/             # Index-species correlation matrices
-│   ├── summaries/               # Statistical summaries
-│   └── model_results/           # Predictive model outputs
+├── mbon_analysis/                # Integrated Python analysis subpackage
+│   ├── __init__.py
+│   ├── core/                     # Core data processing utilities
+│   │   ├── __init__.py
+│   │   ├── data_loader.py        # Basic data loading functions
+│   │   ├── data_sync.py          # CDN synchronization
+│   │   ├── auto_loader.py        # Auto-sync data loading
+│   │   └── data_prep.py          # Data preparation and cleaning
+│   ├── analysis/                 # Analysis modules
+│   │   ├── __init__.py
+│   │   ├── temporal.py           # Temporal pattern analysis
+│   │   ├── spatial.py            # Spatial/station comparison analysis
+│   │   └── biodiversity.py       # Detection patterns and diversity
+│   ├── visualization/            # Plotting and visualization utilities
+│   │   └── __init__.py
+│   └── utils/                    # General utility functions
+│       └── __init__.py
 │
-├── cdn/                          # CDN-ready data (gitignored)
-│   ├── dashboard-data.json      # Lightweight dashboard data
-│   ├── pca-results.json        # Pre-computed PCA for visualization
-│   ├── index-summaries.json    # Key metrics and trends
-│   └── station-profiles.json   # Station-specific acoustic profiles
+├── scripts/
+│   ├── dashboard_prep/           # Core data processing
+│   │   └── process_excel_to_json.py
+│   ├── examples/                 # Usage examples for mbon_analysis package
+│   │   ├── data_loading_example.py
+│   │   ├── data_sync_example.py
+│   │   └── analysis_workflow_example.py
+│   └── exploratory/             # Interactive analysis
+│       ├── figures/             # Generated plots (gitignored)
+│       └── step01_explore_data_for_dashboard.py
 │
-└── public/                      # Static assets only (no data files)
-    ├── images/
-    └── icons/
+├── notes/                        # Documentation
+│   └── python-exploratory-workflow.md
+│
+└── src/                         # Next.js web application
+    └── [web dashboard code]
 ```
 
-### UPDATED: Processing Pipeline Architecture
+### Current Processing Workflow
 
-The data processing has been redesigned as a modular pipeline to handle the integration of comprehensive acoustic indices with existing detection and environmental data.
+**Core Processing**: `scripts/dashboard_prep/process_excel_to_json.py`
+- Reads Excel files from `data/2018/` and `data/2021/` directories
+- Processes detection, environmental (temp/depth), acoustic indices, and metadata
+- Handles mixed data types and timestamp precision
+- Outputs JSON files to `data/cdn/processed/` for web dashboard
 
-#### **Pipeline Overview**
-```bash
-# Complete pipeline (run when new data arrives)
-uv run scripts/pipeline/run_full_pipeline.py
+**Exploratory Analysis**: `scripts/exploratory/step01_explore_data_for_dashboard.py`
+- Loads processed JSON data for interactive exploration
+- Generates temporal, spatial, and co-occurrence analysis
+- Creates visualizations saved to `scripts/exploratory/figures/`
+- Supports scientific categorization (biological vs anthropogenic sounds)
 
-# Individual processing steps (for development/debugging)
-uv run scripts/pipeline/steps/1_process_raw_data.py
-uv run scripts/pipeline/steps/2_align_temporal_windows.py  
-uv run scripts/pipeline/steps/3_join_datasets.py
-uv run scripts/pipeline/steps/4_handle_missing_data.py
-uv run scripts/pipeline/steps/5_run_pca_analysis.py
-uv run scripts/pipeline/steps/6_prepare_dashboard_data.py
-
-# Analysis scripts (heavy computational work)
-uv run scripts/analysis/pca_analysis.py
-uv run scripts/analysis/correlation_analysis.py
-uv run scripts/analysis/biodiversity_models.py
-```
-
-#### **Step-by-Step Processing**
-
-**Step 1: Process Raw Data**
-- **Detection Files**: Master_Manual_[STATION]_2h_[YEAR].xlsx (6 files)
-- **Environmental Files**: Temperature/Depth files (12 files) 
-- **Acoustic Indices**: AcousticIndices_[STATION]_[BANDWIDTH]_v1.csv (flexible count)
-- **Deployment Metadata**: Filter to relevant deployments
-- **Output**: `processed/` directory with cleaned JSON files
-
-**Step 2: Temporal Alignment** 
-- **Challenge**: Indices are hourly, detections are 2-hourly
-- **Solution**: Aggregate indices to 2-hour windows using configurable methods (mean, max, etc.)
-- **Missing Data**: Flag gaps, apply interpolation rules
-- **Output**: `processed/combined/aligned_windows.json`
-
-**Step 3: Dataset Joining**
-- **Join Criteria**: Station + datetime windows
-- **Data Prioritization**: Detection data drives temporal scope
-- **Quality Control**: Flag mismatched windows, missing periods
-- **Output**: `processed/combined/full_dataset.json`
-
-**Step 4: Missing Data Handling**
-- **Short gaps (≤2 hours)**: Linear interpolation with QC flags
-- **Medium gaps (2-6 hours)**: Mark as "interpolated" 
-- **Long gaps (>6 hours)**: Exclude from analysis
-- **Output**: `processed/combined/analysis_ready.json`
-
-**Step 5: PCA Analysis** (Heavy Computation)
-- **Index Filtering**: Remove low-variance, highly-correlated indices
-- **PCA Computation**: Principal components, loadings, explained variance
-- **Component Analysis**: Identify key indices for each component
-- **Output**: `analysis/pca/` directory with multiple JSON files
-
-**Step 6: Dashboard Data Preparation**
-- **Data Reduction**: Extract key metrics, trends, PCA results  
-- **Visualization Prep**: Format for Observable Plot consumption
-- **CDN Optimization**: Compress, split by usage patterns
-- **Output**: `cdn/` directory ready for upload
-
-#### **Flexible File Handling**
-
-The pipeline automatically detects and processes available acoustic index files:
-
-```python
-# File pattern matching (flexible for new datasets)
-ACOUSTIC_INDEX_PATTERNS = [
-    "AcousticIndices_{station}_{bandwidth}_v*.csv",
-    "Acoustic_Indices_{station}_{bandwidth}_v*.csv"  # Handle naming variations
-]
-
-# Supported configurations
-EXPECTED_STATIONS = ["9M", "14M", "37M"]
-EXPECTED_YEARS = [2018, 2021] 
-BANDWIDTH_TYPES = ["FullBW", "LowBW", "HighBW"]  # Flexible list
-
-# Processing behavior:
-# - Process all found files matching patterns
-# - Log missing expected files  
-# - Handle naming variations gracefully
-# - Support future bandwidth types automatically
-```
-
-**UPDATED**: Script has been corrected and data regenerated with proper scope (3 stations, 2018/2021 only).
-
-**Why Python over Node.js for data processing:**
-- Superior pandas/numpy ecosystem for scientific data
-- Better Excel file handling and data validation
-- Existing codebase in `examples.py` can be extended
-- Standard practice in research data pipelines
+**Key Features**:
+- **Data Type Classification**: Uses `det_column_names.csv` with bio/anthro/info/none types
+- **Timestamp Handling**: Rounds timestamps to seconds for proper merging
+- **Scientific Terminology**: Only calls biological detections "species"
+- **Visualization-Ready**: Exports dashboard-compatible JSON formats
 
 ### Deployment Metadata File
 The `1_Montie Lab_metadata_deployments_2017 to 2022.xlsx` file contains important metadata about the hydrophone deployments across multiple years (2017-2022). This includes:
@@ -278,42 +213,106 @@ This metadata provides crucial context for interpreting the detection, environme
 
 ## Development Commands
 
+### Data Sync (CDN-based)
+```bash
+# Smart sync with CDN (only downloads changes)
+npm run sync-data              # Sync all files that are outdated
+npm run sync-data:check        # Check what needs updating (no downloads)  
+npm run sync-data:indices      # Sync only indices files
+npm run sync-data:force        # Force download everything
+npm run generate-manifest      # Generate manifest from local files
+```
+
 ### Data Processing (Python with uv)
 ```bash
-# UPDATED: Pipeline processing (recommended for full workflow)
-uv run scripts/pipeline/run_full_pipeline.py    # Complete data processing pipeline
-uv run scripts/pipeline/run_partial_pipeline.py --steps 1,2,3  # Run specific steps
+# Current processing script (proven working)
+uv run scripts/dashboard_prep/process_excel_to_json.py
 
-# Individual pipeline steps (for development)
-uv run scripts/pipeline/steps/1_process_raw_data.py
-uv run scripts/pipeline/steps/2_align_temporal_windows.py
-uv run scripts/pipeline/steps/3_join_datasets.py
-uv run scripts/pipeline/steps/4_handle_missing_data.py
-uv run scripts/pipeline/steps/5_run_pca_analysis.py
-uv run scripts/pipeline/steps/6_prepare_dashboard_data.py
+# Exploratory analysis scripts
+uv run scripts/exploratory/step01_explore_data_for_dashboard.py
 
-# Analysis scripts (computationally intensive)
-uv run scripts/analysis/pca_analysis.py         # Principal component analysis
-uv run scripts/analysis/correlation_analysis.py  # Index-species correlations
-uv run scripts/analysis/biodiversity_models.py  # Predictive models
-
-# Legacy/utility scripts (maintained for compatibility)
-uv run scripts/legacy/process_data.py           # Original processing script
-uv run scripts/legacy/validate_data.py          # Data integrity checks
-uv run scripts/legacy/data_stats.py             # Generate data summaries
-
-# Or via npm scripts (calls uv under the hood)
-npm run build-data                   # Runs full pipeline
-npm run validate-data               # Runs validation
-npm run data-stats                  # Runs statistics
-npm run build-analysis             # Runs PCA and correlation analysis
+# Or via npm scripts
+npm run process-data                # Process raw data to JSON
+npm run validate-data               # Data integrity checks
+npm run data-stats                  # Generate summaries
 ```
 
 ### Smart Data Processing Workflow
-- **First time setup**: Run `npm run dev:fresh` to process data and start
+- **First time setup**: Run `uv sync` to install dependencies, then `uv pip install -e .` to install the package, then `npm run sync-data` to get latest data
 - **Daily development**: Just use `npm run dev` (skips data processing)
-- **After updating Excel files**: Run `npm run build-data` then `npm run dev`
-- **Check if data is stale**: Run `uv run scripts/check_data_freshness.py`
+- **After CDN updates**: Run `npm run sync-data` then `npm run process-data` then `npm run dev`
+- **Check what needs updating**: Run `npm run sync-data:check`
+
+### Python Package Setup and Usage
+
+**Initial Setup** (run once after cloning):
+```bash
+# Install the mbon_analysis package in editable mode (after uv sync)
+uv pip install -e .
+```
+
+The `mbon_analysis` package provides reusable utilities for acoustic analysis with clean imports:
+
+```python
+# Basic data loading (from local files)
+from mbon_analysis.core import load_processed_data, load_acoustic_indices
+
+# Load all core datasets
+detections, environmental, species_meta, stations = load_processed_data()
+
+# Load with acoustic indices included
+*core_data, acoustic_indices = load_processed_data(include_acoustic_indices=True)
+
+# Auto-sync loading (ensures fresh data from CDN)
+from mbon_analysis.core import load_with_auto_sync, smart_load
+
+# Automatically check for updates and sync before loading
+detections, environmental, species, stations = load_with_auto_sync()
+
+# Smart loading - load only what you need
+data = smart_load(["detections", "acoustic_indices"])
+detections_df = data["detections"]
+indices_df = data["acoustic_indices"]
+
+# CDN sync utilities
+from mbon_analysis.core import check_data_freshness, ensure_data_available
+
+# Check what needs updating
+status = check_data_freshness("indices")
+
+# Ensure data is available (download if needed)
+ensure_data_available("all")
+
+# Analysis modules (now available!)
+from mbon_analysis.analysis import (
+    # Temporal analysis
+    get_monthly_patterns, find_temporal_peaks, analyze_temporal_trends,
+    
+    # Spatial analysis  
+    compare_stations, calculate_station_similarity, get_station_profiles,
+    
+    # Biodiversity analysis
+    calculate_co_occurrence, analyze_bio_anthro_patterns, get_diversity_metrics
+)
+
+# Data preparation utilities
+from mbon_analysis.core import prepare_detection_data, get_detection_columns, create_dashboard_aggregations
+```
+
+**Package Structure**: The `mbon_analysis` package is now a full-featured analysis toolkit with data loading, preparation, and analysis capabilities.
+
+### Package Examples
+```bash
+# Run usage examples to learn the analysis workflows
+uv run scripts/examples/data_loading_example.py        # Basic data loading
+uv run scripts/examples/data_sync_example.py           # CDN sync features
+uv run scripts/examples/analysis_workflow_example.py   # Comprehensive analysis workflow
+
+# Test individual analysis modules
+uv run mbon_analysis/analysis/biodiversity.py          # Biodiversity analysis examples
+uv run mbon_analysis/analysis/temporal.py              # Temporal analysis examples
+uv run mbon_analysis/analysis/spatial.py               # Spatial analysis examples
+```
 
 ### Development
 ```bash
@@ -448,6 +447,7 @@ All data loading is consolidated in `/src/lib/hooks/useData.ts`:
 - `useMetadata()` - Loads metadata.json with data summary
 - `useStations()` - Loads stations.json with station information
 - `useSpecies()` - Loads species.json with species list
+- `useAcousticIndices()` - Loads acoustic_indices.json with indices data
 - `useCoreData()` - Loads all core data simultaneously
 
 Data is fetched from Cloudflare R2 CDN using the `NEXT_PUBLIC_DATA_URL` environment variable.
@@ -481,7 +481,8 @@ Following the `examples.py` approach:
 
 1. **Process Data Locally**:
    ```bash
-   uv run scripts/process_data.py  # Generate JSON files
+   npm run sync-data        # Get latest raw data from CDN
+   npm run process-data     # Generate JSON files
    ```
 
 2. **Upload Data to Cloudflare R2**:
@@ -516,15 +517,20 @@ Following the `examples.py` approach:
 ```json
 {
   "scripts": {
-    "build-data": "uv run scripts/process_data.py",
-    "validate-data": "uv run scripts/validate_data.py", 
-    "data-stats": "uv run scripts/data_stats.py",
+    "sync-data": "uv run scripts/data_management/sync_raw_data.py",
+    "sync-data:check": "uv run scripts/data_management/sync_raw_data.py --check-only",
+    "sync-data:indices": "uv run scripts/data_management/sync_raw_data.py --indices-only",
+    "sync-data:force": "uv run scripts/data_management/sync_raw_data.py --force",
+    "generate-manifest": "uv run scripts/data_management/generate_manifest.py",
+    "process-data": "uv run scripts/dashboard_prep/process_excel_to_json.py",
+    "validate-data": "uv run scripts/utils/validate_data.py",
+    "data-stats": "uv run scripts/utils/data_statistics.py",
     "build": "next build",
     "dev": "next dev",
-    "dev:fresh": "npm run build-data && next dev",
+    "dev:fresh": "npm run process-data && next dev",
     "lint": "next lint",
-    "clean": "rm -rf .next out",
-    "clean:data": "rm -rf public/data/*"
+    "type-check": "tsc --noEmit",
+    "dashboard:all": "npm run sync-data && npm run process-data"
   }
 }
 ```
@@ -532,14 +538,19 @@ Following the `examples.py` approach:
 **`pyproject.toml`** (Python dependencies via uv):
 ```toml
 [project]
-name = "mbon-dashboard"
+name = "mbon-dash-2025"
 version = "0.1.0"
 dependencies = [
-    "pandas>=2.0.0",
-    "openpyxl>=3.1.0", 
-    "numpy>=1.24.0"
+    "pandas>=2.3.1",
+    "openpyxl>=3.1.5", 
+    "numpy>=2.3.2",
+    "matplotlib>=3.10.5",
+    "seaborn>=0.13.2",
 ]
-requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mbon_analysis*", "scripts*"]
 ```
 
 ## Responsive Dashboard Design Best Practices
@@ -679,61 +690,25 @@ npm run data-stats        # View data summary statistics
 - Demonstrate effectiveness of acoustic monitoring for biodiversity assessment
 - Provide actionable recommendations for marine monitoring programs
 
-## Implementation Timeline & Milestones
+## Project Workflow
 
-### **Phase 1: Data Integration & Basic Analysis (Weeks 1-2)**
+### **Python Analysis (Heavy Computation)**
+- **Core Subpackage (`mbon_analysis/`)**: Reusable utilities for acoustic analysis, PCA, correlation matrices (integrated within project)
+- **Application Scripts (`scripts/`)**: Project-specific processing and exploratory workflows  
+- **Analysis Workflow**: Step-based exploratory scripts that import and use subpackage functions
+- **Research Focus**: Acoustic indices evaluation, dimensionality reduction, biodiversity prediction
 
-**Week 1: Infrastructure Setup**
-- ✅ Restructure data folders (`data/`, `processed/`, `analysis/`, `cdn/`)
-- ✅ Create flexible acoustic indices processing pipeline
-- ✅ Implement temporal alignment (hourly → 2-hour windows)
-- ✅ Basic PCA analysis with 9M 2021 data
-
-**Week 2: Multi-Dataset Integration**  
-- ⏳ Extend pipeline for multiple stations/bandwidths (when available)
-- ⏳ Missing data handling implementation
-- ⏳ Dashboard integration: Index Explorer page
-- ⏳ **Milestone 1 Presentation**: "Here's what the acoustic indices look like"
-
-### **Phase 2: PCA Analysis & Insights (Weeks 3-4)**
-
-**Week 3: Advanced Analysis**
-- ⏳ Index filtering and dimensionality reduction
-- ⏳ Full PCA analysis with component interpretation
-- ⏳ Index-species correlation analysis
-- ⏳ Environmental confounder assessment
-
-**Week 4: Visualization & Results**
-- ⏳ Interactive PCA dashboard components  
-- ⏳ Top indices identification and ranking
-- ⏳ Station comparison analysis
-- ⏳ **Milestone 2 Presentation**: "Here's what we're learning from the indices"
-
-### **Phase 3: Predictive Models & Recommendations (Weeks 5-6)**
-
-**Week 5: Model Development**
-- ⏳ Biodiversity prediction models using reduced index sets
-- ⏳ Cost-effectiveness analysis
-- ⏳ Cross-validation and model performance assessment
-- ⏳ Environmental correction experiments
-
-**Week 6: Final Integration**
-- ⏳ Dashboard completion with all analysis results
-- ⏳ Index recommendation system
-- ⏳ Documentation and methodology writeup
-- ⏳ **Final Presentation**: "Here's what managers should use"
-
-### **Flexible Timeline Notes**
-- Timeline adjusts based on data availability from collaborators
-- Each milestone can be presented independently
-- Pipeline designed to incorporate new datasets as they arrive
-- Dashboard iterates based on analysis discoveries
+### **Web Dashboard (Interactive Visualization)**
+- Real-time filtering and exploration of processed results
+- Interactive charts with Observable Plot and Mapbox
+- User-friendly interface for scientists and managers
+- Pre-computed visualizations served from CDN
 
 ### **Success Metrics**
-- **Technical**: Pipeline processes new acoustic index files automatically
-- **Scientific**: Identify <10 key indices that explain >70% of biodiversity variation
-- **Practical**: Demonstrate automated analysis capabilities vs manual annotation
-- **Communication**: Clear visualizations showing index-biodiversity relationships
+- Identify key acoustic indices that predict species detection patterns
+- Reduce 56+ indices to manageable set of "super indices" via PCA
+- Demonstrate automated analysis capabilities vs manual annotation
+- Clear visualizations showing index-biodiversity relationships
 
 ## Development Notes
 - Don't run `npm run dev` - the user will do that in a separate terminal window. Just tell them when they're ready to run.
@@ -752,7 +727,8 @@ npm run data-stats        # View data summary statistics
 - Cloudflare R2 CDN integration for data storage
 
 ### ✅ **Recently Completed (Data Foundation & Visualization)**
-- **Data processing script updated** - now correctly processes focused scope
+- **Acoustic indices processing** - new CSV files integrated with full processing pipeline (17,231 records)
+- **CDN sync system** - manifest-based file discovery and smart downloading with change detection
 - **Data filtered to 2018, 2021, 9M/14M/37M only** - 3 stations, 2 years as intended
 - **Sheet selection corrected** - environmental/acoustic files now use sheet 1
 - **Primary data prioritized** - Manual detection files properly emphasized
@@ -776,14 +752,29 @@ npm run data-stats        # View data summary statistics
 ### 🎯 **Current Priority: Site Restructuring**
 1. ✅ **Foundation Complete** - Data processing, Observable Plot integration, working dashboard
 2. ✅ **Research focus refined** - Soundscape biodiversity and acoustic indices as proxies
-3. **NEXT: Implement restructured pages** following `docs/site-restructuring-plan.md`:
+3. ✅ **Python package structure** - Integrated `mbon_analysis` subpackage for reusable utilities
+4. **NEXT: Implement restructured pages** following `docs/site-restructuring-plan.md`:
    - `/acoustic-biodiversity` - Primary analysis (PCA, correlations, rankings)
    - `/environmental-factors` - Temperature/depth confounders
    - `/acoustic-glossary` - Index education and science communication
    - Enhanced `/stations` - Spatial context and deployment details
-4. **Phase 1 Goal**: Answer core question "Which acoustic indices best predict soundscape biodiversity?"
+5. **Phase 1 Goal**: Answer core question "Which acoustic indices best predict soundscape biodiversity?"
+
+### 📝 **TODO: Documentation Updates**
+- Update Python workflow documentation to reflect tightly coupled subpackage approach
+- Document migration pattern for moving utilities from scripts to `mbon_analysis` subpackage
+- Create examples showing how to use subpackage functions in exploratory scripts
+- Add testing guidelines for subpackage utilities
 
 ---
 
-*Last updated: $(date)*
-*Data processing based on existing examples.py workflow*
+### Extra notes
+- don't launch the site using npm run dev unless I ask you to, normally I will want to do that myself.
+- don't edit code or make changes to the site unless I ask you to.
+- always attempt to follow best practices and standards for coding and design.
+- Keep CLAUDE.md up to date as we go. If our plan changes I want to make sure that is captured.
+
+---
+
+*Last updated: August 2025*
+*Current focus: Acoustic indices integration and PCA analysis*
