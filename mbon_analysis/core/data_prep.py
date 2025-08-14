@@ -123,7 +123,8 @@ def classify_detections(detection_meta: List[Dict]) -> Dict[str, List[str]]:
 
 def create_dashboard_aggregations(df: pd.DataFrame, detection_cols: List[str]) -> Dict[str, Any]:
     """
-    Create pre-aggregated views optimized for dashboard display.
+    Create pre-aggregated views optimized for dashboard display. This makes it easier for
+    the web dashboard to quickly filter and display data.
     
     Args:
         df: Detection dataframe with datetime index
