@@ -56,9 +56,11 @@ interface UseDataResult<T> {
   refetch: () => void;
 }
 
-// Simple fetch wrapper
+// Simple fetch wrapper with cache busting in development
 async function fetchData<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${DATA_URL}/processed/${endpoint}`);
+  // Add timestamp in development to bypass cache
+  const cacheBuster = process.env.NODE_ENV === 'development' ? `?t=${Date.now()}` : '';
+  const response = await fetch(`${DATA_URL}/processed/${endpoint}${cacheBuster}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
   }
@@ -278,4 +280,56 @@ export function useTimelineData() {
   }, []);
 
   return { ...data, loading, error, refetch: fetchTimelineData };
+}
+
+/**
+ * Monthly detection summary data types
+ */
+export interface MonthlyDetection {
+  year: number;
+  month: number;
+  station: string;
+  detection_type: string;
+  count: number;
+}
+
+export interface MonthlyDetectionsData {
+  monthly_summary: MonthlyDetection[];
+  detection_types: string[];
+  type_labels: Record<string, string>;
+  metadata: {
+    generated_at: string;
+    description: string;
+    years_included: number[];
+    stations_included: string[];
+    total_records: number;
+  };
+}
+
+/**
+ * Hook to load monthly detection aggregations for timeline visualization
+ */
+export function useMonthlyDetections(): UseDataResult<MonthlyDetectionsData> {
+  const [data, setData] = useState<MonthlyDetectionsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchMonthlyDetections = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const monthlyData = await fetchData<MonthlyDetectionsData>('monthly_detections.json');
+      setData(monthlyData);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMonthlyDetections();
+  }, []);
+
+  return { data, loading, error, refetch: fetchMonthlyDetections };
 }
