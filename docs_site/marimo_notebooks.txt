@@ -13,6 +13,8 @@ Data Loading Example | Basic data loading patterns with mbon_analysis | https://
 
 Basic Analysis Example | A few examples of doing basic aggregation and analysis on the detections data | https://static.marimo.app/static/analysis-8wis | scripts/notebooks/1.0_analysis_workflow_example.py
 
+Analysis Workflow Example | Loading various data types and performing some simple analysis | https://static.marimo.app/static/workflow-qze9 | scripts/notebooks/3.0_workflow_example.py
+
 # Add more notebooks here:
 # Temporal Analysis | Exploring temporal patterns in detection data | https://static.marimo.app/static/temporal-example | scripts/notebooks/1.0_temporal_analysis.py
 # Spatial Analysis | Station comparisons and spatial patterns | https://static.marimo.app/static/spatial-example | scripts/notebooks/2.0_spatial_analysis.py
