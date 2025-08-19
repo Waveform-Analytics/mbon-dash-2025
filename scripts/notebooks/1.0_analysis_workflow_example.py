@@ -143,7 +143,7 @@ def _(mo):
         r"""
     ## Dashboard data prep
 
-    This function uses the detections dataframe computed earlier to generate various data aggregations to make it easier to generate visualizations for the dashboard. 
+    This function uses the detections dataframe computed earlier to generate various data aggregations to make it easier to generate visualizations for the dashboard.
     """
     )
     return

@@ -10,7 +10,7 @@ def _(mo):
         r"""
     # Data Aggregation Examples
 
-    Much of the python code in this project is focused on preparing data for use in a web environment, which means we're using a lot of dictionary objects (since they can be easily converted to json which is the best format for web things). This notebook is intended to provide the Python users with some examples of how to use Pandas to aggregate the data directly. 
+    Much of the python code in this project is focused on preparing data for use in a web environment, which means we're using a lot of dictionary objects (since they can be easily converted to json which is the best format for web things). This notebook is intended to provide the Python users with some examples of how to use Pandas to aggregate the data directly.
     """
     )
     return
@@ -60,7 +60,7 @@ def _(mo):
         r"""
     ## Temporal aggregations
 
-    In this example, we are preparing a dataframe that would work for generating a Plotly figure. 
+    In this example, we are preparing a dataframe that would work for generating a Plotly figure.
     """
     )
     return
@@ -89,7 +89,7 @@ def _(detection_cols, df, pd):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Here's an example showing how to generate a plotly visualization. """)
+    mo.md(r"""Here's an example showing how to generate a plotly visualization.""")
     return
 
 

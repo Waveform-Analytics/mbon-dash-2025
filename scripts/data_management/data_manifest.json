@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-08-13T22:46:36.421434Z",
+  "last_updated": "2025-08-17T21:34:41.338391Z",
   "description": "MBON raw data file manifest for CDN synchronization",
   "files": {
     "det_column_names.csv": {
@@ -26,6 +26,12 @@
       "last_modified": "2025-08-12T22:09:38Z",
       "checksum": "bf7dc308",
       "description": "Station 9M acoustic indices"
+    },
+    "indices/Acoustic_Indices_14M_2021_FullBW_v2_Final.csv": {
+      "size_bytes": 34396829,
+      "last_modified": "2025-08-17T21:31:36.504586Z",
+      "checksum": "ca3e3a64",
+      "description": "Station 14M acoustic indices"
     },
     "indices/Acoustic_Indices_9M_2021_8kHz_v2_Final.csv": {
       "size_bytes": 33894543,
