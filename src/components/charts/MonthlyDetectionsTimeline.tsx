@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as Plot from "@observablehq/plot";
-import { useMonthlyDetections, type MonthlyDetection } from '@/lib/hooks/useData';
+import { useMonthlyDetections } from '@/lib/hooks/useData';
 
 interface MonthlyDetectionsTimelineProps {
   className?: string;
@@ -13,36 +13,41 @@ export default function MonthlyDetectionsTimeline({ className = "" }: MonthlyDet
   const [selectedDetectionType, setSelectedDetectionType] = useState<string>('all');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Station color mapping
-  const stationColors = {
+  // Station color mapping - memoized to prevent re-renders
+  const stationColors = useMemo(() => ({
     '9M': '#0ea5e9',   // Sky blue
     '14M': '#22c55e',  // Green
     '37M': '#f59e0b'   // Amber
-  };
+  }), []);
 
-  // Month labels for x-axis
-  const monthLabels = [
+  // Month labels for x-axis - memoized to prevent re-renders
+  const monthLabels = useMemo(() => [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
+  ], []);
 
   useEffect(() => {
     if (!data || !containerRef.current) return;
+
+    // Capture the container ref to avoid stale closure
+    const container = containerRef.current;
 
     // Filter data for selected detection type
     const filteredData = data.monthly_summary.filter(
       record => record.detection_type === selectedDetectionType
     );
 
-    // Separate data by year for two-panel display
-    const data2018 = filteredData.filter(d => d.year === 2018);
-    const data2021 = filteredData.filter(d => d.year === 2021);
+    
+    let mounted = true; // Guard against unmounted component updates
 
     const createPlot = () => {
+      if (!mounted) return null;
       if (!containerRef.current) return null;
       
-      // Clear previous plot
-      containerRef.current.innerHTML = '';
+      // Clear previous plot - more thorough cleanup
+      while (containerRef.current.firstChild) {
+        containerRef.current.removeChild(containerRef.current.firstChild);
+      }
 
       // Get container width for responsive sizing
       const containerWidth = containerRef.current.clientWidth;
@@ -62,10 +67,10 @@ export default function MonthlyDetectionsTimeline({ className = "" }: MonthlyDet
         },
         
         // Two-panel layout with faceting by year
-        facet: {
-          data: filteredData,
-          y: "year",
-          marginRight: 100
+        fy: {
+          domain: [2018, 2021],
+          label: null,
+          ticks: [] // Hide the year axis ticks/labels
         },
         
         // Y-axis configuration
@@ -97,23 +102,31 @@ export default function MonthlyDetectionsTimeline({ className = "" }: MonthlyDet
           // Scatter plot points
           Plot.dot(filteredData, {
             x: "month",
-            y: "count", 
+            y: "count",
+            fy: "year", // Add facet year channel
             fill: "station",
             stroke: "station",
             strokeWidth: 2,
             r: 6,
             fillOpacity: 0.8,
-            tip: true
+            tip: {
+              format: {
+                fy: false, // Hide the facet year from tooltip
+                year: (d: number) => d.toString(), // Format year without comma
+                month: (d: number) => monthLabels[d - 1], // Show month name
+                count: true, // Keep default formatting for count
+                station: true // Keep default formatting for station
+              }
+            }
           }),
           
           // Year labels for each facet
           Plot.text(
             [{ year: 2018, label: "2018" }, { year: 2021, label: "2021" }],
             {
-              fx: null, // Don't facet this mark
               fy: "year",
               x: 6.5, // Center of x-axis
-              y: (d: any) => {
+              y: (d: { year: number; label: string }) => {
                 const yearData = filteredData.filter(record => record.year === d.year);
                 const maxCount = Math.max(...yearData.map(record => record.count), 0);
                 return maxCount * 0.9; // Position near top of panel
@@ -137,12 +150,18 @@ export default function MonthlyDetectionsTimeline({ className = "" }: MonthlyDet
     // Create initial plot
     let currentPlot = createPlot();
 
-    // Set up resize observer for responsive behavior
+    // Set up resize observer for responsive behavior with debounce
+    let resizeTimeout: NodeJS.Timeout;
     const resizeObserver = new ResizeObserver(() => {
-      if (currentPlot) {
-        currentPlot.remove();
-      }
-      currentPlot = createPlot();
+      if (!mounted) return;
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (!mounted) return;
+        if (currentPlot) {
+          currentPlot.remove();
+        }
+        currentPlot = createPlot();
+      }, 100); // Debounce resize events
     });
 
     if (containerRef.current) {
@@ -151,12 +170,20 @@ export default function MonthlyDetectionsTimeline({ className = "" }: MonthlyDet
 
     // Cleanup function
     return () => {
+      mounted = false; // Prevent updates after unmount
+      clearTimeout(resizeTimeout); // Clear any pending resize
       if (currentPlot) {
         currentPlot.remove();
       }
       resizeObserver.disconnect();
+      // Extra cleanup - clear the container using captured ref
+      if (container) {
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+      }
     };
-  }, [data, selectedDetectionType]);
+  }, [data, selectedDetectionType, monthLabels, stationColors]);
 
   if (loading) {
     return (

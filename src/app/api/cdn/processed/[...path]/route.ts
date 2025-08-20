@@ -9,11 +9,12 @@ import { join } from 'path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     // Get the file path from the URL params
-    const filePath = params.path.join('/');
+    const resolvedParams = await params;
+    const filePath = resolvedParams.path.join('/');
     
     // Construct the full path to the data file
     const dataPath = join(process.cwd(), 'data', 'cdn', 'processed', filePath);
@@ -35,7 +36,7 @@ export async function GET(
     console.error('Error serving data file:', error);
     
     // Return appropriate error response
-    if ((error as any).code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }

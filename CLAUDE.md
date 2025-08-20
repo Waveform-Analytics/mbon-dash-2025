@@ -120,16 +120,19 @@ NEXT_PUBLIC_MAPBOX_TOKEN=mapbox_token_here
 mbon-dash-2025/
 ├── data/                           # Raw data (committed to git)
 │   ├── cdn/
-│   │   └── raw-data/              # Column mappings and metadata
-│   │       └── det_column_names.csv  # Species/sound classifications
-│   ├── 2018/                      # Detection and environmental data
-│   │   ├── Master_Manual_[STATION]_2h_2018.xlsx
-│   │   ├── Master_[STATION]_Temp_2018.xlsx
-│   │   └── Master_[STATION]_Depth_2018.xlsx
-│   ├── 2021/                      # [similar structure]
-│   ├── indices/                   # Acoustic indices from collaborator
-│   │   ├── Acoustic_Indices_9M_2021_FullBW_v2_Final.csv
-│   │   └── Acoustic_Indices_9M_2021_8kHz_v2_Final.csv
+│   │   └── raw-data/              # Raw data files synced from CDN
+│   │       ├── det_column_names.csv  # Species/sound classifications
+│   │       ├── Updated_Index_Categories_v2.csv  # Index categories
+│   │       ├── indices/           # Acoustic indices from collaborator
+│   │       │   ├── Acoustic_Indices_9M_2021_FullBW_v2_Final.csv
+│   │       │   ├── Acoustic_Indices_9M_2021_8kHz_v2_Final.csv
+│   │       │   ├── Acoustic_Indices_14M_2021_FullBW_v2_Final.csv
+│   │       │   └── Acoustic_Indices_14M_2021_8kHz_v2_Final.csv
+│   │       ├── 2018/              # Detection and environmental data
+│   │       │   ├── Master_Manual_[STATION]_2h_2018.xlsx
+│   │       │   ├── Master_[STATION]_Temp_2018.xlsx
+│   │       │   └── Master_[STATION]_Depth_2018.xlsx
+│   │       └── 2021/              # [similar structure]
 │   └── 1_Montie Lab_metadata_deployments_2017 to 2022.xlsx
 │
 ├── data/cdn/processed/            # Dashboard-ready JSON (gitignored)
@@ -222,6 +225,12 @@ npm run sync-data:indices      # Sync only indices files
 npm run sync-data:force        # Force download everything
 npm run generate-manifest      # Generate manifest from local files
 ```
+
+**CDN Structure**:
+- Base URL: `https://pub-71436b8d94864ba1ace2ef29fa28f0f1.r2.dev`
+- Raw data path: `/raw-data/`
+- Indices files: `/raw-data/indices/`
+- Manifest location: `/raw-data/data_manifest.json` (needs to be uploaded)
 
 ### Data Processing (Python with uv)
 ```bash
