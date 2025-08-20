@@ -34,3 +34,14 @@ from .data_prep import (
     classify_detections,
     create_dashboard_aggregations
 )
+
+from .acoustic_indices_loader import (
+    load_acoustic_indices_csv,
+    load_all_acoustic_indices,
+    prepare_temporal_heatmap_data,
+    prepare_box_plot_data,
+    get_available_indices,
+    export_for_dashboard,
+    create_temporal_heatmap_json,
+    create_box_plot_json
+)

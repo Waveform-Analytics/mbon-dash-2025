@@ -32,7 +32,14 @@ const navigation: NavItem[] = [
       { name: 'Station Profiles', href: '/stations', description: 'Study sites & spatial context' },
     ]
   },
-  { name: 'Explorer', href: '/explorer', icon: MagnifyingGlassIcon },
+  {
+    name: 'Explore',
+    icon: MagnifyingGlassIcon,
+    children: [
+      { name: 'Species Annotations', href: '/explore/annotations', description: 'Manual detection data & timelines' },
+      { name: 'Acoustic Indices', href: '/explore/indices', description: 'Index patterns & distributions' },
+    ]
+  },
 ]
 
 export default function Navigation() {

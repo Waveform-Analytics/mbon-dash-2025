@@ -333,3 +333,276 @@ export function useMonthlyDetections(): UseDataResult<MonthlyDetectionsData> {
 
   return { data, loading, error, refetch: fetchMonthlyDetections };
 }
+
+/**
+ * PCA Biplot data types
+ */
+export interface PCAPoint {
+  datetime: string;
+  station: string;
+  species_count: number;
+  pc1: number;
+  pc2: number;
+  pc3: number;
+  pc4: number;
+  pc5: number;
+  pc6: number;
+  pc7: number;
+  pc8: number;
+}
+
+export interface PCALoading {
+  index: string;
+  category: string;
+  pc1: number;
+  pc2: number;
+  pc3: number;
+  pc4: number;
+  pc5: number;
+  pc6: number;
+  pc7: number;
+  pc8: number;
+}
+
+export interface PCABiplotData {
+  pca_biplot: {
+    points: PCAPoint[];
+    loadings: PCALoading[];
+    variance_explained: number[];
+    metadata: {
+      total_variance: number;
+      n_components: number;
+      n_indices: number;
+      n_observations: number;
+      analysis_date: string;
+      indices_used?: string[];
+      temporal_aggregation?: string;
+    };
+    performance?: {
+      original_n_indices: number;
+      original_n_points: number;
+      reduced_n_indices: number;
+      reduced_n_points: number;
+      reduction_ratio: string;
+    };
+    stations?: string[];
+  };
+  generated_at: string;
+  bandwidth?: string;
+  data_sources: {
+    acoustic_indices_records: number;
+    detection_records?: number;
+    stations?: string[];
+    optimization_settings?: {
+      max_indices: number;
+      temporal_aggregation: string;
+      max_visualization_points: number;
+      bandwidth?: string;
+    };
+  };
+}
+
+/**
+ * Hook to load PCA biplot data for dimensionality analysis
+ * @param bandwidth - Which bandwidth to load ('FullBW' or '8kHz')
+ */
+export function usePCABiplot(bandwidth: 'FullBW' | '8kHz' = 'FullBW'): UseDataResult<PCABiplotData> {
+  const [data, setData] = useState<PCABiplotData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchPCABiplot = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const filename = bandwidth === '8kHz' ? 'pca_biplot_8khz.json' : 'pca_biplot_fullbw.json';
+      const pcaData = await fetchData<PCABiplotData>(filename);
+      setData(pcaData);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPCABiplot();
+  }, [bandwidth]);
+
+  return { data, loading, error, refetch: fetchPCABiplot };
+}
+
+/**
+ * Raw Data Landscape data types
+ */
+export interface IndexInfo {
+  index: string;
+  category: string;
+  availability: Record<string, {
+    available: boolean;
+    station: string;
+    bandwidth: string;
+    n_values?: number;
+    coverage_pct?: number;
+    n_missing?: number;
+    mean?: number;
+    std?: number;
+    min?: number;
+    max?: number;
+  }>;
+}
+
+export interface RawDataLandscapeData {
+  raw_data_landscape: {
+    indices_overview: IndexInfo[];
+    datasets_info: Record<string, {
+      station: string;
+      bandwidth: string;
+      n_records: number;
+      filename: string;
+      date_range?: {
+        start: string;
+        end: string;
+        days: number;
+      } | null;
+    }>;
+    summary_stats: {
+      total_indices: number;
+      total_datasets: number;
+      category_counts: Record<string, number>;
+      coverage_percentage: number;
+      station_stats: Record<string, any>;
+      bandwidth_stats: Record<string, any>;
+      missing_patterns: {
+        indices_missing_from_all: string[];
+        indices_in_all: string[];
+      };
+    };
+    metadata: {
+      analysis_date: string;
+      description: string;
+      purpose: string;
+    };
+  };
+  generated_at: string;
+}
+
+/**
+ * Hook to load raw data landscape for Step 1A visualization
+ */
+export function useRawDataLandscape(): UseDataResult<RawDataLandscapeData> {
+  const [data, setData] = useState<RawDataLandscapeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchRawDataLandscape = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const landscapeData = await fetchData<RawDataLandscapeData>('step1a_raw_data_landscape.json');
+      setData(landscapeData);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRawDataLandscape();
+  }, []);
+
+  return { data, loading, error, refetch: fetchRawDataLandscape };
+}
+
+/**
+ * Index Distributions data types (with bandwidth separation)
+ */
+export interface IndexAnalysis {
+  index: string;
+  category: string;
+  bandwidth: string;
+  combined_stats: {
+    mean: number;
+    std: number;
+    skewness: number;
+    zero_pct: number;
+    missing_pct: number;
+    outlier_pct: number;
+    distribution_type: string;
+    min: number;
+    max: number;
+  };
+  combined_density: {
+    x: number[];           // Normalized 0-1 x values
+    density: number[];     // PDF density values
+    x_original: number[];  // Original x values
+  };
+  quality_metrics: {
+    missing_pct: number;
+    zero_pct: number;
+    skewness_abs: number;
+    outlier_pct: number;
+    std: number;
+    distribution_type: string;
+  };
+}
+
+export interface BandwidthSummary {
+  total_indices: number;
+  distribution_type_counts: Record<string, number>;
+  category_counts: Record<string, number>;
+  raw_metrics_summary: {
+    skewness_median: number;
+    zero_pct_median: number;
+    missing_pct_median: number;
+    highly_skewed_count: number;
+    zero_heavy_count: number;
+    missing_heavy_count: number;
+  };
+}
+
+export interface IndexDistributionsData {
+  index_distributions_by_bandwidth: Record<string, IndexAnalysis[]>;
+  summary_stats_by_bandwidth: Record<string, BandwidthSummary>;
+  available_bandwidths: string[];
+  metadata: {
+    analysis_date: string;
+    description: string;
+    purpose: string;
+    total_indices_analyzed: number;
+    datasets_included: number;
+    bandwidths_analyzed: string[];
+    visualization_type: string;
+    normalization: string;
+  };
+  generated_at: string;
+}
+
+/**
+ * Hook to load index distributions for quality analysis
+ */
+export function useIndexDistributions(): UseDataResult<IndexDistributionsData> {
+  const [data, setData] = useState<IndexDistributionsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchIndexDistributions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const distributionsData = await fetchData<IndexDistributionsData>('step1b_index_distributions.json');
+      setData(distributionsData);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIndexDistributions();
+  }, []);
+
+  return { data, loading, error, refetch: fetchIndexDistributions };
+}

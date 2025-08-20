@@ -1,14 +1,16 @@
-# Observable Plot MCP Server Setup Guide
+# Observable Plot Documentation Server Setup Guide
 
-A comprehensive guide to create a free MCP (Model Context Protocol) server that connects Claude Code to Observable Plot documentation for enhanced accuracy and up-to-date API references.
+A guide to create a local documentation server that provides Claude Code with access to current Observable Plot documentation for enhanced accuracy and up-to-date API references.
 
 ## Overview
 
-This guide will help you build an MCP server that provides Claude Code with access to:
+This guide will help you build a local HTTP server that provides Claude Code with access to:
 - **Observable Plot official documentation** (observablehq.com/plot/)
 - **GitHub repository content** (README, CHANGELOG, examples)
 - **API references and TypeScript definitions**
 - **Real examples and code snippets**
+
+**Note**: While we'll keep an eye on MCP (Model Context Protocol) for future implementation, we're starting with a simple HTTP server approach that works immediately with Claude Code's existing WebFetch tool.
 
 ## Available Documentation Sources
 
@@ -30,27 +32,24 @@ Based on research, Observable Plot documentation is available through multiple f
 ## Architecture Overview
 
 ```
-Claude Code ←→ Your MCP Server ←→ Observable Plot Docs
-                     ↓
-              Local Cache/Database
+Claude Code ←→ WebFetch Tool ←→ Your HTTP Server ←→ Observable Plot Docs
+                                      ↓
+                               Local Cache/Database
 ```
 
 ## Implementation Approach
 
-### Option 1: Simple Web Scraper MCP (Recommended for Start)
+### Phase 1: Local HTTP Server (Current Implementation)
 
-**Pros**: Easy to implement, always current
-**Cons**: Requires web requests, potential rate limiting
+**Pros**: Works immediately with Claude Code, no MCP dependencies, easy to debug
+**Cons**: Requires manual WebFetch calls (not a major limitation)
 
-### Option 2: GitHub API + Website Hybrid
+### Phase 2: MCP Migration (Future Consideration)
 
-**Pros**: More reliable, uses official APIs
-**Cons**: Slightly more complex setup
+**Pros**: Tighter Claude Code integration, automatic tool discovery
+**Cons**: Depends on MCP SDK stability and availability
 
-### Option 3: Pre-cached Documentation
-
-**Pros**: Fastest response times, no rate limits
-**Cons**: Requires periodic updates
+We'll start with Phase 1 and migrate to MCP once it's proven stable and beneficial.
 
 ## Step-by-Step Implementation
 
@@ -58,117 +57,131 @@ Claude Code ←→ Your MCP Server ←→ Observable Plot Docs
 
 ```bash
 # Create new Node.js project
-mkdir observable-plot-mcp
-cd observable-plot-mcp
+mkdir observable-plot-docs-server
+cd observable-plot-docs-server
 npm init -y
 
 # Install dependencies
-npm install @anthropic/mcp-sdk
+npm install express cors
 npm install cheerio axios node-fetch
-npm install @types/node typescript ts-node --save-dev
+npm install @types/node @types/express typescript ts-node --save-dev
 
 # Create TypeScript config
 npx tsc --init
 ```
 
-### Step 2: Basic MCP Server Structure
+### Step 2: Basic HTTP Server Structure
 
 Create `src/server.ts`:
 
 ```typescript
-import { MCPServer } from '@anthropic/mcp-sdk';
+import express from 'express';
+import cors from 'cors';
 import { DocumentationFetcher } from './documentation-fetcher';
 
-class ObservablePlotMCPServer {
-  private server: MCPServer;
+class ObservablePlotDocsServer {
+  private app: express.Application;
   private docFetcher: DocumentationFetcher;
+  private port: number;
 
-  constructor() {
-    this.server = new MCPServer({
-      name: "observable-plot-docs",
-      version: "1.0.0"
-    });
-    
+  constructor(port: number = 3001) {
+    this.app = express();
+    this.port = port;
     this.docFetcher = new DocumentationFetcher();
-    this.setupHandlers();
+    this.setupMiddleware();
+    this.setupRoutes();
   }
 
-  private setupHandlers() {
-    // Register available tools
-    this.server.setRequestHandler('tools/list', async () => ({
-      tools: [
-        {
-          name: "search_plot_docs",
-          description: "Search Observable Plot documentation",
-          inputSchema: {
-            type: "object",
-            properties: {
-              query: { type: "string", description: "Search query" },
-              section: { 
-                type: "string", 
-                enum: ["api", "examples", "getting-started", "all"],
-                description: "Documentation section to search"
-              }
-            },
-            required: ["query"]
-          }
-        },
-        {
-          name: "get_plot_api",
-          description: "Get specific Observable Plot API documentation",
-          inputSchema: {
-            type: "object",
-            properties: {
-              method: { type: "string", description: "API method or mark type" }
-            },
-            required: ["method"]
-          }
-        }
-      ]
-    }));
+  private setupMiddleware() {
+    this.app.use(cors());
+    this.app.use(express.json());
+  }
 
-    // Handle tool calls
-    this.server.setRequestHandler('tools/call', async (request) => {
-      const { name, arguments: args } = request.params;
+  private setupRoutes() {
+    // Health check
+    this.app.get('/health', (req, res) => {
+      res.json({ status: 'OK', service: 'observable-plot-docs' });
+    });
 
-      switch (name) {
-        case "search_plot_docs":
-          return await this.handleSearchDocs(args.query, args.section);
-        case "get_plot_api":
-          return await this.handleGetAPI(args.method);
-        default:
-          throw new Error(`Unknown tool: ${name}`);
+    // Search documentation
+    this.app.get('/search/:query', async (req, res) => {
+      try {
+        const { query } = req.params;
+        const { section = 'all' } = req.query;
+        
+        const results = await this.docFetcher.searchDocumentation(
+          query, 
+          section as string
+        );
+        
+        res.json({
+          query,
+          section,
+          results,
+          count: results.length
+        });
+      } catch (error) {
+        res.status(500).json({ 
+          error: 'Search failed', 
+          message: error.message 
+        });
+      }
+    });
+
+    // Get specific API documentation
+    this.app.get('/api/:method', async (req, res) => {
+      try {
+        const { method } = req.params;
+        const apiDoc = await this.docFetcher.getAPIDocumentation(method);
+        
+        res.json({
+          method,
+          documentation: apiDoc
+        });
+      } catch (error) {
+        res.status(500).json({ 
+          error: 'API lookup failed', 
+          message: error.message 
+        });
+      }
+    });
+
+    // Get examples for specific mark types
+    this.app.get('/examples/:markType', async (req, res) => {
+      try {
+        const { markType } = req.params;
+        const examples = await this.docFetcher.getExamples(markType);
+        
+        res.json({
+          markType,
+          examples
+        });
+      } catch (error) {
+        res.status(500).json({ 
+          error: 'Examples lookup failed', 
+          message: error.message 
+        });
       }
     });
   }
 
-  private async handleSearchDocs(query: string, section: string = "all") {
-    const results = await this.docFetcher.searchDocumentation(query, section);
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(results, null, 2)
-      }]
-    };
-  }
-
-  private async handleGetAPI(method: string) {
-    const apiDoc = await this.docFetcher.getAPIDocumentation(method);
-    return {
-      content: [{
-        type: "text", 
-        text: apiDoc
-      }]
-    };
-  }
-
   async start() {
-    await this.server.connect();
-    console.log("Observable Plot MCP Server started");
+    // Initialize documentation cache
+    console.log('Initializing documentation cache...');
+    await this.docFetcher.initialize();
+    
+    this.app.listen(this.port, () => {
+      console.log(`Observable Plot docs server running on http://localhost:${this.port}`);
+      console.log('Available endpoints:');
+      console.log(`  GET /health`);
+      console.log(`  GET /search/:query?section=api|examples|all`);
+      console.log(`  GET /api/:method`);
+      console.log(`  GET /examples/:markType`);
+    });
   }
 }
 
-const server = new ObservablePlotMCPServer();
+const server = new ObservablePlotDocsServer();
 server.start().catch(console.error);
 ```
 
@@ -192,6 +205,7 @@ interface DocSection {
 export class DocumentationFetcher {
   private cache: Map<string, any> = new Map();
   private cacheDir = path.join(__dirname, '../cache');
+  private initialized = false;
 
   constructor() {
     this.ensureCacheDir();
@@ -203,6 +217,57 @@ export class DocumentationFetcher {
     } catch (error) {
       // Directory exists
     }
+  }
+
+  async initialize() {
+    if (this.initialized) return;
+    
+    console.log('Pre-loading core documentation...');
+    
+    // Pre-load common searches to warm the cache
+    const commonQueries = [
+      'scatter plot', 'bar chart', 'line chart', 'heatmap',
+      'Plot.dot', 'Plot.bar', 'Plot.line', 'Plot.cell',
+      'getting started', 'marks', 'scales'
+    ];
+    
+    for (const query of commonQueries) {
+      try {
+        await this.searchDocumentation(query, 'all');
+      } catch (error) {
+        console.warn(`Failed to pre-load ${query}:`, error.message);
+      }
+    }
+    
+    this.initialized = true;
+    console.log('Documentation cache initialized');
+  }
+
+  async getExamples(markType: string): Promise<string[]> {
+    const cacheKey = `examples_${markType}`;
+    
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const examples: string[] = [];
+    
+    try {
+      // Search for specific mark type examples
+      const searchResults = await this.searchDocumentation(markType, 'examples');
+      
+      searchResults.forEach(result => {
+        if (result.examples) {
+          examples.push(...result.examples);
+        }
+      });
+      
+      this.cache.set(cacheKey, examples);
+    } catch (error) {
+      console.warn(`Failed to get examples for ${markType}:`, error.message);
+    }
+    
+    return examples;
   }
 
   async searchDocumentation(query: string, section: string): Promise<DocSection[]> {
@@ -372,21 +437,25 @@ Update `package.json`:
 
 ```json
 {
-  "name": "observable-plot-mcp",
+  "name": "observable-plot-docs-server",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts"
   },
   "dependencies": {
-    "@anthropic/mcp-sdk": "latest",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
     "axios": "^1.0.0",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "node-fetch": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
     "typescript": "^5.0.0",
     "ts-node": "^10.0.0"
   }
@@ -395,26 +464,59 @@ Update `package.json`:
 
 ## Usage with Claude Code
 
-### Step 5: Connect to Claude Code
+### Step 5: Start and Test Your Server
 
-1. **Build and start your MCP server**:
+1. **Build and start your server**:
 ```bash
 npm run build
 npm start
+
+# Or for development:
+npm run dev
 ```
 
-2. **Configure Claude Code** to connect to your MCP server by updating your Claude Code configuration to include your MCP server endpoint.
+2. **Test endpoints manually**:
+```bash
+# Health check
+curl http://localhost:3001/health
 
-3. **Test the connection** by asking Claude Code Observable Plot questions.
+# Search for documentation
+curl http://localhost:3001/search/scatter-plot
 
-## Example Queries
+# Get API docs for specific method
+curl http://localhost:3001/api/dot
 
-Once set up, you can ask Claude Code questions like:
+# Get examples for mark type
+curl http://localhost:3001/examples/scatter
+```
 
-- "How do I create a scatter plot with Observable Plot?"
-- "What are the latest features in Observable Plot?"
-- "Show me examples of using the dot mark"
-- "What's the current API for Plot.plot()?"
+3. **Use with Claude Code** via WebFetch:
+   - When you need Observable Plot help, have Claude Code call:
+   - `WebFetch("http://localhost:3001/search/YOUR_QUERY", "Get Observable Plot documentation")`
+
+## Example Usage with Claude Code
+
+Once your server is running, you can improve Claude Code's Observable Plot responses by having it fetch current documentation:
+
+**Example 1: Getting scatter plot help**
+```
+You: "How do I create a scatter plot with Observable Plot?"
+You to Claude Code: "Use WebFetch to get scatter plot docs from http://localhost:3001/search/scatter-plot first, then answer based on current docs"
+```
+
+**Example 2: Learning about specific marks**  
+```
+You: "Show me examples of using the dot mark"
+You to Claude Code: "Get dot mark examples from http://localhost:3001/examples/dot"
+```
+
+**Example 3: API reference lookup**
+```
+You: "What's the current API for Plot.cell()?"
+You to Claude Code: "Check http://localhost:3001/api/cell for the latest cell mark API"
+```
+
+This ensures Claude Code uses current, accurate Observable Plot documentation instead of potentially outdated training data.
 
 ## Enhancement Ideas
 
@@ -436,10 +538,10 @@ Once set up, you can ask Claude Code questions like:
 
 **Total Cost: FREE**
 
-- MCP Server: Free to develop and run
+- HTTP Server: Free to develop and run locally
 - Observable Plot docs: Publicly available
-- GitHub API: 60 requests/hour free (5,000 with free token)
-- Hosting: Can run locally or use free tier services
+- GitHub API: 60 requests/hour free (5,000 with free token)  
+- Hosting: Runs on your local machine
 
 ## Troubleshooting
 
@@ -459,10 +561,19 @@ Once set up, you can ask Claude Code questions like:
 
 ## Next Steps
 
-1. **Start Simple**: Begin with the basic scraper approach
-2. **Test Thoroughly**: Verify Claude Code can connect and get responses
-3. **Iterate**: Add more sophisticated features based on usage
-4. **Monitor**: Track what documentation Claude Code requests most
-5. **Optimize**: Improve based on actual usage patterns
+1. **Start Simple**: Begin with the HTTP server approach outlined above
+2. **Test Thoroughly**: Verify Claude Code can fetch docs via WebFetch and provide better responses
+3. **Iterate**: Add more sophisticated features based on what you find most useful
+4. **Monitor**: Track what documentation you request most through Claude Code
+5. **Future**: Consider migrating to MCP once the ecosystem matures
 
-This approach will give Claude Code access to current, comprehensive Observable Plot documentation, significantly improving its accuracy when helping with Plot-related coding tasks.
+## Future MCP Migration
+
+When MCP becomes stable and widely supported:
+
+1. **Assess Benefits**: Does MCP provide significant advantages over WebFetch?
+2. **Migration Path**: The DocumentationFetcher class can be reused with MCP protocol
+3. **Tool Discovery**: MCP allows Claude Code to automatically discover available documentation tools
+4. **Integration**: Tighter integration with Claude Code's tool ecosystem
+
+This HTTP server approach gives you immediate access to current Observable Plot documentation, significantly improving Claude Code's accuracy for Plot-related tasks, while keeping the door open for MCP migration when appropriate.

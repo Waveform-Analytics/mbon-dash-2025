@@ -8,6 +8,7 @@
     "sync-data:indices": "uv run scripts/data_management/sync_raw_data.py --indices-only",
     "sync-data:force": "uv run scripts/data_management/sync_raw_data.py --force",
     "generate-manifest": "uv run scripts/data_management/generate_manifest.py",
+    "upload-cdn": "uv run scripts/data_management/upload_to_cdn.py",
     "download-data": "uv run scripts/data_management/download_raw_data.py",
     "process-data": "uv run scripts/dashboard_prep/process_excel_to_json.py",
     "validate-data": "uv run scripts/utils/validate_data.py",

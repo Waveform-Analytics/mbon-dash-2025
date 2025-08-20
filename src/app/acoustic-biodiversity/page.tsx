@@ -2,8 +2,7 @@
 
 // Icons removed since text sections were removed
 import { AcousticBiodiversityContent } from './page.content';
-import AcousticIndicesHeatmap from '@/components/charts/AcousticIndicesHeatmap';
-import BandwidthComparisonBoxPlot from '@/components/charts/BandwidthComparisonBoxPlot';
+// Charts will be moved to explore pages for detailed analysis
 
 export default function AcousticBiodiversityPage() {
   return (
@@ -19,14 +18,19 @@ export default function AcousticBiodiversityPage() {
         </p>
       </div>
 
-      {/* Acoustic Indices Heatmap - NEW VISUALIZATION */}
-      <AcousticIndicesHeatmap />
-
-      {/* Bandwidth Comparison Box Plot */}
-      <div className="mt-8">
-        <BandwidthComparisonBoxPlot />
+      {/* Placeholder for methodological content */}
+      <div className="mb-12">
+        <div className="bg-blue-50 p-6 rounded-lg">
+          <h2 className="text-2xl font-bold text-blue-800 mb-3">
+            Acoustic Indices Analysis Framework
+          </h2>
+          <p className="text-blue-700 max-w-4xl">
+            This page will present our systematic approach to identifying which acoustic indices 
+            best predict marine soundscape biodiversity. The analysis workflow and visualizations 
+            are being developed in the <strong>Explore → Acoustic Indices</strong> section.
+          </p>
+        </div>
       </div>
-
 
     </div>
   );
