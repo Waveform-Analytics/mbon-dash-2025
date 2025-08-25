@@ -2,6 +2,7 @@
 Tests for the Excel processor module.
 """
 
+import pytest
 import pandas as pd
 from pathlib import Path
 import sys
@@ -34,11 +35,8 @@ class TestMBONExcelProcessor:
         processor = MBONExcelProcessor()
         
         # Test file with no station identifier
-        try:
+        with pytest.raises(ValueError, match="Cannot extract station"):
             processor.extract_metadata_from_filename(Path("data/2018/Master.xlsx"))
-            raise AssertionError("Expected ValueError was not raised")
-        except ValueError as e:
-            assert "Cannot extract station" in str(e)
     
     def test_load_column_mapping(self):
         """Test column mapping loading."""
@@ -67,8 +65,7 @@ class TestMBONExcelProcessor:
             assert name_mapping is name_mapping2, "Column mapping should be cached"
             
         except FileNotFoundError:
-            print("Column mapping file not found - skipping test")
-            return
+            pytest.skip("Column mapping file not found - skipping test")
     
     def test_processor_configuration(self):
         """Test processor initialization with custom configuration."""
@@ -175,8 +172,7 @@ class TestConvenienceFunctions:
             assert isinstance(name_mapping, dict)
             assert isinstance(type_mapping, dict)
         except FileNotFoundError:
-            print("Column mapping file not found - skipping test")
-            return
+            pytest.skip("Column mapping file not found - skipping test")
     
     def test_extract_metadata_function(self):
         """Test the standalone extract_metadata_from_filename function."""

@@ -2,6 +2,7 @@
 Tests for the data validation script.
 """
 
+import pytest
 import json
 import tempfile
 from pathlib import Path
