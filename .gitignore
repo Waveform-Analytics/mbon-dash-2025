@@ -74,3 +74,22 @@ site/
 
 # Generated plots from exploratory scripts
 scripts/**/*.png
+
+# Test coverage files
+.coverage
+coverage.json
+htmlcov/
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Backup files
+*.backup
+*.bak
+
+# Log files
+*.log
+
+# Temporary test utilities
+test_runner.py
+pytest.ini
