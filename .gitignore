@@ -92,4 +92,3 @@ htmlcov/
 
 # Temporary test utilities
 test_runner.py
-pytest.ini
