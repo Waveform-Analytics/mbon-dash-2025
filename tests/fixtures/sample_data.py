@@ -12,39 +12,78 @@ def mock_data_dir():
     with tempfile.TemporaryDirectory() as tmpdir:
         data_dir = Path(tmpdir)
         
-        # Create mock detections.json
-        detections_data = {
-            "data": [
-                {
-                    "station": "9M",
-                    "datetime": "2021-01-01T00:00:00",
-                    "species": "sp",
-                    "detection": 1
-                },
-                {
-                    "station": "14M", 
-                    "datetime": "2021-01-01T02:00:00",
-                    "species": "otbw",
-                    "detection": 1
-                }
-            ]
-        }
+        # Create mock detections.json (array of detection records)
+        detections_data = [
+            {
+                "station": "9M",
+                "datetime": "2021-01-01T00:00:00",
+                "species": "sp",
+                "detection": 1
+            },
+            {
+                "station": "14M", 
+                "datetime": "2021-01-01T02:00:00",
+                "species": "otbw",
+                "detection": 1
+            },
+            {
+                "station": "9M",
+                "datetime": "2021-01-01T04:00:00",
+                "species": "bde",
+                "detection": 1
+            }
+        ]
         
         with open(data_dir / "detections.json", "w") as f:
             json.dump(detections_data, f)
         
-        # Create mock stations.json (include required stations, but can have more)
-        stations_data = {
-            "stations": [
-                {"id": "9M", "name": "Station 9M", "lat": 32.1, "lon": -80.8},
-                {"id": "14M", "name": "Station 14M", "lat": 32.2, "lon": -80.7},
-                {"id": "37M", "name": "Station 37M", "lat": 32.3, "lon": -80.6}
-                # Future stations can be added here without breaking tests
-            ]
-        }
+        # Create mock stations.json (match real data structure: array directly)
+        stations_data = [
+            {
+                "id": "9M", 
+                "name": "Station 9M", 
+                "coordinates": {"lat": 32.1, "lon": -80.8},
+                "years": ["2021"],
+                "data_types": ["detections", "environmental"]
+            },
+            {
+                "id": "14M", 
+                "name": "Station 14M", 
+                "coordinates": {"lat": 32.2, "lon": -80.7},
+                "years": ["2021"],
+                "data_types": ["detections", "environmental"]
+            },
+            {
+                "id": "37M", 
+                "name": "Station 37M", 
+                "coordinates": {"lat": 32.3, "lon": -80.6},
+                "years": ["2021"],
+                "data_types": ["detections", "environmental"]
+            }
+            # Future stations can be added here without breaking tests
+        ]
         
         with open(data_dir / "stations.json", "w") as f:
             json.dump(stations_data, f)
+        
+        # Create mock deployment_metadata.json
+        deployment_data = [
+            {
+                "station": "9M",
+                "deployment_id": "9M_test_2021",
+                "start_date": "2021-01-01",
+                "end_date": "2021-12-31"
+            },
+            {
+                "station": "14M",
+                "deployment_id": "14M_test_2021", 
+                "start_date": "2021-01-01",
+                "end_date": "2021-12-31"
+            }
+        ]
+        
+        with open(data_dir / "deployment_metadata.json", "w") as f:
+            json.dump(deployment_data, f)
         
         yield data_dir
 

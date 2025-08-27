@@ -97,3 +97,37 @@ export interface NavChild {
   href: string;
   description?: string;
 }
+
+// View data types for optimized dashboard views
+export interface StationOverviewData {
+  stations: Array<{
+    id: string;
+    name: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+    deployments: Array<{
+      start?: string;
+      end?: string;
+      deployment_id?: string;
+    }>;
+    summary_stats: {
+      total_detections: number;
+      species_count: number;
+      recording_hours: number;
+      years_active: number[];
+    };
+  }>;
+  metadata: {
+    generated_at: string;
+    data_sources: string[];
+    total_stations: number;
+  };
+}
+
+// Union type for all view data types
+export type ViewData = StationOverviewData;
+
+// View type identifiers
+export type ViewType = 'station-overview' | 'species-overview';
