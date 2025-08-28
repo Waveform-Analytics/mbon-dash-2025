@@ -744,13 +744,15 @@ npm run data-stats        # View data summary statistics
 - **Species Activity Timeline Heatmap** - implemented with Observable Plot
 - **Observable Plot integration** - replaced Plotly.js for better performance
 
-### 🚧 **In Progress (MVP Focus)**
-- Station map (✅ working with correct 3 stations)
-- Dashboard metrics (✅ showing correct scope and data)
-- Species activity timeline (✅ completed with Observable Plot heatmap)
-- Species analysis page (placeholder)
-- Temporal patterns page (placeholder)
-- Data explorer page (placeholder)
+### 🚧 **In Progress (View-Based Architecture Migration)**
+- ✅ **Phase 1**: Foundation Setup (TDD, testing infrastructure)
+- ✅ **Phase 2**: Station overview view (7KB vs 9KB, working)
+- ✅ **Phase 2b**: Species timeline view (1.6KB vs MB+, 1000x+ improvement)
+- ✅ **Phase 3**: CDN automation system (deployed to Cloudflare R2)
+- ✅ **Phase 4.1**: Acoustic summary view (**MAJOR WIN**: 19.6KB vs 166MB, **8,686x improvement!**)
+- 🚧 **Phase 4.2**: Acoustic summary frontend integration (in progress)
+- 📋 **Phase 4.3**: Environmental trends view (planned)
+- 📋 **Phase 4.4**: Biodiversity patterns view (planned)
 
 ### 🔮 **Planned (After Data Fixed)**
 - Interactive charts and visualizations
@@ -786,4 +788,14 @@ npm run data-stats        # View data summary statistics
 ---
 
 *Last updated: August 2025*
-*Current focus: Acoustic indices integration and PCA analysis*
+*Current focus: Phase 4.2 - Acoustic Summary Frontend Integration (following TDD approach)*
+
+## Recent Major Achievement: Phase 4.1 Complete! 🚀
+
+**Acoustic Summary View Generator** - Achieved **8,686x performance improvement**:
+- **Before**: 166MB `acoustic_indices.json` (massive, slow to load)
+- **After**: 19.6KB `acoustic_summary.json` (lightning fast)
+- **Data Preserved**: 61 acoustic indices → 5 PCA components + 6 research categories
+- **Real Data**: 34,700 measurements from stations 9M, 14M processed
+- **Research Value**: Dimensionality reduction, index categorization, temporal aggregation
+- **TDD Success**: 10 comprehensive tests, all passing

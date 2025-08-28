@@ -1,0 +1,196 @@
+{
+  "stations": [
+    {
+      "id": "9M",
+      "name": "Station 9M",
+      "coordinates": {
+        "lat": 32.2833,
+        "lon": -80.8833
+      },
+      "deployments": [
+        {
+          "start": "2017-10-24",
+          "end": "2018-01-23",
+          "deployment_id": "9M_1082_012318"
+        },
+        {
+          "start": "2018-01-23",
+          "end": "2018-04-20",
+          "deployment_id": "9M_1153_042018"
+        },
+        {
+          "start": "2018-04-20",
+          "end": "2018-07-26",
+          "deployment_id": "9M_1082_072618"
+        },
+        {
+          "start": "2018-07-26",
+          "end": "2018-10-16",
+          "deployment_id": "9M_1153_101618"
+        },
+        {
+          "start": "2020-10-26",
+          "end": "2021-01-25",
+          "deployment_id": "9M_1083_012521"
+        },
+        {
+          "start": "2021-01-25",
+          "end": "2021-04-26",
+          "deployment_id": "9M_1081_042621"
+        },
+        {
+          "start": "2021-04-26",
+          "end": "2021-07-26",
+          "deployment_id": "9M_1083_072621"
+        },
+        {
+          "start": "2021-07-26",
+          "end": "2021-10-19",
+          "deployment_id": "9M_1081_101921"
+        },
+        {
+          "start": "2021-10-19",
+          "end": "2022-03-02",
+          "deployment_id": "9M_1083_030222"
+        }
+      ],
+      "summary_stats": {
+        "total_detections": 8760,
+        "species_count": 0,
+        "recording_hours": 78140,
+        "years_active": [
+          2018,
+          2021
+        ]
+      }
+    },
+    {
+      "id": "14M",
+      "name": "Station 14M",
+      "coordinates": {
+        "lat": 32.2667,
+        "lon": -80.9
+      },
+      "deployments": [
+        {
+          "start": "2017-10-24",
+          "end": "2018-01-23",
+          "deployment_id": "14M_1215_012318"
+        },
+        {
+          "start": "2018-01-23",
+          "end": "2018-04-20",
+          "deployment_id": "14M_1154_042018"
+        },
+        {
+          "start": "2018-04-20",
+          "end": "2018-07-26",
+          "deployment_id": "14M_1215_072618"
+        },
+        {
+          "start": "2018-07-26",
+          "end": "2018-10-16",
+          "deployment_id": "14M_1154_101618"
+        },
+        {
+          "start": "2021-01-25",
+          "end": "2021-04-26",
+          "deployment_id": "14M_1084_042621"
+        },
+        {
+          "start": "2021-04-26",
+          "end": "2021-07-26",
+          "deployment_id": "14M_1215_072621"
+        },
+        {
+          "start": "2021-07-26",
+          "end": "2021-10-19",
+          "deployment_id": "14M_1084_101921"
+        },
+        {
+          "start": "2021-10-19",
+          "end": "2022-03-02",
+          "deployment_id": "14M_1215_030222"
+        }
+      ],
+      "summary_stats": {
+        "total_detections": 8760,
+        "species_count": 0,
+        "recording_hours": 79312,
+        "years_active": [
+          2018,
+          2021
+        ]
+      }
+    },
+    {
+      "id": "37M",
+      "name": "Station 37M",
+      "coordinates": {
+        "lat": 32.25,
+        "lon": -80.9167
+      },
+      "deployments": [
+        {
+          "start": "2017-10-24",
+          "end": "2018-01-23",
+          "deployment_id": "37M_1216_012318"
+        },
+        {
+          "start": "2018-01-23",
+          "end": "2018-04-20",
+          "deployment_id": "37M_1217_042018"
+        },
+        {
+          "start": "2018-04-20",
+          "end": "2018-07-26",
+          "deployment_id": "37M_1084_072618"
+        },
+        {
+          "start": "2018-07-26",
+          "end": "2018-10-16",
+          "deployment_id": "37M_1217_101618"
+        },
+        {
+          "start": "2021-01-25",
+          "end": "2021-04-26",
+          "deployment_id": "37M_1152_042621"
+        },
+        {
+          "start": "2021-04-26",
+          "end": "2021-07-26",
+          "deployment_id": "37M_1217_072621"
+        },
+        {
+          "start": "2021-07-26",
+          "end": "2021-10-19",
+          "deployment_id": "37M_1152_101921"
+        },
+        {
+          "start": "2021-10-19",
+          "end": "2022-03-02",
+          "deployment_id": "37M_1216_030222"
+        }
+      ],
+      "summary_stats": {
+        "total_detections": 8760,
+        "species_count": 0,
+        "recording_hours": 79882,
+        "years_active": [
+          2018,
+          2021
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "generated_at": "2025-08-26T16:02:28.477276Z",
+    "data_sources": [
+      "stations.json",
+      "deployment_metadata.json",
+      "detections.json",
+      "environmental.json"
+    ],
+    "total_stations": 3
+  }
+}

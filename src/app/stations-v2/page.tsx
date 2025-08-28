@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Stations V2 Page - Optimized version using view data
  * 

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Custom hook for loading optimized view data from CDN.
  * 
@@ -9,22 +11,24 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { ViewType, StationOverviewData } from '@/types/data';
+import type { ViewType, StationOverviewData, SpeciesTimelineData, AcousticSummaryData } from '@/types/data';
 
 // Type mapping for different view types
 type ViewDataMap = {
   'station-overview': StationOverviewData;
-  'species-overview': any; // TODO: Add type when implemented
+  'species-timeline': SpeciesTimelineData;
+  'acoustic-summary': AcousticSummaryData;
 };
 
 // URL mapping for view types to file names
 const VIEW_FILE_MAP: Record<ViewType, string> = {
   'station-overview': 'station_overview.json',
-  'species-overview': 'species_overview.json',
+  'species-timeline': 'species_timeline.json',
+  'acoustic-summary': 'acoustic_summary.json',
 };
 
 // Valid view types for runtime validation
-const VALID_VIEW_TYPES: ViewType[] = ['station-overview', 'species-overview'];
+const VALID_VIEW_TYPES: ViewType[] = ['station-overview', 'species-timeline', 'acoustic-summary'];
 
 interface UseViewDataResult<T extends ViewType> {
   data: ViewDataMap[T] | null;
@@ -59,7 +63,9 @@ export function useViewData<T extends ViewType>(viewType: T): UseViewDataResult<
     const loadData = async () => {
       try {
         const fileName = VIEW_FILE_MAP[viewType];
-        const url = `${process.env.NEXT_PUBLIC_DATA_URL}/views/${fileName}`;
+        // Use relative URL if no base URL is set (local development)
+        const baseUrl = process.env.NEXT_PUBLIC_DATA_URL;
+        const url = baseUrl ? `${baseUrl}/views/${fileName}` : `/views/${fileName}`;
         
         const response = await fetch(url);
         
@@ -88,4 +94,12 @@ export function useViewData<T extends ViewType>(viewType: T): UseViewDataResult<
 // Convenience hooks for specific view types
 export function useStationOverview() {
   return useViewData('station-overview');
+}
+
+export function useSpeciesTimeline() {
+  return useViewData('species-timeline');
+}
+
+export function useAcousticSummary() {
+  return useViewData('acoustic-summary');
 }

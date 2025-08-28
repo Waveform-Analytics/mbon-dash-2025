@@ -59,7 +59,7 @@ const nextConfig = {
               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com;
               font-src 'self' data: https://fonts.gstatic.com;
               img-src 'self' data: blob: https://*.mapbox.com https://*.r2.dev;
-              connect-src 'self' https://*.mapbox.com https://*.r2.dev https://api.mapbox.com;
+              connect-src 'self' https://*.mapbox.com https://*.r2.dev https://api.mapbox.com https://waveformdata.work;
               worker-src 'self' blob:;
               frame-src 'none';
               object-src 'none';

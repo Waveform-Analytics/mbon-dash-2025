@@ -12,7 +12,7 @@ import { act } from 'react'
 global.fetch = jest.fn()
 
 // Import the hook we're testing (will fail initially - that's expected in TDD)
-import { useViewData } from '@/lib/hooks/useViewData'
+import { useViewData, useAcousticSummary } from '@/lib/hooks/useViewData'
 
 describe('useViewData Hook', () => {
   beforeEach(() => {
@@ -250,6 +250,53 @@ describe('useViewData Hook', () => {
         expect(result.current.data).toHaveProperty('stations')
         expect(result.current.data).toHaveProperty('metadata')
         expect(Array.isArray(result.current.data.stations)).toBe(true)
+      }
+    })
+
+    it('should support acoustic summary data loading', async () => {
+      const mockAcousticData = {
+        acoustic_summary: [],
+        pca_analysis: {
+          components: ['PC1', 'PC2', 'PC3'],
+          explained_variance: [0.4, 0.3, 0.2],
+          feature_loadings: {}
+        },
+        index_categories: {},
+        metadata: {
+          generated_at: '2024-01-01T12:00:00Z',
+          data_sources: ['acoustic_indices.json'],
+          total_indices: 61,
+          stations_included: ['9M', '14M'],
+          total_records_processed: 34700,
+          date_range: { start: null, end: null },
+          generator: 'test',
+          version: '1.0.0'
+        }
+      }
+      
+      ;(fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockAcousticData
+      })
+
+      const { result } = renderHook(() => useAcousticSummary())
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Should have loaded acoustic summary data
+      expect(result.current.data).toEqual(mockAcousticData)
+      expect(result.current.error).toBeNull()
+      
+      // Type should be inferred as AcousticSummaryData
+      if (result.current.data) {
+        expect(result.current.data).toHaveProperty('acoustic_summary')
+        expect(result.current.data).toHaveProperty('pca_analysis')
+        expect(result.current.data).toHaveProperty('index_categories')
+        expect(result.current.data).toHaveProperty('metadata')
+        expect(result.current.data.pca_analysis).toHaveProperty('components')
+        expect(Array.isArray(result.current.data.pca_analysis.components)).toBe(true)
       }
     })
   })

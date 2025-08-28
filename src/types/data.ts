@@ -126,8 +126,76 @@ export interface StationOverviewData {
   };
 }
 
+export interface SpeciesTimelineData {
+  species_timeline: Array<{
+    species_code: string;
+    species_name: string;
+    category: 'biological';
+    monthly_detections: Array<{
+      year_month: string; // "2018-01" format
+      detection_count: number;
+      stations: string[]; // Stations that had detections
+    }>;
+    detection_frequency: number; // 0-1 ratio
+    total_detections: number;
+  }>;
+  metadata: {
+    generated_at: string;
+    data_sources: string[];
+    total_species: number;
+    aggregation_level: 'monthly';
+    description: string;
+  };
+  temporal_aggregation: 'monthly';
+}
+
+// Acoustic Summary Data (optimized from 166MB → 19.6KB)
+export interface AcousticSummaryData {
+  acoustic_summary: Array<{
+    station: string;
+    temporal_stats: {
+      total_records: number;
+      date_range: {
+        start: string | null;
+        end: string | null;
+      };
+    };
+    acoustic_metrics: Record<string, {
+      mean: number | null;
+      std: number | null;
+    }>;
+  }>;
+  pca_analysis: {
+    components: string[]; // e.g., ['PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+    explained_variance: number[];
+    feature_loadings: Record<string, Record<string, number>>;
+  };
+  index_categories: Record<string, {
+    description: string;
+    indices: string[];
+    summary_stats?: {
+      index_count: number;
+      avg_correlation: number | null;
+      data_availability: number;
+    };
+  }>;
+  metadata: {
+    generated_at: string;
+    data_sources: string[];
+    total_indices: number;
+    stations_included: string[];
+    total_records_processed: number;
+    date_range: {
+      start: string | null;
+      end: string | null;
+    };
+    generator: string;
+    version: string;
+  };
+}
+
 // Union type for all view data types
-export type ViewData = StationOverviewData;
+export type ViewData = StationOverviewData | SpeciesTimelineData | AcousticSummaryData;
 
 // View type identifiers
-export type ViewType = 'station-overview' | 'species-overview';
+export type ViewType = 'station-overview' | 'species-timeline' | 'acoustic-summary';
