@@ -16,13 +16,18 @@ const nextConfig = {
     return [
       {
         source: '/api/cdn/:path*',
-        destination: 'https://pub-71436b8d94864ba1ace2ef29fa28f0f1.r2.dev/:path*',
+        destination: 'https://waveformdata.work/:path*',
       },
     ]
   },
   
   // Security headers configuration
   async headers() {
+    // Disable CSP in development to avoid conflicts with Next.js hot reloading
+    if (process.env.NODE_ENV === 'development') {
+      return []
+    }
+    
     return [
       {
         source: '/:path*',
@@ -48,25 +53,20 @@ const nextConfig = {
             value: 'origin-when-cross-origin'
           },
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(self)'
-          },
-          {
             key: 'Content-Security-Policy',
             value: `
               default-src 'self';
               script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api.mapbox.com;
               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com;
-              font-src 'self' data: https://fonts.gstatic.com;
+              font-src 'self' data: https://fonts.gstatic.com https://*.mapbox.com;
               img-src 'self' data: blob: https://*.mapbox.com https://*.r2.dev;
-              connect-src 'self' https://*.mapbox.com https://*.r2.dev https://api.mapbox.com https://waveformdata.work;
+              connect-src 'self' https://*.mapbox.com https://*.r2.dev https://api.mapbox.com https://waveformdata.work https://events.mapbox.com;
               worker-src 'self' blob:;
               frame-src 'none';
               object-src 'none';
               base-uri 'self';
               form-action 'self';
               frame-ancestors 'none';
-              upgrade-insecure-requests;
             `.replace(/\s+/g, ' ').trim()
           }
         ]

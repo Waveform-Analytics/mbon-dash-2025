@@ -1,5 +1,10 @@
 # Marine Biodiversity Dashboard (MBON-USC-2025)
 
+** note that important information for scientists and developers is in the README.md file **
+
+
+
+
 ## Project Overview
 Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as proxies for complex biodiversity monitoring. The core research question: "Can computed acoustic indices help us understand and predict marine biodiversity patterns as an alternative to labor-intensive manual species detection methods?"
 

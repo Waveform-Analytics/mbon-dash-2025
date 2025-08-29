@@ -73,12 +73,24 @@ def main():
             species_list = []
             if not detections_df.empty and name_mapping:
                 # Get species columns (skip datetime/metadata columns)
-                metadata_cols = {'date', 'time', 'datetime', 'station', 'year', 'source_file'}
+                metadata_cols = {'id', 'file', 'date', 'time', 'datetime', 'station', 'year', 'source_file', 'analyzer'}
                 species_cols = [col for col in detections_df.columns if col not in metadata_cols]
                 
                 for col in species_cols:
                     if col in name_mapping:
-                        detection_count = int(detections_df[col].sum()) if col in detections_df.columns else 0
+                        # Safely calculate detection count, handling mixed-type columns
+                        try:
+                            # Try to convert to numeric, coercing errors to NaN
+                            numeric_col = pd.to_numeric(detections_df[col], errors='coerce')
+                            detection_count = int(numeric_col.sum()) if not numeric_col.isna().all() else 0
+                        except Exception:
+                            # If that fails, try simple sum (for pure numeric columns)
+                            try:
+                                detection_count = int(detections_df[col].sum())
+                            except Exception:
+                                # If all else fails, count non-zero/non-null entries
+                                detection_count = int((detections_df[col] != 0).sum())
+                        
                         species_list.append({
                             "short_name": col,
                             "long_name": str(name_mapping[col]),  # Ensure string

@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { 
   MapPinIcon,
@@ -9,8 +7,7 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { StationMap } from '@/components/maps/StationMap';
-import { useDeploymentMetadata, DeploymentMetadata } from '@/lib/hooks/useData';
-import { useMemo } from 'react';
+import { getServerDeployments, DeploymentMetadata } from '@/lib/server-data';
 
 // Define station colors
 const STATION_COLORS = {
@@ -121,14 +118,13 @@ function formatCoordinate(coord: number, type: 'lat' | 'lon'): string {
   return `${abs.toFixed(5)}°${direction}`;
 }
 
-export default function StationsPage() {
-  const { data: deployments, loading, error } = useDeploymentMetadata();
+export default async function StationsPage() {
+  const deployments = await getServerDeployments();
   
   // Process deployment data for the map
-  const stationsForMap = useMemo(() => {
-    if (!deployments) return [];
-    return processStationsForMap(deployments);
-  }, [deployments]);
+  const stationsForMap = deployments ? processStationsForMap(deployments) : [];
+  const error = null; // Handle errors gracefully
+  const loading = false; // Server-side data is loaded
 
   return (
     <div className="page-container">

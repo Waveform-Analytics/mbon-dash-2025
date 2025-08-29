@@ -7,10 +7,10 @@ import type {
   DetectionRecord as Detection
 } from '@/types/data';
 
-// Use proxy in development to bypass CORS
+// Use local proxy in development to bypass CORS, CDN in production
 const DATA_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? '/api/cdn'  // Use local proxy in development
-  : (process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data');
+  : (process.env.NEXT_PUBLIC_DATA_URL || 'https://waveformdata.work');
 
 // Re-export types with compatibility aliases
 export type { Detection };
@@ -72,9 +72,12 @@ async function fetchViewData<T>(endpoint: string): Promise<T> {
   // Add timestamp in development to bypass cache
   const cacheBuster = process.env.NODE_ENV === 'development' ? `?t=${Date.now()}` : '';
   
-  // Always use the CDN for consistency
-  const CDN_URL = process.env.NEXT_PUBLIC_DATA_URL || 'https://waveformdata.work';
-  const response = await fetch(`${CDN_URL}/${endpoint}${cacheBuster}`);
+  // Use local proxy in development to bypass CORS, CDN in production
+  const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? '/api/cdn'  // Use local proxy in development
+    : (process.env.NEXT_PUBLIC_DATA_URL || 'https://waveformdata.work');
+  
+  const response = await fetch(`${baseUrl}/${endpoint}${cacheBuster}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch view ${endpoint}: ${response.statusText}`);

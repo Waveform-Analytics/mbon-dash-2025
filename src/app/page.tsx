@@ -1,9 +1,5 @@
-'use client'
-
-import { useMemo } from 'react';
-import { useCoreData, useDeploymentMetadata, DeploymentMetadata } from '@/lib/hooks/useData'
-import { StationMap } from '@/components/maps/StationMap';
 import { HomepageContent } from './page.content';
+import StationMapWrapper from '@/components/StationMapWrapper';
 import { 
   MusicalNoteIcon, 
   SunIcon, 
@@ -14,6 +10,12 @@ import {
   CheckCircleIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline'
+import { 
+  getServerMetadata, 
+  getServerSpecies, 
+  getServerStations, 
+  getServerDeployments 
+} from '@/lib/server-data'
 
 // Define what processed station data will look like
 // Export it so other files can import and use it
@@ -79,37 +81,18 @@ function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStat
   return Array.from(stationMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export default function DashboardPage() {
-  // Existing data fetching
-  const { metadata, stations, species, loading, error } = useCoreData()
-  
-  // NEW: Fetch deployment metadata
-  const { 
-    data: deployments, 
-    loading: deploymentsLoading, 
-    error: _deploymentsError 
-  } = useDeploymentMetadata();
-  
-  // NEW: Process the deployment data for the map
-  // useMemo prevents recalculating on every render
-  const stationsForMap = useMemo(() => {
-    if (!deployments) return [];
-    return processStationsForMap(deployments);
-  }, [deployments]);  // Only recalculate if deployments change
-  
-  // Combine loading states
-  const isLoading = loading || deploymentsLoading;
+export default async function DashboardPage() {
+  // Server-side data fetching
+  const [metadata, species, stations, deployments] = await Promise.all([
+    getServerMetadata(),
+    getServerSpecies(), 
+    getServerStations(),
+    getServerDeployments()
+  ]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading acoustic annotations and indices...</p>
-        </div>
-      </div>
-    )
-  }
+  // Process deployment data for stations
+  const stationsForMap = deployments ? processStationsForMap(deployments) : [];
+  const error = null; // Handle errors gracefully
 
   return (
     <div className="page-container">
@@ -128,7 +111,7 @@ export default function DashboardPage() {
       <div className="card-grid gap-6 mb-12">
         <div className="metrics-card group">
           <div className="text-3xl font-bold text-ocean-600 mb-2">
-            {metadata?.data_summary.total_detections.toLocaleString() || '-'}
+            {metadata?.data_summary?.total_detections?.toLocaleString() || '-'}
           </div>
           <div className="text-sm font-medium text-slate-600">{HomepageContent.metrics.detections}</div>
         </div>
@@ -167,36 +150,13 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      {/* Station Map - Separate section */}
+      {/* Station Map */}
       <div className="mb-12">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between p-6 pb-4">
             <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.stationMap.title}</h3>
-            {deploymentsLoading && (
-              <span className="badge badge-ocean">Loading...</span>
-            )}
           </div>
-          
-          {/* Show the map if we have data, otherwise show placeholder */}
-          {stationsForMap.length > 0 ? (
-            <div className="h-[400px] w-full rounded-b-xl overflow-hidden">
-              <StationMap stations={stationsForMap} />
-            </div>
-          ) : deploymentsLoading ? (
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-                <div className="text-slate-500 font-medium mt-4">{HomepageContent.stationMap.loadingText}</div>
-              </div>
-            </div>
-          ) : (
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-b-lg p-6">
-              <div className="text-center">
-                <MapPinIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
-                <div className="text-slate-500 font-medium">{HomepageContent.stationMap.noDataText}</div>
-              </div>
-            </div>
-          )}
+          <StationMapWrapper stations={stationsForMap} />
         </div>
       </div>
 

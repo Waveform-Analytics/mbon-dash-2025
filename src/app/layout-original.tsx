@@ -1,7 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Source_Sans_3 } from 'next/font/google'
-import Navigation from '@/components/layout/NavigationFixed'
+import Navigation from '@/components/layout/Navigation'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -29,7 +29,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body 
+        className={`${inter.variable} ${sourceSans.variable} font-sans bg-slate-50`}
+        style={{ 
+          backgroundColor: '#f8fafc', 
+          color: '#0f172a', 
+          fontFamily: 'var(--font-source-sans), system-ui, sans-serif',
+          margin: 0,
+          padding: 0
+        }}
+      >
         <Navigation />
         <main className="min-h-screen" style={{ minHeight: '100vh' }}>
           {children}
