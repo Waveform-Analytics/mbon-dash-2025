@@ -96,7 +96,7 @@ export default function RawDataLandscape({
         Plot.cell(heatmapData, {
           x: "dataset",
           y: "index", 
-          fill: d => d.available ? d.category : "#f5f5f5",
+          fill: d => d.available ? categoryColors[d.category] || "#666" : "#f5f5f5",
           stroke: "white",
           strokeWidth: 1,
           opacity: d => d.available ? 0.8 : 0.3,

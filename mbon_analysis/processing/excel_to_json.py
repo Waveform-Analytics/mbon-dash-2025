@@ -350,53 +350,73 @@ class MBONExcelProcessor:
     
     def process_acoustic_files(self) -> pd.DataFrame:
         """
-        Process acoustic (rmsSPL) files and combine into acoustic DataFrame.
+        Process acoustic indices CSV files and combine into acoustic DataFrame.
         
         Returns:
-            Combined acoustic DataFrame
+            Combined acoustic indices DataFrame
         """
-        logger.info("Processing acoustic data files...")
+        logger.info("Processing acoustic indices CSV files...")
         
         acoustic_records = []
-        pattern = "Master_rmsSPL_*_1h_*.xlsx"
         
-        for year in self.years_of_interest:
-            year_dir = self.raw_data_dir / year
-            if not year_dir.exists():
-                continue
-            
-            for acoustic_file in year_dir.glob(pattern):
-                try:
-                    # Extract station from filename
-                    _, station = self.extract_metadata_from_filename(acoustic_file)
+        # Look for acoustic indices CSV files in the indices directory
+        indices_dir = self.raw_data_dir / "indices"
+        if not indices_dir.exists():
+            logger.warning(f"Indices directory not found: {indices_dir}")
+            return pd.DataFrame()
+        
+        # Pattern: Acoustic_Indices_{station}_{year}_{bandwidth}_v2_Final.csv
+        pattern = "Acoustic_Indices_*.csv"
+        
+        for csv_file in indices_dir.glob(pattern):
+            try:
+                # Extract metadata from filename
+                # Format: Acoustic_Indices_9M_2021_FullBW_v2_Final.csv
+                filename_parts = csv_file.stem.split('_')
+                
+                if len(filename_parts) < 5:
+                    logger.warning(f"Cannot parse filename format: {csv_file.name}")
+                    continue
+                
+                station = filename_parts[2]  # "9M"
+                year = filename_parts[3]     # "2021"
+                bandwidth = filename_parts[4] # "FullBW" or "8kHz"
+                
+                # Filter by our criteria
+                if year not in self.years_of_interest:
+                    logger.debug(f"Skipping year {year} not in {self.years_of_interest}")
+                    continue
                     
-                    if station not in self.stations_of_interest:
-                        continue
-                    
-                    # Read acoustic data
-                    acoustic_df = pd.read_excel(acoustic_file, sheet_name=1)
-                    acoustic_df = acoustic_df.rename(columns={'Date and time': 'datetime'})
-                    
-                    # Round timestamps to seconds
-                    if 'datetime' in acoustic_df.columns:
-                        acoustic_df['datetime'] = pd.to_datetime(acoustic_df['datetime']).dt.round('s')
-                    
-                    acoustic_df['year'] = year
-                    acoustic_df['station'] = station
-                    acoustic_df['source_file'] = acoustic_file.name
-                    
-                    acoustic_records.append(acoustic_df)
-                    logger.info(f"✓ Processed acoustic data: {acoustic_file.name}")
-                    
-                except Exception as e:
-                    logger.error(f"Failed to process acoustic file {acoustic_file.name}: {e}")
+                if station not in self.stations_of_interest:
+                    logger.debug(f"Skipping station {station} not in {self.stations_of_interest}")
+                    continue
+                
+                # Read CSV file
+                acoustic_df = pd.read_csv(csv_file)
+                
+                # Add metadata columns
+                acoustic_df['source_file'] = csv_file.name
+                acoustic_df['station'] = station
+                acoustic_df['year'] = year
+                acoustic_df['bandwidth'] = bandwidth
+                
+                # Standardize datetime column if it exists
+                if 'Date' in acoustic_df.columns:
+                    # Convert to datetime and round to seconds for consistency
+                    acoustic_df['datetime'] = pd.to_datetime(acoustic_df['Date'], errors='coerce').dt.round('s')
+                
+                acoustic_records.append(acoustic_df)
+                logger.info(f"✓ Processed acoustic indices: {csv_file.name} ({len(acoustic_df)} records)")
+                
+            except Exception as e:
+                logger.error(f"Failed to process acoustic indices file {csv_file.name}: {e}")
         
         if not acoustic_records:
-            logger.warning("No acoustic files were successfully processed")
+            logger.warning("No acoustic indices files were successfully processed")
             return pd.DataFrame()
         
         combined_acoustic = pd.concat(acoustic_records, ignore_index=True)
-        logger.info(f"✅ Combined {len(combined_acoustic)} acoustic records")
+        logger.info(f"✅ Combined {len(combined_acoustic)} acoustic indices records from {len(acoustic_records)} files")
         
         return combined_acoustic
     

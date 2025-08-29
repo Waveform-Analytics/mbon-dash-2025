@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo } from 'react';
-import { useCoreData, useDeploymentMetadata, useTimelineData, DeploymentMetadata } from '@/lib/hooks/useData'
+import { useCoreData, useDeploymentMetadata, DeploymentMetadata } from '@/lib/hooks/useData'
 import { StationMap } from '@/components/maps/StationMap';
 import { HomepageContent } from './page.content';
-import { SpeciesActivityHeatmap } from '@/components/charts/SpeciesActivityHeatmap';
 import { 
   MusicalNoteIcon, 
   SunIcon, 
@@ -91,15 +90,6 @@ export default function DashboardPage() {
     error: _deploymentsError 
   } = useDeploymentMetadata();
   
-  // NEW: Fetch timeline data for heatmap
-  const {
-    detections,
-    speciesMapping,
-    deploymentMetadata,
-    loading: timelineLoading,
-    error: _timelineError
-  } = useTimelineData();
-  
   // NEW: Process the deployment data for the map
   // useMemo prevents recalculating on every render
   const stationsForMap = useMemo(() => {
@@ -167,43 +157,13 @@ export default function DashboardPage() {
 
       {/* Preview Charts */}
       <div className="space-y-8 mb-12">
-        {/* Species Activity Heatmap - Full width */}
-        <div className="chart-container group">
-          {detections && detections.length > 0 ? (
-            <SpeciesActivityHeatmap
-              detections={detections}
-              speciesMapping={speciesMapping}
-              deploymentMetadata={deploymentMetadata || []}
-              height={400}
-              topSpeciesCount={10}
-            />
-          ) : timelineLoading ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.speciesChart.title}</h3>
-                <span className="badge badge-ocean">Loading...</span>
-              </div>
-              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600 mx-auto"></div>
-                  <div className="text-slate-500 font-medium mt-4">{HomepageContent.speciesChart.loadingText}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">{HomepageContent.speciesChart.title}</h3>
-                <span className="badge badge-red">No Data</span>
-              </div>
-              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
-                <div className="text-center">
-                  <ChartBarIcon className="w-16 h-16 text-slate-400 mx-auto mb-2" />
-                  <div className="text-slate-500 font-medium">{HomepageContent.speciesChart.noDataText}</div>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Placeholder for future optimized visualizations */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">Visualizations Coming Soon</h3>
+          <p className="text-slate-600 text-sm">
+            We're building optimized data views for better performance. 
+            Check out the Explore section for acoustic index visualizations.
+          </p>
         </div>
       </div>
       

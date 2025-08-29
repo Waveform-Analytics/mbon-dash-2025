@@ -1,7 +1,4 @@
 import RawDataLandscape from '@/components/charts/RawDataLandscape';
-import IndexDistributions from '@/components/charts/IndexDistributions';
-import AcousticIndicesHeatmap from '@/components/charts/AcousticIndicesHeatmap';
-import BandwidthComparisonBoxPlot from '@/components/charts/BandwidthComparisonBoxPlot';
 import { IndicesContent } from './page.content';
 
 export default function IndicesExplorerPage() {
@@ -26,34 +23,22 @@ export default function IndicesExplorerPage() {
         />
       </section>
 
-      {/* Index Distributions & Quality Check */}
+      {/* More visualizations coming soon */}
       <section className="mb-12">
-        <IndexDistributions 
-          width={1200} 
-          height={800} 
-        />
-      </section>
-
-      {/* Acoustic Indices Heatmap */}
-      <section className="mb-12">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">{IndicesContent.sections.heatmap.title}</h2>
-          <p className="text-slate-600">
-            {IndicesContent.sections.heatmap.description}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">Additional Visualizations In Development</h3>
+          <p className="text-slate-600 text-sm mb-4">
+            We're rebuilding the following visualizations with optimized data views for better performance:
+          </p>
+          <ul className="text-slate-600 text-sm space-y-2 max-w-2xl mx-auto text-left">
+            <li>• <strong>Index Distributions & Quality Check</strong> - Probability density functions for acoustic indices by bandwidth</li>
+            <li>• <strong>Temporal Heatmaps</strong> - Hourly acoustic patterns across months and stations</li>
+            <li>• <strong>Bandwidth Comparison</strong> - Statistical comparisons between FullBW and 8kHz measurements</li>
+          </ul>
+          <p className="text-slate-500 text-xs mt-4">
+            These visualizations will use aggregated data views instead of the 175MB raw dataset.
           </p>
         </div>
-        <AcousticIndicesHeatmap />
-      </section>
-
-      {/* Bandwidth Comparison Box Plot */}
-      <section className="mb-12">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">{IndicesContent.sections.bandwidth.title}</h2>
-          <p className="text-slate-600">
-            {IndicesContent.sections.bandwidth.description}
-          </p>
-        </div>
-        <BandwidthComparisonBoxPlot />
       </section>
     </div>
   )

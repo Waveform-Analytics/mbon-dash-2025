@@ -130,12 +130,12 @@ export default function IndexDistributions({
   height = 800 
 }: IndexDistributionsProps) {
   const { data, loading, error } = useIndexDistributions();
-  const [selectedBandwidth, setSelectedBandwidth] = useState<string>('FullBW');
+  const [selectedBandwidth, setSelectedBandwidth] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Set default bandwidth when data loads
   useEffect(() => {
-    if (data?.available_bandwidths && data.available_bandwidths.length > 0 && selectedBandwidth === 'FullBW') {
+    if (data?.available_bandwidths && data.available_bandwidths.length > 0 && !selectedBandwidth) {
       // Prefer FullBW if available, otherwise use first available
       const preferredBandwidth = data.available_bandwidths.includes('FullBW') 
         ? 'FullBW' 
@@ -178,10 +178,28 @@ export default function IndexDistributions({
   const currentAnalyses = data?.index_distributions_by_bandwidth?.[selectedBandwidth] || [];
   const currentSummary = data?.summary_stats_by_bandwidth?.[selectedBandwidth];
 
-  if (!currentSummary || currentAnalyses.length === 0) {
+  // Only show error if we have data loaded but no valid bandwidth selected
+  if (data && selectedBandwidth && (!currentSummary && currentAnalyses.length === 0)) {
     return (
       <div className="flex items-center justify-center" style={{ width, height }}>
-        <p className="text-gray-500">No data available for {selectedBandwidth} bandwidth</p>
+        <div className="text-center">
+          <p className="text-gray-500 mb-2">No data available for {selectedBandwidth} bandwidth</p>
+          <p className="text-sm text-gray-400">
+            Available: {data.available_bandwidths?.join(', ') || 'None'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state if we don't have a selected bandwidth yet
+  if (!selectedBandwidth) {
+    return (
+      <div className="flex items-center justify-center" style={{ width, height }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading bandwidth options...</p>
+        </div>
       </div>
     );
   }
@@ -236,7 +254,7 @@ export default function IndexDistributions({
               className="text-sm border rounded px-2 py-1"
             >
               <option value="all">All Categories ({currentSummary?.total_indices || 0})</option>
-              {Object.entries(currentSummary?.category_counts || {}).map(([cat, count]) => (
+              {Object.entries(currentSummary?.categories || {}).map(([cat, count]) => (
                 <option key={cat} value={cat}>
                   {cat} ({count})
                 </option>
@@ -255,7 +273,7 @@ export default function IndexDistributions({
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-blue-800 font-semibold">Category Distribution</div>
           <div className="text-blue-700 space-y-1 text-sm mt-2">
-            {Object.entries(currentSummary?.category_counts || {}).slice(0, 4).map(([category, count]) => (
+            {Object.entries(currentSummary?.categories || {}).slice(0, 4).map(([category, count]) => (
               <div key={category} className="flex justify-between">
                 <span className="truncate">{category.replace(' Indices', '')}:</span>
                 <span className="font-medium">{count}</span>
@@ -318,7 +336,7 @@ export default function IndexDistributions({
           normalized to a 0-1 scale for comparison. Skewed distributions, multi-modal patterns, 
           or extreme outliers can indicate data quality issues that may affect downstream analysis. 
           The {selectedBandwidth} bandwidth contains {currentSummary?.total_indices || 0} acoustic indices 
-          across {Object.keys(currentSummary?.category_counts || {}).length} categories.
+          across {Object.keys(currentSummary?.categories || {}).length} categories.
         </p>
       </div>
     </div>
