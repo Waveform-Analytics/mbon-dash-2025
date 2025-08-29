@@ -3,6 +3,11 @@ node_modules/
 .pnp
 .pnp.js
 
+# Prevent duplicate lockfiles - we use single root lockfile
+dashboard/package-lock.json
+dashboard/yarn.lock
+dashboard/pnpm-lock.yaml
+
 # Next.js
 .next/
 out/

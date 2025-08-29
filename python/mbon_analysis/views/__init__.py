@@ -1,0 +1,1 @@
+"""View generation modules for dashboard data."""

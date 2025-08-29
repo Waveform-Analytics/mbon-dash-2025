@@ -1,0 +1,62 @@
+{
+  "name": "mbon-dash-2025",
+  "version": "1.0.0",
+  "description": "MBON Marine Biodiversity Dashboard - Exploring acoustic indices as biodiversity predictors",
+  "private": true,
+  "scripts": {
+    "// Development": "========================================",
+    "dev": "concurrently -n \"DASHBOARD,INFO\" -c \"cyan,green\" \"npm run dev:dashboard\" \"echo '\\n🌊 MBON Dashboard started at http://localhost:3000 - ish\\n'\"",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:python": "cd python && uv run --dev python",
+    
+    "// Data Processing": "========================================",
+    "data:test": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/test_data_loading.py",
+    "data:stations": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/generate_stations_view.py",
+    "data:views": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/generate_all_views.py",
+    "data:process": "npm run data:test && npm run data:views",
+    
+    "// Future Data Commands": "========================================",
+    "data:all": "echo 'Will process all data and generate all views'",
+    "data:upload-cdn": "echo 'Will upload to Cloudflare R2'",
+    
+    "// Build & Deploy": "========================================",
+    "build": "npm run data:process && cd dashboard && npm run build",
+    "build:dashboard": "cd dashboard && npm run build",
+    "start": "cd dashboard && npm run start",
+    
+    "// Setup & Installation": "========================================",
+    "setup": "npm run setup:python && npm run setup:dashboard && npm install",
+    "setup:python": "cd python && uv sync --dev",
+    "setup:dashboard": "cd dashboard && npm install",
+    
+    "// Testing": "========================================",
+    "test": "npm run test:python && npm run test:dashboard",
+    "test:python": "cd python && uv run pytest",
+    "test:dashboard": "cd dashboard && npm run test",
+    
+    "// Utilities": "========================================",
+    "clean": "rm -rf dashboard/.next dashboard/node_modules python/.venv node_modules",
+    "lint": "cd dashboard && npm run lint",
+    "typecheck": "cd dashboard && npm run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/mbon-dash-2025"
+  },
+  "keywords": [
+    "marine-biodiversity",
+    "acoustic-indices",
+    "dashboard",
+    "visualization",
+    "oceanography"
+  ],
+  "author": "MBON Team",
+  "license": "MIT"
+}

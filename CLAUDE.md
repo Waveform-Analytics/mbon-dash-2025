@@ -37,7 +37,7 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 - **Maps**: Mapbox GL JS for geographic visualizations
 
 ### Infrastructure
-- **Data Storage**: Cloudflare R2 CDN for global distribution (already have it set up at waveformdata.works)
+- **Data Storage**: Cloudflare R2 CDN for global distribution (already have it set up at waveformdata.work - bucket name mbon-usc-2025)
 - **Deployment**: Vercel (frontend), Python processing runs locally
 - **Environment**: Docker optional, uv-based Python environment
 
@@ -608,3 +608,8 @@ make documentation-review           # Update docs as needed
 ---
 
 This rebuild plan provides a solid foundation for creating a high-performance, scientifically rigorous marine biodiversity dashboard that addresses the identified issues while maintaining the project's research focus and technical requirements.
+
+
+---
+
+Make sure to follow modern code development best practices and keep the code clean and maintainable. 
