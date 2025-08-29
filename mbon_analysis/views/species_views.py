@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any
 
-from ..core.data_loader import load_processed_data
+from ..processing.data_loader import load_processed_data
 
 
 def generate_species_timeline(processed_data_dir: Path) -> Dict[str, Any]:

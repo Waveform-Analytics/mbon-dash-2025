@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { 
   MapPinIcon,
   CalendarIcon,
@@ -8,23 +9,101 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { StationMap } from '@/components/maps/StationMap';
-import { useStationOverview } from '@/lib/hooks/useViewData';
+import { useDeploymentMetadata, DeploymentMetadata } from '@/lib/hooks/useData';
+import { useMemo } from 'react';
+
+// Define station colors
+const STATION_COLORS = {
+  '9M': '#e11d48',   // Rose
+  '14M': '#0ea5e9',  // Sky blue  
+  '37M': '#f59e0b',  // Amber
+} as const;
+
+function getStationColor(stationId: string) {
+  return STATION_COLORS[stationId as keyof typeof STATION_COLORS] || '#6b7280';
+}
+
+// Interface for processed station data for the map
+interface ProcessedStation {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  deploymentCount: number;
+  years: number[];
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  color: string;
+  description: string;
+}
+
+// Process deployment metadata into station data for the map
+function processStationsForMap(deployments: DeploymentMetadata[]): ProcessedStation[] {
+  // Group deployments by station
+  const stationMap = new Map<string, ProcessedStation>();
+  
+  deployments.forEach(deployment => {
+    const stationName = deployment.station;
+    
+    // Initialize station if we haven't seen it before
+    if (!stationMap.has(stationName)) {
+      stationMap.set(stationName, {
+        id: stationName,
+        name: stationName,
+        lat: deployment.gps_lat,
+        lng: deployment.gps_long,
+        deploymentCount: 0,
+        years: [],
+        dateRange: {
+          start: deployment.start_date,
+          end: deployment.end_date
+        },
+        color: getStationColor(stationName),
+        description: `Station ${stationName}`
+      });
+    }
+    
+    const station = stationMap.get(stationName)!;
+    
+    // Update the station's aggregate data
+    station.deploymentCount += 1;
+    
+    // Add year if we haven't seen it before
+    if (!station.years.includes(deployment.year)) {
+      station.years.push(deployment.year);
+    }
+    
+    // Update date range (keep earliest start and latest end)
+    if (deployment.start_date < station.dateRange.start) {
+      station.dateRange.start = deployment.start_date;
+    }
+    if (deployment.end_date > station.dateRange.end) {
+      station.dateRange.end = deployment.end_date;
+    }
+  });
+  
+  // Convert the Map back to an array and sort by station name
+  return Array.from(stationMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
 
 // Loading spinner component
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-8">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600"></div>
+      <span className="ml-3 text-slate-600">Loading station data...</span>
     </div>
   );
 }
 
-// Error display component
+// Error message component
 function ErrorMessage({ error }: { error: string }) {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
-      <div className="flex items-center gap-2 text-red-800 mb-2">
-        <ExclamationTriangleIcon className="w-5 h-5" />
+    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+      <div className="flex items-center gap-2 mb-2">
+        <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
         <h3 className="font-semibold">Error Loading Station Data</h3>
       </div>
       <p className="text-red-700 text-sm">{error}</p>
@@ -35,17 +114,7 @@ function ErrorMessage({ error }: { error: string }) {
   );
 }
 
-// Helper function to determine station color based on ID
-function getStationColor(stationId: string): string {
-  const colors = {
-    '9M': '#3B82F6',   // blue
-    '14M': '#10B981',  // green  
-    '37M': '#F59E0B',  // amber
-  };
-  return colors[stationId as keyof typeof colors] || '#6B7280';
-}
-
-// Helper function to format coordinates
+// Helper function for coordinate formatting
 function formatCoordinate(coord: number, type: 'lat' | 'lon'): string {
   const abs = Math.abs(coord);
   const direction = type === 'lat' ? (coord >= 0 ? 'N' : 'S') : (coord >= 0 ? 'E' : 'W');
@@ -53,7 +122,13 @@ function formatCoordinate(coord: number, type: 'lat' | 'lon'): string {
 }
 
 export default function StationsPage() {
-  const { data, loading, error } = useStationOverview();
+  const { data: deployments, loading, error } = useDeploymentMetadata();
+  
+  // Process deployment data for the map
+  const stationsForMap = useMemo(() => {
+    if (!deployments) return [];
+    return processStationsForMap(deployments);
+  }, [deployments]);
 
   return (
     <div className="page-container">
@@ -69,9 +144,9 @@ export default function StationsPage() {
         </p>
         
         {/* Performance indicator */}
-        {data && (
+        {deployments && (
           <div className="mt-4 text-sm text-slate-600">
-            Station data loaded from optimized view • {(JSON.stringify(data).length / 1024).toFixed(1)} KB
+            Station data loaded from deployment metadata • {(JSON.stringify(deployments).length / 1024).toFixed(1)} KB
           </div>
         )}
       </div>
@@ -80,10 +155,10 @@ export default function StationsPage() {
       {loading && <LoadingSpinner />}
       
       {/* Error State */}
-      {error && <ErrorMessage error={error} />}
+      {error && <ErrorMessage error={error.message} />}
 
       {/* Content - only show when data is loaded */}
-      {data && !loading && !error && (
+      {deployments && stationsForMap.length > 0 && !loading && !error && (
         <>
           {/* Station Map */}
           <div className="chart-container mb-8">
@@ -92,35 +167,24 @@ export default function StationsPage() {
               Station Locations
             </h2>
             <div className="h-[500px] rounded-lg overflow-hidden border border-slate-200">
-              <StationMap 
-                stations={data.stations.map(station => ({
-                  id: station.id,
-                  name: station.name,
-                  lat: station.coordinates.lat,
-                  lng: station.coordinates.lon,
-                  deploymentCount: station.deployments.length,
-                  years: station.summary_stats.years_active,
-                  color: getStationColor(station.id),
-                  description: `Station ${station.id} - ${station.summary_stats.total_detections.toLocaleString()} detections`
-                }))} 
-              />
+              <StationMap stations={stationsForMap} />
             </div>
           </div>
 
           {/* Station Information Cards */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {data.stations.map((station) => (
+            {stationsForMap.map((station) => (
               <div key={station.id} className="bg-white rounded-xl border border-slate-200 p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{station.name}</h3>
                     <p className="text-sm text-slate-600 mt-1">
-                      {station.summary_stats.total_detections.toLocaleString()} total detections
+                      {station.deploymentCount} deployments
                     </p>
                   </div>
                   <div 
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: getStationColor(station.id) }}
+                    style={{ backgroundColor: station.color }}
                   />
                 </div>
                 
@@ -131,140 +195,39 @@ export default function StationsPage() {
                       Coordinates
                     </span>
                     <span className="font-medium text-slate-900">
-                      {formatCoordinate(station.coordinates.lat, 'lat')}, {formatCoordinate(station.coordinates.lon, 'lon')}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                    <span className="text-slate-600 flex items-center gap-1">
-                      <BeakerIcon className="w-4 h-4" />
-                      Recording Hours
-                    </span>
-                    <span className="font-medium text-slate-900">
-                      {station.summary_stats.recording_hours.toLocaleString()} hours
+                      {formatCoordinate(station.lat, 'lat')}, {formatCoordinate(station.lng, 'lon')}
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between py-2 border-b border-slate-100">
                     <span className="text-slate-600 flex items-center gap-1">
                       <CalendarIcon className="w-4 h-4" />
+                      Active Years
+                    </span>
+                    <span className="font-medium text-slate-900">
+                      {station.years.join(', ')}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <BeakerIcon className="w-4 h-4" />
                       Deployments
                     </span>
                     <span className="font-medium text-slate-900">
-                      {station.deployments.length} total
+                      {station.deploymentCount} total
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-slate-600">Species Detected</span>
-                    <span className="font-medium text-slate-900">
-                      {station.summary_stats.species_count} species
+                    <span className="text-slate-600">Date Range</span>
+                    <span className="font-medium text-slate-900 text-xs">
+                      {new Date(station.dateRange.start).getFullYear()} - {new Date(station.dateRange.end).getFullYear()}
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Deployment Timeline */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              Deployment Timeline
-            </h3>
-            
-            <div className="space-y-6">
-              {data.stations.map((station) => (
-                <div key={station.id} className="border-l-4 border-blue-300 pl-4">
-                  <h4 className="font-medium text-blue-800 mb-2">{station.name}</h4>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {station.deployments
-                      .filter(dep => dep.start && dep.end)
-                      .sort((a, b) => new Date(a.start!).getTime() - new Date(b.start!).getTime())
-                      .map((deployment, index) => {
-                        const start = new Date(deployment.start!);
-                        const end = new Date(deployment.end!);
-                        const startFormatted = start.toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short'
-                        });
-                        const endFormatted = end.toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short' 
-                        });
-                        
-                        return (
-                          <div key={deployment.deployment_id || index} className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                            {startFormatted} - {endFormatted}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Environmental Conditions (Static for now) */}
-          <div className="chart-container">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <BeakerIcon className="w-5 h-5" />
-              Environmental Conditions
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium text-slate-800 mb-3">Temperature Range</h4>
-                <p className="text-sm text-slate-600 mb-2">
-                  Water temperatures across deployments ranged from approximately:
-                </p>
-                <ul className="text-sm text-slate-700 space-y-1">
-                  <li>• <strong>Winter:</strong> 10-13°C</li>
-                  <li>• <strong>Spring:</strong> 17-21°C</li>
-                  <li>• <strong>Summer:</strong> 29-31°C</li>
-                  <li>• <strong>Fall:</strong> 22-25°C</li>
-                </ul>
-              </div>
-              
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium text-slate-800 mb-3">Salinity Variation</h4>
-                <p className="text-sm text-slate-600 mb-2">
-                  Salinity measurements showed tidal and seasonal variation:
-                </p>
-                <ul className="text-sm text-slate-700 space-y-1">
-                  <li>• <strong>Range:</strong> 17-35 ppt</li>
-                  <li>• <strong>Highest:</strong> Summer months (low freshwater input)</li>
-                  <li>• <strong>Lowest:</strong> Following rain events</li>
-                  <li>• <strong>Pattern:</strong> Tidal influence at all stations</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Summary */}
-          <div className="mt-8 p-4 bg-slate-100 rounded-lg">
-            <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-              <InformationCircleIcon className="w-4 h-4" />
-              Data Summary
-            </h4>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-slate-600">
-              <div>
-                <strong>Total Stations:</strong> {data.metadata.total_stations}
-              </div>
-              <div>
-                <strong>Total Detections:</strong> {data.stations.reduce((sum, s) => sum + s.summary_stats.total_detections, 0).toLocaleString()}
-              </div>
-              <div>
-                <strong>Total Recording Hours:</strong> {data.stations.reduce((sum, s) => sum + s.summary_stats.recording_hours, 0).toLocaleString()}
-              </div>
-              <div>
-                <strong>Data Generated:</strong> {new Date(data.metadata.generated_at).toLocaleDateString()}
-              </div>
-            </div>
-            <ul className="text-sm text-slate-600 space-y-1 mt-3">
-              <li>• Hydrophones deployed at approximately 0.2m above seafloor</li>
-              <li>• Continuous recording with 2-hour manual annotation samples</li>
-              <li>• Station codes (9M, 14M, 37M) represent distance markers in the estuary</li>
-            </ul>
           </div>
         </>
       )}

@@ -135,7 +135,7 @@ export default function IndexDistributions({
 
   // Set default bandwidth when data loads
   useEffect(() => {
-    if (data && data.available_bandwidths.length > 0 && selectedBandwidth === 'FullBW') {
+    if (data?.available_bandwidths && data.available_bandwidths.length > 0 && selectedBandwidth === 'FullBW') {
       // Prefer FullBW if available, otherwise use first available
       const preferredBandwidth = data.available_bandwidths.includes('FullBW') 
         ? 'FullBW' 
@@ -175,8 +175,8 @@ export default function IndexDistributions({
   }
 
   // Get current bandwidth data
-  const currentAnalyses = data.index_distributions_by_bandwidth[selectedBandwidth] || [];
-  const currentSummary = data.summary_stats_by_bandwidth[selectedBandwidth];
+  const currentAnalyses = data?.index_distributions_by_bandwidth?.[selectedBandwidth] || [];
+  const currentSummary = data?.summary_stats_by_bandwidth?.[selectedBandwidth];
 
   if (!currentSummary || currentAnalyses.length === 0) {
     return (
@@ -219,9 +219,9 @@ export default function IndexDistributions({
               onChange={(e) => setSelectedBandwidth(e.target.value)}
               className="text-sm border rounded px-2 py-1 font-medium"
             >
-              {data.available_bandwidths.map(bandwidth => (
+              {(data?.available_bandwidths || []).map(bandwidth => (
                 <option key={bandwidth} value={bandwidth}>
-                  {bandwidth} ({data.summary_stats_by_bandwidth[bandwidth]?.total_indices || 0})
+                  {bandwidth} ({data?.summary_stats_by_bandwidth?.[bandwidth]?.total_indices || 0})
                 </option>
               ))}
             </select>
@@ -235,8 +235,8 @@ export default function IndexDistributions({
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="text-sm border rounded px-2 py-1"
             >
-              <option value="all">All Categories ({currentSummary.total_indices})</option>
-              {Object.entries(currentSummary.category_counts).map(([cat, count]) => (
+              <option value="all">All Categories ({currentSummary?.total_indices || 0})</option>
+              {Object.entries(currentSummary?.category_counts || {}).map(([cat, count]) => (
                 <option key={cat} value={cat}>
                   {cat} ({count})
                 </option>
@@ -255,7 +255,7 @@ export default function IndexDistributions({
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-blue-800 font-semibold">Category Distribution</div>
           <div className="text-blue-700 space-y-1 text-sm mt-2">
-            {Object.entries(currentSummary.category_counts).slice(0, 4).map(([category, count]) => (
+            {Object.entries(currentSummary?.category_counts || {}).slice(0, 4).map(([category, count]) => (
               <div key={category} className="flex justify-between">
                 <span className="truncate">{category.replace(' Indices', '')}:</span>
                 <span className="font-medium">{count}</span>
@@ -267,7 +267,7 @@ export default function IndexDistributions({
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-gray-800 font-semibold">Distribution Types</div>
           <div className="text-gray-700 space-y-1 text-sm mt-2">
-            {Object.entries(currentSummary.distribution_type_counts).slice(0, 4).map(([type, count]) => (
+            {Object.entries(currentSummary?.distribution_type_counts || {}).slice(0, 4).map(([type, count]) => (
               <div key={type} className="flex justify-between">
                 <span className="truncate">{type.replace('_', ' ')}:</span>
                 <span className="font-medium">{count}</span>
@@ -281,11 +281,11 @@ export default function IndexDistributions({
           <div className="text-amber-700 space-y-1 text-sm mt-2">
             <div className="flex justify-between">
               <span>Highly Skewed:</span>
-              <span className="font-medium">{currentSummary.raw_metrics_summary.highly_skewed_count}</span>
+              <span className="font-medium">{currentSummary?.raw_metrics_summary?.highly_skewed_count || 0}</span>
             </div>
             <div className="flex justify-between">
               <span>Zero-Heavy:</span>
-              <span className="font-medium">{currentSummary.raw_metrics_summary.zero_heavy_count}</span>
+              <span className="font-medium">{currentSummary?.raw_metrics_summary?.zero_heavy_count || 0}</span>
             </div>
             <div className="flex justify-between">
               <span>Bandwidth:</span>
@@ -317,8 +317,8 @@ export default function IndexDistributions({
           These probability density function curves show the distribution shape of each acoustic index, 
           normalized to a 0-1 scale for comparison. Skewed distributions, multi-modal patterns, 
           or extreme outliers can indicate data quality issues that may affect downstream analysis. 
-          The {selectedBandwidth} bandwidth contains {currentSummary.total_indices} acoustic indices 
-          across {Object.keys(currentSummary.category_counts).length} categories.
+          The {selectedBandwidth} bandwidth contains {currentSummary?.total_indices || 0} acoustic indices 
+          across {Object.keys(currentSummary?.category_counts || {}).length} categories.
         </p>
       </div>
     </div>

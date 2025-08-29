@@ -2,162 +2,91 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import * as Plot from '@observablehq/plot';
-import { useIndexDistributions } from '@/lib/hooks/useData';
-
-// Hook for raw acoustic indices data (same as heatmap)
-interface AcousticIndicesRawData {
-  acoustic_indices: Array<{
-    Date: string;
-    station: string;
-    bandwidth: string;
-    [key: string]: string | number; // All the acoustic index columns
-  }>;
-  metadata: {
-    stations: string[];
-    bandwidths: string[];
-  };
-}
-
-function useAcousticIndicesRaw() {
-  const [data, setData] = useState<AcousticIndicesRawData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-          ? '/api/cdn'
-          : (process.env.NEXT_PUBLIC_DATA_URL || 'http://localhost:3000/data');
-        
-        const response = await fetch(`${baseUrl}/processed/acoustic_indices_detailed.json`);
-        if (!response.ok) throw new Error('Failed to fetch acoustic indices data');
-        
-        const jsonData = await response.json();
-        setData(jsonData);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return { data, loading, error };
-}
+import { useAcousticSummary } from '@/lib/hooks/useViewData';
 
 interface BandwidthComparisonBoxPlotProps {
   className?: string;
 }
 
 export default function BandwidthComparisonBoxPlot({ className = "" }: BandwidthComparisonBoxPlotProps) {
-  const [selectedIndex, setSelectedIndex] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('both');
+  const [selectedMetric, setSelectedMetric] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load the index distributions data and raw acoustic indices
-  const { data: indexDistributions, loading, error } = useIndexDistributions();
-  const { data: rawData, loading: rawLoading, error: rawError } = useAcousticIndicesRaw();
+  // Load the acoustic summary data (optimized view)
+  const { data: acousticSummary, loading, error } = useAcousticSummary();
 
-  // Get available categories and indices from the data
-  const categories = useMemo(() => {
-    if (!indexDistributions) return [];
-    const categorySet = new Set<string>();
+  // Get available acoustic metrics from the summary data
+  const availableMetrics = useMemo(() => {
+    if (!acousticSummary || !acousticSummary.acoustic_summary.length) return [];
     
-    // Get categories from both bandwidths
-    Object.values(indexDistributions.index_distributions_by_bandwidth).forEach(analyses => {
-      analyses.forEach(analysis => {
-        if (analysis.category) {
-          categorySet.add(analysis.category);
-        }
-      });
-    });
-    
-    return Array.from(categorySet).sort();
-  }, [indexDistributions]);
-  
-  const availableIndices = useMemo(() => {
-    if (!selectedCategory || !indexDistributions) return [];
-    const indexSet = new Set<string>();
-    
-    // Get indices for the selected category from both bandwidths
-    Object.values(indexDistributions.index_distributions_by_bandwidth).forEach(analyses => {
-      analyses.forEach(analysis => {
-        if (analysis.category === selectedCategory && analysis.index) {
-          indexSet.add(analysis.index);
-        }
-      });
-    });
-    
-    return Array.from(indexSet).sort();
-  }, [selectedCategory, indexDistributions]);
+    const firstStation = acousticSummary.acoustic_summary[0];
+    return Object.keys(firstStation.acoustic_metrics || {}).sort();
+  }, [acousticSummary]);
 
-  // Set initial category and index
+  // Set initial metric selection
   useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      const initialCategory = categories.find(cat => cat.includes('Diversity')) || categories[0];
-      setSelectedCategory(initialCategory);
+    if (availableMetrics.length > 0 && !selectedMetric) {
+      // Try to select a diversity-related metric first
+      const initialMetric = availableMetrics.find(metric => 
+        metric.toLowerCase().includes('diversity') || 
+        metric.toLowerCase().includes('h_') ||
+        metric.toLowerCase().includes('aci')
+      ) || availableMetrics[0];
+      setSelectedMetric(initialMetric);
     }
-  }, [categories, selectedCategory]);
+  }, [availableMetrics, selectedMetric]);
 
-  // Update selected index when category changes
-  useEffect(() => {
-    if (availableIndices.length > 0 && !availableIndices.includes(selectedIndex)) {
-      setSelectedIndex(availableIndices[0]);
-    }
-  }, [availableIndices, selectedIndex]);
-
-  // Prepare box plot data from the raw acoustic indices values
-  const boxPlotData = useMemo(() => {
-    if (!selectedIndex || !rawData || !rawData.acoustic_indices) return [];
+  // Prepare comparison data from acoustic summary
+  const comparisonData = useMemo(() => {
+    if (!selectedMetric || !acousticSummary) return [];
 
     const data: Array<{
       station: string;
-      bandwidth: string;
+      metric: string;
+      mean: number;
+      std: number;
+      type: 'Mean' | 'Std Dev';
       value: number;
-      group: string;
     }> = [];
     
-    // Filter data based on year selection
-    const filteredData = rawData.acoustic_indices.filter(record => {
-      if (selectedYear === 'both') return true;
-      
-      const recordDate = new Date(record.Date);
-      const recordYear = recordDate.getFullYear().toString();
-      
-      if (selectedYear === '2018') return recordYear === '2018';
-      if (selectedYear === '2021') return recordYear === '2021';
-      return true;
-    });
-    
-    // Extract values for each station and bandwidth combination
-    filteredData.forEach(record => {
-      const value = record[selectedIndex];
-      if (value !== undefined && value !== null && typeof value === 'number' && !isNaN(value)) {
+    // Convert summary data to comparison format
+    acousticSummary.acoustic_summary.forEach(stationData => {
+      const metricStats = stationData.acoustic_metrics[selectedMetric];
+      if (metricStats && metricStats.mean !== null && metricStats.std !== null) {
+        // Add mean value
         data.push({
-          station: record.station,
-          bandwidth: record.bandwidth,
-          value: value,
-          group: `${record.station}_${record.bandwidth}`
+          station: stationData.station,
+          metric: selectedMetric,
+          mean: metricStats.mean,
+          std: metricStats.std,
+          type: 'Mean',
+          value: metricStats.mean
+        });
+        
+        // Add standard deviation value
+        data.push({
+          station: stationData.station,
+          metric: selectedMetric,
+          mean: metricStats.mean,
+          std: metricStats.std,
+          type: 'Std Dev',
+          value: metricStats.std
         });
       }
     });
 
     return data;
-  }, [selectedIndex, rawData, selectedYear]);
+  }, [selectedMetric, acousticSummary]);
 
   // Create the plot
   useEffect(() => {
-    if (boxPlotData.length === 0 || !containerRef.current || !selectedIndex) return;
+    if (comparisonData.length === 0 || !containerRef.current || !selectedMetric) return;
 
     const container = containerRef.current;
     container.innerHTML = '';
 
     // Get unique stations for x-axis domain
-    const stations = [...new Set(boxPlotData.map(d => d.station))].sort();
+    const stations = [...new Set(comparisonData.map(d => d.station))].sort();
 
     const plot = Plot.plot({
       width: Math.max(container.clientWidth - 48, 700),
@@ -182,14 +111,14 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
       },
       
       x: {
-        domain: ['FullBW', '8kHz'],
+        domain: ['Mean', 'Std Dev'],
         paddingOuter: 0.2,
-        paddingInner: 0.1,  // Small space between bandwidths within station
-        axis: null  // Hide the bandwidth axis since it's shown in the legend
+        paddingInner: 0.1,  // Small space between metrics within station
+        axis: null  // Hide the metric axis since it's shown in the legend
       },
       
       y: {
-        label: `↑ ${selectedIndex} Value`,
+        label: `↑ ${selectedMetric} Value`,
         labelAnchor: "center", 
         labelOffset: 45,
         grid: true,
@@ -198,10 +127,10 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
       },
       
       color: {
-        domain: ['FullBW', '8kHz'],
+        domain: ['Mean', 'Std Dev'],
         range: ['#0ea5e9', '#f59e0b'], // Ocean blue and coral amber
         legend: true,
-        label: "Bandwidth"
+        label: "Statistic"
       },
       
       marks: [
@@ -212,29 +141,24 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
           strokeDasharray: "2,2"
         }),
         
-        // Box plots grouped by station and bandwidth
-        Plot.boxY(boxPlotData, {
+        // Bar chart grouped by station and metric type
+        Plot.rectY(comparisonData, {
           fx: "station",  // Facet by station
-          x: "bandwidth", // Group by bandwidth within station
+          x: "type", // Group by mean/std within station
           y: "value",
-          fill: "bandwidth",
-          stroke: "bandwidth",
+          fill: "type",
+          stroke: "type",
           strokeWidth: 1.5,
-          fillOpacity: 0.6,
-          tip: false
-        }),
-        
-        // Add outlier dots
-        Plot.dot(boxPlotData, {
-          fx: "station",
-          x: "bandwidth",
-          y: "value",
-          fill: "bandwidth",
           fillOpacity: 0.7,
-          stroke: "bandwidth",
-          strokeWidth: 1,
-          r: 2,
-          tip: false
+          tip: {
+            format: {
+              fx: false, // Hide station from tooltip (already in facet)
+              station: true,
+              metric: true,
+              value: (d: number) => d.toFixed(4),
+              type: true
+            }
+          }
         })
       ]
     });
@@ -244,27 +168,27 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
     return () => {
       if (plot) plot.remove();
     };
-  }, [boxPlotData, selectedIndex]);
+  }, [comparisonData, selectedMetric]);
 
-  if (loading || rawLoading) {
+  if (loading) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className} p-8`}>
         <div className="flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600 text-sm">Loading bandwidth comparison...</p>
+            <p className="text-gray-600 text-sm">Loading acoustic metrics comparison...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error || rawError || !indexDistributions || !rawData) {
+  if (error || !acousticSummary) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className} p-8`}>
         <div className="text-center p-4 bg-red-50 rounded-lg">
           <h3 className="text-red-800 font-semibold mb-2">Error Loading Data</h3>
-          <p className="text-red-600 text-sm">{error?.message || 'No data available'}</p>
+          <p className="text-red-600 text-sm">{error || 'No acoustic summary data available'}</p>
         </div>
       </div>
     );
@@ -275,72 +199,42 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <h3 className="text-xl font-semibold text-slate-800">
-          Bandwidth Comparison: {selectedIndex || 'Select an Index'}
+          Acoustic Metrics Comparison: {selectedMetric || 'Select a Metric'}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Compare statistical distributions across different frequency ranges
+          Compare mean values and standard deviations across monitoring stations
         </p>
       </div>
       
       {/* Controls */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Category Selector */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Metric Selector */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-              Index Category:
+            <label htmlFor="metric" className="block text-sm font-medium text-gray-700 mb-2">
+              Acoustic Metric:
             </label>
             <select
-              id="category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              id="metric"
+              value={selectedMetric}
+              onChange={(e) => setSelectedMetric(e.target.value)}
               className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Select category...</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              <option value="">Select metric...</option>
+              {availableMetrics.map((metric) => (
+                <option key={metric} value={metric}>
+                  {metric}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Index Selector */}
-          <div>
-            <label htmlFor="index" className="block text-sm font-medium text-gray-700 mb-2">
-              Acoustic Index:
-            </label>
-            <select
-              id="index"
-              value={selectedIndex}
-              onChange={(e) => setSelectedIndex(e.target.value)}
-              disabled={!selectedCategory}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-            >
-              <option value="">Select index...</option>
-              {availableIndices.map((index) => (
-                <option key={index} value={index}>
-                  {index}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Year Selector */}
-          <div>
-            <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
-              Year:
-            </label>
-            <select
-              id="year"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="both">Both Years</option>
-              <option value="2018">2018 Only</option>
-              <option value="2021">2021 Only</option>
-            </select>
+          {/* Data Source Info */}
+          <div className="flex items-end">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Data Source:</span> Acoustic Summary View<br/>
+              <span className="text-xs text-gray-500">19.6KB optimized (vs 166MB raw data)</span>
+            </div>
           </div>
         </div>
       </div>
@@ -353,15 +247,15 @@ export default function BandwidthComparisonBoxPlot({ className = "" }: Bandwidth
       </div>
 
       {/* Statistical Summary */}
-      {boxPlotData.length > 0 && (
+      {comparisonData.length > 0 && (
         <div className="px-6 pb-6">
           <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="font-medium text-blue-800 mb-2">Box Plot Interpretation</div>
+            <div className="font-medium text-blue-800 mb-2">Acoustic Metrics Comparison</div>
             <div className="text-blue-700 text-sm">
-              Each box shows the distribution of <strong>{selectedIndex}</strong> values for a specific bandwidth. 
-              The box represents the interquartile range (25th to 75th percentile), 
-              the line inside shows the median, and whiskers extend to min/max values. 
-              Stations are grouped separately with both bandwidth options shown side-by-side for easy comparison.
+              Each bar shows the <strong>{selectedMetric}</strong> acoustic metric values across stations. 
+              The blue bars represent mean values, while orange bars show standard deviations. 
+              This comparison helps identify which stations have the highest acoustic activity and variability 
+              for the selected metric. Data is aggregated from the acoustic summary view for fast loading.
             </div>
           </div>
         </div>

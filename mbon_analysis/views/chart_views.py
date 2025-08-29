@@ -10,7 +10,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from ..core.data_loader import load_processed_data
+from ..processing.data_loader import load_processed_data
 
 
 def generate_raw_data_landscape(processed_data_dir: Path) -> Dict[str, Any]:
