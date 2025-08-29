@@ -67,6 +67,21 @@ async function fetchData<T>(endpoint: string): Promise<T> {
   return response.json();
 }
 
+// Fetch function for optimized view files (directly from CDN)
+async function fetchViewData<T>(endpoint: string): Promise<T> {
+  // Add timestamp in development to bypass cache
+  const cacheBuster = process.env.NODE_ENV === 'development' ? `?t=${Date.now()}` : '';
+  
+  // Always use the CDN for consistency
+  const CDN_URL = process.env.NEXT_PUBLIC_DATA_URL || 'https://waveformdata.work';
+  const response = await fetch(`${CDN_URL}/${endpoint}${cacheBuster}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch view ${endpoint}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
 /**
  * Hook to load metadata
  */
@@ -499,7 +514,8 @@ export function useRawDataLandscape(): UseDataResult<RawDataLandscapeData> {
     try {
       setLoading(true);
       setError(null);
-      const landscapeData = await fetchData<RawDataLandscapeData>('step1a_raw_data_landscape.json');
+      // Updated to use optimized view from views endpoint (32KB vs 100KB+)
+      const landscapeData = await fetchViewData<RawDataLandscapeData>('views/raw_data_landscape.json');
       setData(landscapeData);
     } catch (err) {
       setError(err as Error);
@@ -591,7 +607,8 @@ export function useIndexDistributions(): UseDataResult<IndexDistributionsData> {
     try {
       setLoading(true);
       setError(null);
-      const distributionsData = await fetchData<IndexDistributionsData>('step1b_index_distributions.json');
+      // Updated to use optimized view from CDN (119KB vs 2.8MB = 23x smaller!)
+      const distributionsData = await fetchViewData<IndexDistributionsData>('views/index_distributions.json');
       setData(distributionsData);
     } catch (err) {
       setError(err as Error);

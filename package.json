@@ -10,7 +10,7 @@
     "generate-manifest": "uv run scripts/data_management/generate_manifest.py",
     "upload-cdn": "uv run scripts/data_management/upload_to_cdn.py",
     "download-data": "uv run scripts/data_management/download_raw_data.py",
-    "generate-views": "uv run scripts/view_generation/generate_station_views.py && uv run scripts/view_generation/generate_species_views.py && uv run scripts/view_generation/generate_acoustic_views.py",
+    "generate-views": "uv run scripts/view_generation/generate_station_views.py && uv run scripts/view_generation/generate_species_views.py && uv run scripts/view_generation/generate_acoustic_views.py && uv run scripts/view_generation/generate_chart_views.py",
     "deploy": "uv run scripts/deployment/full_deploy.py",
     "deploy:check": "uv run scripts/deployment/full_deploy.py --check-only",
     "deploy:dry-run": "uv run scripts/deployment/full_deploy.py --dry-run",

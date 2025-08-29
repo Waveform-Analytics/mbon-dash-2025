@@ -160,6 +160,15 @@ export default function RawDataLandscape({
 
   const { summary_stats } = data.raw_data_landscape;
 
+  // Additional safety check for summary_stats
+  if (!summary_stats) {
+    return (
+      <div className="flex items-center justify-center" style={{ width, height }}>
+        <p className="text-gray-500">Raw data landscape structure is incomplete</p>
+      </div>
+    );
+  }
+
   return (
     <div className="raw-data-landscape-container">
       {/* Control Panel */}
@@ -179,7 +188,7 @@ export default function RawDataLandscape({
               className="text-sm border rounded px-2 py-1"
             >
               <option value="all">All Categories ({summary_stats.total_indices})</option>
-              {Object.entries(summary_stats.category_counts).map(([cat, count]) => (
+              {Object.entries(summary_stats.category_counts || {}).map(([cat, count]) => (
                 <option key={cat} value={cat}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
                 </option>
@@ -202,7 +211,7 @@ export default function RawDataLandscape({
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-blue-800 font-semibold">Index Categories</div>
           <div className="text-blue-700 space-y-1 text-sm mt-2">
-            {Object.entries(summary_stats.category_counts).map(([cat, count]) => (
+            {Object.entries(summary_stats.category_counts || {}).map(([cat, count]) => (
               <div key={cat} className="flex justify-between">
                 <span>{cat}:</span>
                 <span className="font-medium">{count}</span>
@@ -214,7 +223,7 @@ export default function RawDataLandscape({
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-green-800 font-semibold">Station Coverage</div>
           <div className="text-green-700 space-y-1 text-sm mt-2">
-            {Object.entries(summary_stats.station_stats).map(([station, stats]) => (
+            {Object.entries(summary_stats.station_stats || {}).map(([station, stats]) => (
               <div key={station} className="flex justify-between">
                 <span>Station {station}:</span>
                 <span className="font-medium">{(stats as any).total_records.toLocaleString()}</span>
@@ -226,7 +235,7 @@ export default function RawDataLandscape({
         <div className="bg-purple-50 p-3 rounded-lg">
           <div className="text-purple-800 font-semibold">Bandwidth Analysis</div>
           <div className="text-purple-700 space-y-1 text-sm mt-2">
-            {Object.entries(summary_stats.bandwidth_stats).map(([bandwidth, stats]) => (
+            {Object.entries(summary_stats.bandwidth_stats || {}).map(([bandwidth, stats]) => (
               <div key={bandwidth} className="flex justify-between">
                 <span>{bandwidth}:</span>
                 <span className="font-medium">{(stats as any).total_records.toLocaleString()}</span>

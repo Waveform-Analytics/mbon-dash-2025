@@ -636,15 +636,112 @@ class CDNDeployer:
 - **Performance**: 8,686x faster loading compared to raw acoustic indices
 - **Data Integrity**: All 61 indices preserved in categorized format with PCA loadings
 
-### **4.2 Migration Order (Updated)**
+### **4.2 Incremental Component Migration Strategy 🎯 CURRENT FOCUS**
+
+**NEW APPROACH**: Instead of creating -v2 pages, we'll generate optimized views for existing components and gradually swap data sources in-place. This provides cleaner migration and immediate benefits.
+
+#### **Migration Workflow**
+1. **Generate View** → 2. **Test with Component** → 3. **Update Hook** → 4. **Swap Data Source**
+
+#### **Chart Components & Required Views**
+
+##### **4.2.1 RawDataLandscape Component ✅ VIEW COMPLETE, TESTING NEXT**
+
+**View Generation Complete:**
+- [x] **Tests Written**: 10 comprehensive tests in `test_chart_views.py`
+- [x] **View Generator**: `generate_raw_data_landscape()` in `mbon_analysis/views/chart_views.py`
+- [x] **Script Wrapper**: `scripts/view_generation/generate_chart_views.py`
+- [x] **npm Integration**: Added to `npm run generate-views`
+- [x] **Performance**: 32.3KB output (from 166MB+ source)
+- [x] **CDN Deployed**: Successfully deployed to production (55.5KB)
+- [x] **Data Coverage**: 62 indices across 4 datasets (9M/14M, FullBW/8kHz)
+
+**Next Step: Component Integration Testing**
+- [ ] **Load existing component**: `src/components/charts/RawDataLandscape.tsx`
+- [ ] **Test with new data**: Update to use `raw_data_landscape.json` instead of `step1a_raw_data_landscape.json`
+- [ ] **Verify functionality**: Ensure chart renders correctly with new data structure
+- [ ] **Update hook**: Modify `useRawDataLandscape()` to load from views endpoint
+- [ ] **Performance check**: Confirm 32KB vs previous larger file size
+
+##### **4.2.2 IndexDistributions View 🎯 NEXT STEP**
+
+**Purpose**: Generate histogram distribution data for all acoustic indices to visualize their statistical properties.
+
+**TDD Implementation Steps:**
+
+1. **Write Tests First** (`tests/unit/test_chart_views.py`):
+```python
+def test_index_distributions_structure():
+    """Test distributions view structure."""
+    result = generate_index_distributions(mock_data_dir)
+    assert 'distributions' in result
+    assert 'bin_edges' in result  
+    assert 'statistics' in result
+
+def test_distribution_size_limit():
+    """Test output is under 40KB."""
+    result = generate_index_distributions(mock_data_dir)
+    assert len(json.dumps(result)) < 40 * 1024
+
+def test_distribution_bins():
+    """Test each index has proper histogram bins."""
+    result = generate_index_distributions(mock_data_dir)
+    for index_name, dist in result['distributions'].items():
+        assert 'counts' in dist
+        assert 'bin_edges' in dist
+        assert len(dist['counts']) == len(dist['bin_edges']) - 1
+```
+
+2. **Implement Generator** (`mbon_analysis/views/chart_views.py`):
+   - Add `generate_index_distributions()` function
+   - Calculate histogram bins for each index
+   - Include summary statistics (mean, std, quartiles)
+
+3. **Update Script Wrapper** (`scripts/view_generation/generate_chart_views.py`):
+   - Add index distributions generation
+   - Output to `data/cdn/views/index_distributions.json`
+
+4. **Test & Deploy**:
+   - Run tests: `uv run pytest tests/unit/test_chart_views.py -v`
+   - Generate view: `npm run generate-views`
+   - Deploy: `npm run deploy`
+
+**Target**: ~40KB with histogram data for all 62 indices
+
+##### **4.2.3 AcousticIndicesHeatmap View**
+```python
+def test_acoustic_heatmap_data():
+    """Test heatmap data structure."""
+    result = generate_acoustic_heatmap(mock_data_dir)
+    assert 'temporal_matrix' in result
+    assert 'indices' in result
+    assert 'time_bins' in result
+```
+
+**Target**: ~60KB with hourly/daily aggregated data
+
+##### **4.2.4 BandwidthComparison View**
+```python
+def test_bandwidth_comparison_data():
+    """Test bandwidth comparison structure."""
+    result = generate_bandwidth_comparison(mock_data_dir)
+    assert 'fullBW' in result
+    assert '8kHz' in result
+    assert 'comparison_stats' in result
+```
+
+**Target**: ~30KB with statistical summaries
+
+### **4.3 Migration Order (Updated)**
 
 1. ✅ **Acoustic Summary** - **COMPLETED** with major performance breakthrough (8,686x improvement)
-2. **Station Overview** - Simple, mostly static data
-3. **Species Timeline** - Aggregated time series  
-4. **Environmental Trends** - Temperature/depth patterns
-5. **Biodiversity Patterns** - Complex co-occurrence data
+2. ✅ **Station Overview** - **COMPLETED** 
+3. ✅ **Species Timeline** - **COMPLETED**
+4. 🎯 **Chart Views** - **IN PROGRESS** (for feature parity)
+5. 📋 **Environmental Trends** - Temperature/depth patterns
+6. 📋 **Biodiversity Patterns** - Complex co-occurrence data
 
-### **4.2 Each Migration Step**
+### **4.4 Each Migration Step**
 
 1. **Generate view data** using `mbon_analysis/views/`
 2. **Build new page version** at `/{page}-v2`
