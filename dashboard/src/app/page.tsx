@@ -2,6 +2,20 @@
 
 import { useViewData } from '@/lib/data/useViewData';
 import { ProjectMetadata, StationsData, DatasetsData } from '@/types/data';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the map to avoid SSR issues with Mapbox
+const StationMap = dynamic(
+  () => import('@/components/maps/StationMap'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[500px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+        <p className="text-gray-500">Loading map...</p>
+      </div>
+    )
+  }
+);
 
 export default function Home() {
   const { data: projectData, loading: projectLoading } = useViewData<ProjectMetadata>('project_metadata.json');
@@ -24,7 +38,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white pb-32">
         <div className="container mx-auto px-4 py-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {projectData?.project.title || 'MBON Marine Biodiversity Dashboard'}
@@ -50,6 +64,26 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Station Map - Prominent placement right after hero */}
+      <div className="container mx-auto px-4 -mt-20 relative z-10 mb-12">
+        <div className="bg-white rounded-xl shadow-2xl p-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Monitoring Station Locations</h2>
+            <p className="text-gray-600 mt-1">
+              Interactive map showing the three hydrophone monitoring stations off the South Carolina coast. 
+              Click on stations for detailed information.
+            </p>
+          </div>
+          {stationsData && (
+            <StationMap 
+              stations={stationsData.stations} 
+              height="500px"
+              className="mt-4"
+            />
+          )}
         </div>
       </div>
 
