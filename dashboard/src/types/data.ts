@@ -53,7 +53,7 @@ export interface Dataset {
   years: number[];
   temporal_resolution: string;
   data_type: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: string | number | boolean | string[] | number[] | null; // Allow additional properties
 }
 
 export interface DatasetsData {
@@ -112,7 +112,9 @@ export interface ProjectMetadata {
     }>;
     significance: string;
   };
-  methodology: any; // Complex nested structure
+  methodology: {
+    [key: string]: string | number | boolean | string[] | number[] | Record<string, unknown> | null;
+  }; // Complex nested structure
   study_area: {
     location: string;
     ecosystem: string;
@@ -134,6 +136,10 @@ export interface ProjectMetadata {
       habitat_types: string[];
     };
   };
-  data_availability: any;
-  citations: any;
+  data_availability: {
+    [key: string]: string | number | boolean | string[] | number[] | null;
+  };
+  citations: {
+    [key: string]: string | string[] | null;
+  };
 }

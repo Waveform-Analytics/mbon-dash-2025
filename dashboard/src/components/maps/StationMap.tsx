@@ -107,8 +107,8 @@ export default function StationMap({ stations, className = '', height = '500px' 
           'circle-color': [
             'case',
             ['get', 'hasIndices'],
-            '#10b981', // Green for stations with indices
-            '#3b82f6'  // Blue for stations without
+            '#14b8a6', // Teal for stations with indices (chart-1)
+            '#0f766e'  // Primary teal for stations without
           ],
           'circle-opacity': 0.8,
           'circle-stroke-width': 2,
@@ -226,26 +226,26 @@ export default function StationMap({ stations, className = '', height = '500px' 
       />
       
       {/* Map Legend */}
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
-        <h4 className="font-semibold text-sm mb-2 text-gray-800">Station Types</h4>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
-            <span className="text-xs text-gray-700">With Acoustic Indices</span>
+      <div className="absolute bottom-4 right-4 bg-card/95 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-border">
+        <h4 className="font-medium text-sm mb-3 text-card-foreground">Station Types</h4>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: '#14b8a6' }}></div>
+            <span className="text-xs text-card-foreground">With Acoustic Indices</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
-            <span className="text-xs text-gray-700">Detection Data Only</span>
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: '#0f766e' }}></div>
+            <span className="text-xs text-card-foreground">Detection Data Only</span>
           </div>
         </div>
       </div>
 
       {/* Loading State */}
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50 backdrop-blur">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">Loading map...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading map...</p>
           </div>
         </div>
       )}
