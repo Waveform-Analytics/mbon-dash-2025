@@ -143,3 +143,61 @@ export interface ProjectMetadata {
     [key: string]: string | string[] | null;
   };
 }
+
+// Acoustic Indices Distributions types
+export interface StationDistribution {
+  x: number[];
+  y: number[];
+  count: number;
+  mean: number;
+  std: number;
+  min: number;
+  max: number;
+}
+
+export interface IndexDistributions {
+  [stationId: string]: StationDistribution;
+}
+
+export interface IndexMetadata {
+  category: string;
+  description: string;
+  unit: string;
+}
+
+export interface FilterCombination {
+  station: string;
+  bandwidth: string;
+  year: number;
+  record_count: number;
+}
+
+export interface AcousticIndicesDistributionsData {
+  metadata: {
+    generated_at: string;
+    version: string;
+    description: string;
+    total_indices: number;
+    total_records: number;
+    kde_points: number;
+  };
+  summary: {
+    indices_count: number;
+    stations: string[];
+    bandwidths: string[];
+    year: number;
+    categories: string[];
+  };
+  distributions: {
+    [indexName: string]: IndexDistributions;
+  };
+  indices_metadata: {
+    [indexName: string]: IndexMetadata;
+  };
+  filters: {
+    stations: string[];
+    bandwidths: string[];
+    years: number[];
+    available_combinations: FilterCombination[];
+  };
+}

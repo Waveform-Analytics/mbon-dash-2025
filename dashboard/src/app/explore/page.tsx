@@ -2,9 +2,13 @@
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, TrendingUp, Layers, Zap } from 'lucide-react';
+import { BarChart3, TrendingUp, Layers, Zap, Loader2 } from 'lucide-react';
+import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
+import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
 
 export default function ExplorePage() {
+  const { distributionsData, loading, error } = useAcousticDistributions();
+
   return (
     <div className="min-h-screen bg-background pt-8">
       <div className="container mx-auto px-4 py-8">
@@ -89,36 +93,47 @@ export default function ExplorePage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-12"
         >
-          <Card className="bg-gradient-to-r from-accent/10 to-accent/5">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <Zap className="h-8 w-8 text-primary" />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">Coming Soon</CardTitle>
-                  <CardDescription className="text-base">Advanced visualization features in development</CardDescription>
+                  <CardTitle>Acoustic Indices Distributions</CardTitle>
+                  <CardDescription>
+                    Probability density distributions of acoustic indices across monitoring stations
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4">
-                  <Layers className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <h4 className="font-medium mb-1">Interactive Charts</h4>
-                  <p className="text-sm text-muted-foreground">Dynamic scatter plots, heatmaps, and correlation matrices</p>
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2 text-muted-foreground">Loading acoustic data...</span>
                 </div>
-                <div className="p-4">
-                  <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <h4 className="font-medium mb-1">Statistical Analysis</h4>
-                  <p className="text-sm text-muted-foreground">PCA analysis, clustering, and predictive modeling tools</p>
+              )}
+              
+              {error && (
+                <div className="text-center py-12">
+                  <div className="text-red-600 mb-2">Error loading data</div>
+                  <div className="text-sm text-muted-foreground">{error.message}</div>
                 </div>
-                <div className="p-4">
-                  <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <h4 className="font-medium mb-1">Data Export</h4>
-                  <p className="text-sm text-muted-foreground">Download charts as PNG and data as CSV/JSON formats</p>
+              )}
+              
+              {distributionsData && (
+                <AcousticIndicesSmallMultiples 
+                  data={distributionsData}
+                  className="mt-4"
+                />
+              )}
+              
+              {!loading && !error && !distributionsData && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No acoustic indices data available
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

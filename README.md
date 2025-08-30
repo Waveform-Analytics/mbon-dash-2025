@@ -54,6 +54,40 @@ cd ../dashboard/
 npm run dev                          # http://localhost:3000
 ```
 
+## Available Views and Visualizations
+
+The dashboard currently includes the following data views and interactive visualizations:
+
+### Acoustic Indices Distributions
+
+**Location**: `/explore` page  
+**View File**: `acoustic_indices_distributions.json` (~600KB)  
+**Component**: `AcousticIndicesSmallMultiples`
+
+Interactive small multiples visualization showing probability density distributions (KDE) of 60+ acoustic indices across three monitoring stations (9M, 14M, 37M).
+
+**Features**:
+- Small multiples grid layout with individual KDE plots for each acoustic index
+- Station filtering with color-coded distributions (9M: Blue, 14M: Red, 37M: Green)
+- Bandwidth filtering (FullBW vs 8kHz)
+- Category filtering by acoustic index type
+- Search functionality to find specific indices
+- Real-time record counts for each station
+
+**Data Source**: 
+- Acoustic indices CSV files from 2021 dataset
+- Computed using Kernel Density Estimation with 50 evaluation points
+- Covers all available stations and bandwidth combinations
+
+**Usage**: Navigate to the Explorer page to interact with acoustic indices distributions. Use the filter controls to focus on specific stations, bandwidths, or index categories.
+
+### Other Available Views
+
+- **Station Map**: Interactive map showing hydrophone deployment locations
+- **Dataset Summary**: Overview cards with record counts and temporal coverage
+- **Indices Reference**: Filterable table of all acoustic indices with descriptions
+- **Project Metadata**: Research context, methodology, and citations
+
 ## Creating New Views and Plots
 
 This section explains how to add new data views and visualizations to the dashboard.
