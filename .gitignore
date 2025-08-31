@@ -117,3 +117,6 @@ htmlcov/
 # Temporary test utilities
 test_runner.py
 /python/data_backup_20250830_212733
+
+
+data/processed/

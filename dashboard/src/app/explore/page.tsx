@@ -14,20 +14,13 @@ export default function ExplorePage() {
   return (
     <div className="min-h-screen bg-background pt-8">
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12" style={{ opacity: 0, transform: 'translateY(20px)' }}>
           <h1 className="text-4xl font-medium mb-4">Data Explorer</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Interactive visualizations and acoustic indices reference for exploring marine acoustic data and biodiversity patterns
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-primary to-accent-foreground mx-auto mt-6"></div>
-        </motion.div>
-
-
+        </div>
 
         {/* Narrative Section: Introduction to Analysis */}
         <NarrativeSection delay={0.4}>
@@ -95,45 +88,6 @@ export default function ExplorePage() {
             </p>
           </div>
         </NarrativeSection>
-
-        {/* Future Analysis Sections Placeholder */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Development Roadmap</CardTitle>
-              <CardDescription>Planned features for the data exploration interface</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-medium">Phase 1: Data Views</h4>
-                    <p className="text-sm text-muted-foreground">Generate optimized view files for acoustic indices and detection data</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-chart-4 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-medium">Phase 2: Interactive Charts</h4>
-                    <p className="text-sm text-muted-foreground">Time series visualizations with brushing and zooming capabilities</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-muted rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-medium">Phase 3: Advanced Analytics</h4>
-                    <p className="text-sm text-muted-foreground">PCA analysis, clustering, and biodiversity correlation tools</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
     </div>
   );

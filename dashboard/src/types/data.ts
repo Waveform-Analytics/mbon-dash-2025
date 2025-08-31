@@ -204,3 +204,4 @@ export interface AcousticIndicesDistributionsData {
     available_combinations: FilterCombination[];
   };
 }
+
