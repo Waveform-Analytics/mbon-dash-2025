@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Waves, Home, FileText, BarChart3, Settings } from 'lucide-react';
+import { Waves, Home, BarChart3 } from 'lucide-react';
 
 const navItems = [
   {
@@ -16,13 +16,7 @@ const navItems = [
     href: '/explore',
     label: 'Data Explorer',
     icon: BarChart3,
-    description: 'Interactive data visualizations'
-  },
-  {
-    href: '/indices',
-    label: 'Acoustic Indices',
-    icon: FileText,
-    description: 'Reference guide for acoustic indices'
+    description: 'Interactive data visualizations and acoustic indices reference'
   }
 ];
 

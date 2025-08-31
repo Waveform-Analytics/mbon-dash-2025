@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, TrendingUp, Layers, Zap } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
 import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
 import VisualizationCard from '@/components/ui/VisualizationCard';
@@ -22,7 +22,7 @@ export default function ExplorePage() {
         >
           <h1 className="text-4xl font-medium mb-4">Data Explorer</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Interactive visualizations and analysis tools for exploring marine acoustic data and biodiversity patterns
+            Interactive visualizations and acoustic indices reference for exploring marine acoustic data and biodiversity patterns
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-primary to-accent-foreground mx-auto mt-6"></div>
         </motion.div>
@@ -42,6 +42,7 @@ export default function ExplorePage() {
           <p className="text-base text-gray-500">
             Each visualization below reveals different aspects of how acoustic complexity, 
             temporal patterns, and frequency distributions vary across our monitoring locations.
+            Click the info icon (ℹ️) on any chart to learn about the scientific meaning and calculation methods for each index.
           </p>
         </NarrativeSection>
 
@@ -87,6 +88,10 @@ export default function ExplorePage() {
             <p>
               • <strong>Bandwidth Effects:</strong> Switch between FullBW and 8kHz to see how frequency range 
               affects index calculations and station comparisons.
+            </p>
+            <p>
+              • <strong>Interactive Details:</strong> Click the info icon (ℹ️) on any chart to flip the card and view 
+              detailed descriptions of each acoustic index, including their scientific meaning and calculation methods.
             </p>
           </div>
         </NarrativeSection>
