@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "MBON Marine Biodiversity Dashboard - Exploring acoustic indices as biodiversity predictors",
   "private": true,
+  "workspaces": [
+    "dashboard"
+  ],
   "scripts": {
     "// Development": "========================================",
     "dev": "concurrently -n \"DASHBOARD,INFO\" -c \"cyan,green\" \"npm run dev:dashboard\" \"echo '\\n🌊 MBON Dashboard started at http://localhost:3000 - ish\\n'\"",
@@ -10,10 +13,12 @@
     "dev:python": "cd python && uv run --dev python",
     
     "// Data Processing": "========================================",
-    "data:test": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/test_data_loading.py",
-    "data:stations": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/generate_stations_view.py",
-    "data:views": "cd python && PYTHONPATH=. ./.venv/bin/python scripts/generate_all_views.py",
+    "data:test": "cd python && uv run mbon-analysis test-dashboard",
+    "data:stations": "cd python && uv run mbon-analysis generate-views --view stations",
+    "data:views": "cd python && uv run mbon-analysis generate-views",
     "data:process": "npm run data:test && npm run data:views",
+    "data:compile": "cd python && uv run mbon-analysis compile-indices",
+    "data:migrate": "cd python && uv run mbon-analysis migrate-data",
     
     "// Future Data Commands": "========================================",
     "data:all": "echo 'Will process all data and generate all views'",
@@ -26,18 +31,25 @@
     
     "// Setup & Installation": "========================================",
     "setup": "npm run setup:python && npm run setup:dashboard && npm install",
-    "setup:python": "cd python && uv sync --dev",
+    "setup:python": "cd python && uv sync --dev && uv run pre-commit install",
     "setup:dashboard": "cd dashboard && npm install",
     
     "// Testing": "========================================",
     "test": "npm run test:python && npm run test:dashboard",
     "test:python": "cd python && uv run pytest",
     "test:dashboard": "cd dashboard && npm run test",
+    "test:python:cov": "cd python && uv run pytest --cov=mbon_analysis --cov-report=html",
+    "test:python:watch": "cd python && uv run pytest-watch",
+    "test:data": "cd python && uv run mbon-analysis test-dashboard --check-api",
     
     "// Utilities": "========================================",
     "clean": "rm -rf dashboard/.next dashboard/node_modules python/.venv node_modules",
     "lint": "cd dashboard && npm run lint",
-    "typecheck": "cd dashboard && npm run typecheck"
+    "typecheck": "cd dashboard && npm run typecheck",
+    "lint:python": "cd python && uv run ruff check . && uv run black --check . && uv run isort --check-only .",
+    "lint:python:fix": "cd python && uv run ruff check --fix . && uv run black . && uv run isort .",
+    "format:python": "cd python && uv run black . && uv run isort .",
+    "typecheck:python": "cd python && uv run mypy ."
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

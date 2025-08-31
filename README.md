@@ -1,8 +1,58 @@
-# MBON Marine Biodiversity Dashboard
+# MBON Marine Biodiversity Dashboard 2025
 
-Interactive web dashboard exploring whether acoustic indices can predict marine soundscape biodiversity and serve as proxies for complex biodiversity monitoring.
+Exploring acoustic indices as biodiversity predictors through interactive visualizations and data analysis.
 
-**Core Question**: "Can computed acoustic indices help us understand or even predict marine biodiversity patterns as an alternative to labor-intensive manual species detection methods?"
+## 🏗️ Project Structure
+
+This is a **monorepo** with the following structure:
+
+```
+mbon-dash-2025/
+├── package.json              # 🎯 ROOT: Orchestration scripts & workspace management
+├── dashboard/                # 🌐 Frontend: Next.js React application
+│   ├── package.json         # 📦 Dashboard-specific dependencies
+│   └── src/                 # React components & pages
+├── python/                  # 🐍 Backend: Data processing & analysis
+│   ├── pyproject.toml       # Python dependencies
+│   └── mbon_analysis/       # Analysis modules
+└── data/                    # 📊 Data files (raw & processed)
+```
+
+## 🚀 Quick Start
+
+**From the root directory, run:**
+
+```bash
+# Install everything
+npm run setup
+
+# Start development (both frontend & data processing)
+npm run dev
+
+# Process data only
+npm run data:process
+
+# Build for production
+npm run build
+```
+
+## 📦 Package.json Files Explained
+
+### Root `package.json` (🎯 Orchestrator)
+- **Purpose**: Workspace management and orchestration
+- **Contains**: Scripts to run both frontend and backend
+- **Key commands**: `npm run dev`, `npm run data:process`, `npm run build`
+
+### Dashboard `package.json` (🌐 Frontend)
+- **Purpose**: Next.js application dependencies
+- **Contains**: React, Next.js, and visualization libraries
+- **Key commands**: `npm run dev`, `npm run build` (run from dashboard/ directory)
+
+## 🔧 Development Workflow
+
+1. **Always start from the root directory**
+2. **Use root scripts for orchestration**: `npm run dev`, `npm run data:process`
+3. **Use dashboard scripts for frontend-only tasks**: `cd dashboard && npm run lint`
 
 ## Architecture Overview
 
@@ -32,10 +82,10 @@ Raw Data (Excel/CSV) � Python Processing � Optimized Views (<50KB) � Dashb
 git clone <repository>
 cd mbon-dash-2025
 
-# Set up Python environment
+# Set up Python environment (using UV)
 cd python/
-uv sync                                # Install dependencies
-uv pip install -e .                   # Install mbon_analysis package
+uv sync --dev                         # Install dependencies with dev tools
+uv run pre-commit install             # Install pre-commit hooks
 
 # Set up Dashboard
 cd ../dashboard/
@@ -47,7 +97,9 @@ npm install                           # Install dependencies
 ```bash
 # Generate initial views (run once or when data changes)
 cd python/
-uv run scripts/generate_all_views.py
+uv run mbon-generate-views           # Generate all views
+# OR use the Makefile:
+make views
 
 # Start dashboard development server
 cd ../dashboard/
@@ -169,7 +221,7 @@ def main():
     generator = MyNewViewGenerator(data_root)
     result = generator.create_view("my_new_view.json")
     
-    print(f" Generated {result['filename']}")
+    print(f" Generated {result['filename']}")
     print(f"   Size: {result['size_kb']} KB")
     print(f"   Path: {result['path']}")
 
@@ -395,21 +447,36 @@ mbon-dash-2025/
 ```bash
 cd python/
 
+# Quick setup
+make dev-setup                        # Install deps + pre-commit hooks
+make help                            # Show all available commands
+
 # Install/update dependencies
-uv sync
+uv sync --dev                        # Install with dev dependencies
+make update                          # Update all dependencies
 
-# Generate all views
-uv run scripts/generate_all_views.py
+# Generate views and process data
+make views                           # Generate all view files
+make indices                         # Generate compiled indices
+make migrate                         # Migrate data to top-level
+make test-data                       # Test data access
 
-# Generate specific view
-uv run scripts/generate_my_view.py
+# Development workflow
+make dev-cycle                       # Format + lint + test
+make ci                              # Full CI checks
 
-# Run tests
-uv run pytest
+# Code quality
+make lint                            # Run all linting checks
+make format                          # Format code
+make typecheck                       # Type checking
+make test-cov                        # Tests with coverage
 
-# Lint code
-uv run ruff check
-uv run ruff format
+# Individual commands
+uv run mbon-generate-views           # Generate views via CLI
+uv run scripts/generate_compiled_indices.py
+uv run pytest                        # Run tests
+uv run ruff check .                  # Lint with ruff
+uv run black .                       # Format with black
 ```
 
 ### Dashboard (Frontend)

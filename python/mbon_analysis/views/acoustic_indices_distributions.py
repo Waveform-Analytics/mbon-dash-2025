@@ -149,6 +149,10 @@ class AcousticIndicesDistributionsGenerator(BaseViewGenerator):
                     eval_points = np.linspace(eval_min, eval_max, 50)
                     density_values = kde(eval_points)
                     
+                    # Normalize density values to 0-1 range for better visualization
+                    if len(density_values) > 0 and np.max(density_values) > 0:
+                        density_values = (density_values - np.min(density_values)) / (np.max(density_values) - np.min(density_values))
+                    
                     station_distributions[station_bw_key] = {
                         'x': eval_points.tolist(),
                         'y': density_values.tolist(),

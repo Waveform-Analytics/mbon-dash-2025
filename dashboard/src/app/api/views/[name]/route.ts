@@ -21,22 +21,32 @@ export async function GET(
       );
     }
     
-    // Path to Python views directory
-    const viewPath = path.join(
-      process.cwd(),
-      '..',
-      'python',
-      'data',
-      'views',
-      name
-    );
+    // Try multiple possible paths for views directory
+    const possiblePaths = [
+      // New top-level data directory (recommended)
+      path.join(process.cwd(), '..', 'data', 'views', name),
+      // Legacy python/data directory (fallback)
+      path.join(process.cwd(), '..', 'python', 'data', 'views', name),
+      // Current directory fallback (for development)
+      path.join(process.cwd(), 'data', 'views', name),
+    ];
     
-    // Check if file exists
-    try {
-      await fs.access(viewPath);
-    } catch {
+    let viewPath: string | null = null;
+    
+    // Find the first path that exists
+    for (const possiblePath of possiblePaths) {
+      try {
+        await fs.access(possiblePath);
+        viewPath = possiblePath;
+        break;
+      } catch {
+        // Continue to next path
+      }
+    }
+    
+    if (!viewPath) {
       return NextResponse.json(
-        { error: 'View not found' },
+        { error: 'View not found in any expected location' },
         { status: 404 }
       );
     }
