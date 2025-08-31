@@ -11,6 +11,7 @@ from .views.indices_reference import IndicesReferenceViewGenerator
 from .views.project_metadata import ProjectMetadataViewGenerator
 from .views.acoustic_indices_distributions import AcousticIndicesDistributionsGenerator
 from .utils.compiled_indices import CompiledIndicesManager
+from .utils.compiled_detections import CompiledDetectionsManager
 from .utils.data_migration import DataMigrator
 from .utils.dashboard_testing import DashboardDataTester
 
@@ -99,6 +100,27 @@ Examples:
         help="Verbose output"
     )
     
+    # Compile detections command
+    detections_parser = subparsers.add_parser(
+        "compile-detections",
+        help="Compile all detections/annotations data into single JSON file"
+    )
+    detections_parser.add_argument(
+        "--data-root",
+        type=Path,
+        help="Path to data directory (default: auto-detect)"
+    )
+    detections_parser.add_argument(
+        "--output",
+        type=Path,
+        help="Output path for compiled JSON (default: data/processed/compiled_detections.json)"
+    )
+    detections_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Verbose output"
+    )
+    
     # Migrate data command
     migrate_parser = subparsers.add_parser(
         "migrate-data",
@@ -161,6 +183,35 @@ Examples:
         help="Bandwidth (for export)"
     )
     utils_parser.add_argument(
+        "--output",
+        help="Output path (for export)"
+    )
+    
+    # Compiled detections utilities command
+    detections_utils_parser = subparsers.add_parser(
+        "detections-utils",
+        help="Work with compiled detections JSON file"
+    )
+    detections_utils_parser.add_argument(
+        "json_file",
+        type=Path,
+        help="Path to compiled_detections.json file"
+    )
+    detections_utils_parser.add_argument(
+        "--action",
+        choices=["summary", "stations", "species", "export"],
+        default="summary",
+        help="Action to perform"
+    )
+    detections_utils_parser.add_argument(
+        "--station",
+        help="Station identifier (for export)"
+    )
+    detections_utils_parser.add_argument(
+        "--year",
+        help="Year (for export)"
+    )
+    detections_utils_parser.add_argument(
         "--output",
         help="Output path (for export)"
     )
@@ -311,6 +362,39 @@ def compile_indices(data_root: Path, output_path: Optional[Path] = None, verbose
         return 1
 
 
+def compile_detections(data_root: Path, output_path: Optional[Path] = None, verbose: bool = False) -> int:
+    """Compile all detections/annotations data into single JSON file."""
+    from .utils.compiled_detections import compile_detections_data, save_compiled_detections_data
+    
+    if output_path is None:
+        output_path = data_root / "processed" / "compiled_detections.json"
+    
+    print(f"🐟 Compiling detections from: {data_root}")
+    print(f"📁 Output: {output_path}")
+    
+    try:
+        compiled_data = compile_detections_data(data_root, output_path)
+        save_compiled_detections_data(compiled_data, output_path)
+        
+        # Print summary
+        summary = compiled_data["summary"]
+        print(f"\n✅ Compilation complete!")
+        print(f"   📁 Files processed: {summary['total_files']}")
+        print(f"   📊 Total records: {summary['total_records']:,}")
+        print(f"   🗂️  Stations: {list(summary['stations'].keys())}")
+        print(f"   📅 Years: {list(summary['years'].keys())}")
+        print(f"   🐠 Species detected: {len(summary['species'])}")
+        
+        return 0
+        
+    except Exception as e:
+        print(f"❌ Error during compilation: {e}")
+        if verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def migrate_data(force: bool = False, verbose: bool = False) -> int:
     """Migrate data from python/data to top-level data directory."""
     from .utils.data_migration import DataMigrator
@@ -411,6 +495,61 @@ def indices_utils(json_file: Path, action: str, **kwargs) -> int:
         return 1
 
 
+def detections_utils(json_file: Path, action: str, **kwargs) -> int:
+    """Work with compiled detections JSON file."""
+    from .utils.compiled_detections import CompiledDetectionsManager
+    manager = CompiledDetectionsManager(json_file)
+    
+    try:
+        if action == "summary":
+            summary = manager.get_summary()
+            print("Compiled Detections Summary:")
+            print(f"  Total files: {summary.get('total_files', 0)}")
+            print(f"  Total records: {summary.get('total_records', 0):,}")
+            print(f"  Stations: {list(summary.get('stations', {}).keys())}")
+            print(f"  Years: {list(summary.get('years', {}).keys())}")
+            print(f"  Species detected: {len(summary.get('species', {}))}")
+            
+            file_info = manager.get_file_info()
+            print(f"\nFile Information:")
+            print(f"  Size: {file_info.get('file_size_mb', 0)} MB")
+            print(f"  Last modified: {file_info.get('last_modified', 'Unknown')}")
+        
+        elif action == "stations":
+            stations = manager.get_stations()
+            print("Available stations:")
+            for station in stations:
+                print(f"  - {station}")
+        
+        elif action == "species":
+            species = manager.get_species()
+            print("Available species:")
+            for species_name in species:
+                print(f"  - {species_name}")
+        
+        elif action == "export":
+            station = kwargs.get('station')
+            year = kwargs.get('year')
+            output = kwargs.get('output')
+            
+            if not all([station, year, output]):
+                print("Error: --station, --year, and --output are required for export")
+                return 1
+            
+            success = manager.export_station_to_csv(station, year, output)
+            if success:
+                print(f"✅ Successfully exported {station} {year} to {output}")
+            else:
+                print("❌ Export failed")
+                return 1
+        
+        return 0
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return 1
+
+
 def main() -> int:
     """Main CLI entry point."""
     parser = setup_parser()
@@ -442,6 +581,14 @@ def main() -> int:
                 getattr(args, 'verbose', False)
             )
         
+        elif args.command == "compile-detections":
+            data_root = get_data_root(getattr(args, 'data_root', None))
+            return compile_detections(
+                data_root,
+                getattr(args, 'output', None),
+                getattr(args, 'verbose', False)
+            )
+        
         elif args.command == "migrate-data":
             return migrate_data(
                 getattr(args, 'force', False),
@@ -462,6 +609,15 @@ def main() -> int:
                 args.action,
                 station=getattr(args, 'station', None),
                 bandwidth=getattr(args, 'bandwidth', None),
+                output=getattr(args, 'output', None)
+            )
+        
+        elif args.command == "detections-utils":
+            return detections_utils(
+                args.json_file,
+                args.action,
+                station=getattr(args, 'station', None),
+                year=getattr(args, 'year', None),
                 output=getattr(args, 'output', None)
             )
         

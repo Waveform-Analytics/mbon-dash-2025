@@ -23,6 +23,8 @@ These are simple wrappers that call the package CLI:
 - **`generate_views.py`**: Generate dashboard view files
 - **`compile_indices.py`**: Compile all indices into single JSON
 - **`convert_indices_to_json.py`**: Convert raw indices CSV files to combined JSON (alias for compile_indices)
+- **`compile_detections.py`**: Compile all detections/annotations data into single JSON
+- **`detections_utils.py`**: Work with compiled detections JSON file
 - **`migrate_data.py`**: Migrate data to top-level directory
 - **`test_dashboard.py`**: Test dashboard data access
 

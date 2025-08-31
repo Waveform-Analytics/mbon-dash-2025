@@ -1,5 +1,7 @@
 # MBON Marine Biodiversity Dashboard 2025
 
+** this readme is somewhat provisional for now - it's a catchall for notes and developments. I'll clean it up and use it as a basis for doumentation eventually. 
+
 Exploring acoustic indices as biodiversity predictors through interactive visualizations and data analysis.
 
 ## 🏗️ Project Structure

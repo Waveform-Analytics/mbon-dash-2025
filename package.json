@@ -18,6 +18,7 @@
     "data:views": "cd python && uv run mbon-analysis generate-views",
     "data:process": "npm run data:test && npm run data:views",
     "data:compile": "cd python && uv run mbon-analysis compile-indices",
+    "data:compile-detections": "cd python && uv run mbon-analysis compile-detections",
     "data:migrate": "cd python && uv run mbon-analysis migrate-data",
     
     "// Future Data Commands": "========================================",
