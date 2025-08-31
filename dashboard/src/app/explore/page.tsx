@@ -2,8 +2,9 @@
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Calendar } from 'lucide-react';
 import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
+import AcousticDetectionHeatmap from '@/components/charts/AcousticDetectionHeatmap';
 import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
 import VisualizationCard from '@/components/ui/VisualizationCard';
 import NarrativeSection from '@/components/ui/NarrativeSection';
@@ -35,15 +36,30 @@ export default function ExplorePage() {
           <p className="text-base text-gray-500">
             Each visualization below reveals different aspects of how acoustic complexity, 
             temporal patterns, and frequency distributions vary across our monitoring locations.
-            Click the info icon (ℹ️) on any chart to learn about the scientific meaning and calculation methods for each index.
           </p>
         </NarrativeSection>
 
-        {/* Analysis Section 1: Acoustic Indices Distributions */}
+        {/* Analysis Section 1: Acoustic Detection Heatmap */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-12"
+        >
+          <VisualizationCard
+            title="Acoustic Detection Patterns"
+            description="Temporal heatmap showing detection patterns across time and hours of day for different species and anthropogenic sounds"
+            icon={Calendar}
+          > 
+            <AcousticDetectionHeatmap className="mt-4" />
+          </VisualizationCard>
+        </motion.div>
+
+        {/* Analysis Section 2: Acoustic Indices Distributions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="mb-12"
         >
           <VisualizationCard
@@ -67,7 +83,7 @@ export default function ExplorePage() {
           title="What do these distributions tell us?"
           emoji="📊"
           variant="info"
-          delay={0.6}
+          delay={0.7}
         >
           <div className="space-y-2">
             <p>
