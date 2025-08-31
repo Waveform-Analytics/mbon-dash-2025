@@ -1,0 +1,540 @@
+🎵 Generating acoustic indices distributions view...
+   Data root: /Users/michelleweirathmueller/Documents/WORKSPACE/MBON-USC-2025/mbon-dash-2025/python/data
+Loaded 60 index metadata entries
+Loaded data for 9M FullBW: 8616 records
+Loaded data for 9M 8kHz: 8615 records
+Loaded data for 14M FullBW: 8735 records
+Loaded data for 14M 8kHz: 8734 records
+Loaded data for 37M FullBW: 8727 records
+Loaded data for 37M 8kHz: 8733 records
+Found 62 numeric indices columns
+  Checking ZCR at 9M_FullBW: found 8616 data points
+  Checking ZCR at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ZCR at 9M_8kHz: 8615 points
+  Checking ZCR at 14M_FullBW: found 8735 data points
+  Checking ZCR at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ZCR at 14M_8kHz: 8734 points
+  Checking ZCR at 37M_FullBW: found 8727 data points
+  Checking ZCR at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ZCR at 37M_8kHz: 8733 points
+  Checking MEANt at 9M_FullBW: found 8616 data points
+  Checking MEANt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for MEANt at 9M_8kHz: 8615 points
+  Checking MEANt at 14M_FullBW: found 8735 data points
+  Checking MEANt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for MEANt at 14M_8kHz: 8734 points
+  Checking MEANt at 37M_FullBW: found 8727 data points
+  Checking MEANt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for MEANt at 37M_8kHz: 8733 points
+  Checking VARt at 9M_FullBW: found 8616 data points
+  Checking VARt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for VARt at 9M_8kHz: 8615 points
+  Checking VARt at 14M_FullBW: found 8735 data points
+  Checking VARt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for VARt at 14M_8kHz: 8734 points
+  Checking VARt at 37M_FullBW: found 8727 data points
+  Checking VARt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for VARt at 37M_8kHz: 8733 points
+  Checking SKEWt at 9M_FullBW: found 8616 data points
+  Checking SKEWt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for SKEWt at 9M_8kHz: 8615 points
+  Checking SKEWt at 14M_FullBW: found 8735 data points
+  Checking SKEWt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for SKEWt at 14M_8kHz: 8734 points
+  Checking SKEWt at 37M_FullBW: found 8727 data points
+  Checking SKEWt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for SKEWt at 37M_8kHz: 8733 points
+  Checking KURTt at 9M_FullBW: found 8616 data points
+  Checking KURTt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for KURTt at 9M_8kHz: 8615 points
+  Checking KURTt at 14M_FullBW: found 8735 data points
+  Checking KURTt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for KURTt at 14M_8kHz: 8734 points
+  Checking KURTt at 37M_FullBW: found 8727 data points
+  Checking KURTt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for KURTt at 37M_8kHz: 8733 points
+  Checking LEQt at 9M_FullBW: found 8616 data points
+  Checking LEQt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for LEQt at 9M_8kHz: 8615 points
+  Checking LEQt at 14M_FullBW: found 8735 data points
+  Checking LEQt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for LEQt at 14M_8kHz: 8734 points
+  Checking LEQt at 37M_FullBW: found 8727 data points
+  Checking LEQt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for LEQt at 37M_8kHz: 8733 points
+  Checking BGNt at 9M_FullBW: found 8616 data points
+  Checking BGNt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for BGNt at 9M_8kHz: 8615 points
+  Checking BGNt at 14M_FullBW: found 8735 data points
+  Checking BGNt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for BGNt at 14M_8kHz: 8734 points
+  Checking BGNt at 37M_FullBW: found 8727 data points
+  Checking BGNt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for BGNt at 37M_8kHz: 8733 points
+  Checking SNRt at 9M_FullBW: found 8616 data points
+  Checking SNRt at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for SNRt at 9M_8kHz: 8615 points
+  Checking SNRt at 14M_FullBW: found 8735 data points
+  Checking SNRt at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for SNRt at 14M_8kHz: 8734 points
+  Checking SNRt at 37M_FullBW: found 8727 data points
+  Checking SNRt at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for SNRt at 37M_8kHz: 8733 points
+  Checking MED at 9M_FullBW: found 8616 data points
+  Checking MED at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for MED at 9M_8kHz: 8615 points
+  Checking MED at 14M_FullBW: found 8735 data points
+  Checking MED at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for MED at 14M_8kHz: 8734 points
+  Checking MED at 37M_FullBW: found 8727 data points
+  Checking MED at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for MED at 37M_8kHz: 8733 points
+  Checking Ht at 9M_FullBW: found 8616 data points
+  Checking Ht at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for Ht at 9M_8kHz: 8615 points
+  Checking Ht at 14M_FullBW: found 8735 data points
+  Checking Ht at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for Ht at 14M_8kHz: 8734 points
+  Checking Ht at 37M_FullBW: found 8727 data points
+  Checking Ht at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for Ht at 37M_8kHz: 8733 points
+  Checking ACTtFraction at 9M_FullBW: found 8616 data points
+  Checking ACTtFraction at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTtFraction at 9M_8kHz: 8615 points
+  Checking ACTtFraction at 14M_FullBW: found 8735 data points
+  Checking ACTtFraction at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTtFraction at 14M_8kHz: 8734 points
+  Checking ACTtFraction at 37M_FullBW: found 8727 data points
+  Checking ACTtFraction at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTtFraction at 37M_8kHz: 8733 points
+  Checking ACTtCount at 9M_FullBW: found 8616 data points
+  Checking ACTtCount at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTtCount at 9M_8kHz: 8615 points
+  Checking ACTtCount at 14M_FullBW: found 8735 data points
+  Checking ACTtCount at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTtCount at 14M_8kHz: 8734 points
+  Checking ACTtCount at 37M_FullBW: found 8727 data points
+  Checking ACTtCount at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTtCount at 37M_8kHz: 8733 points
+  Checking ACTtMean at 9M_FullBW: found 8616 data points
+  Checking ACTtMean at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTtMean at 9M_8kHz: 8615 points
+  Checking ACTtMean at 14M_FullBW: found 8735 data points
+  Checking ACTtMean at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTtMean at 14M_8kHz: 8734 points
+  Checking ACTtMean at 37M_FullBW: found 8727 data points
+  Checking ACTtMean at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTtMean at 37M_8kHz: 8733 points
+  Checking EVNtFraction at 9M_FullBW: found 8616 data points
+  Checking EVNtFraction at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNtFraction at 9M_8kHz: 8615 points
+  Checking EVNtFraction at 14M_FullBW: found 8735 data points
+  Checking EVNtFraction at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNtFraction at 14M_8kHz: 8734 points
+  Checking EVNtFraction at 37M_FullBW: found 8727 data points
+  Checking EVNtFraction at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNtFraction at 37M_8kHz: 8733 points
+  Checking EVNtMean at 9M_FullBW: found 8616 data points
+  Checking EVNtMean at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNtMean at 9M_8kHz: 8615 points
+  Checking EVNtMean at 14M_FullBW: found 8735 data points
+  Checking EVNtMean at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNtMean at 14M_8kHz: 8734 points
+  Checking EVNtMean at 37M_FullBW: found 8727 data points
+  Checking EVNtMean at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNtMean at 37M_8kHz: 8733 points
+  Checking EVNtCount at 9M_FullBW: found 8616 data points
+  Checking EVNtCount at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNtCount at 9M_8kHz: 8615 points
+  Checking EVNtCount at 14M_FullBW: found 8735 data points
+  Checking EVNtCount at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNtCount at 14M_8kHz: 8734 points
+  Checking EVNtCount at 37M_FullBW: found 8727 data points
+  Checking EVNtCount at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNtCount at 37M_8kHz: 8733 points
+  Checking MEANf at 9M_FullBW: found 8616 data points
+  Checking MEANf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for MEANf at 9M_8kHz: 8615 points
+  Checking MEANf at 14M_FullBW: found 8735 data points
+  Checking MEANf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for MEANf at 14M_8kHz: 8734 points
+  Checking MEANf at 37M_FullBW: found 8727 data points
+  Checking MEANf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for MEANf at 37M_8kHz: 8733 points
+  Checking VARf at 9M_FullBW: found 8616 data points
+  Checking VARf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for VARf at 9M_8kHz: 8615 points
+  Checking VARf at 14M_FullBW: found 8735 data points
+  Checking VARf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for VARf at 14M_8kHz: 8734 points
+  Checking VARf at 37M_FullBW: found 8727 data points
+  Checking VARf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for VARf at 37M_8kHz: 8733 points
+  Checking SKEWf at 9M_FullBW: found 8616 data points
+  Checking SKEWf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for SKEWf at 9M_8kHz: 8615 points
+  Checking SKEWf at 14M_FullBW: found 8735 data points
+  Checking SKEWf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for SKEWf at 14M_8kHz: 8734 points
+  Checking SKEWf at 37M_FullBW: found 8727 data points
+  Checking SKEWf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for SKEWf at 37M_8kHz: 8733 points
+  Checking KURTf at 9M_FullBW: found 8616 data points
+  Checking KURTf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for KURTf at 9M_8kHz: 8615 points
+  Checking KURTf at 14M_FullBW: found 8735 data points
+  Checking KURTf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for KURTf at 14M_8kHz: 8734 points
+  Checking KURTf at 37M_FullBW: found 8727 data points
+  Checking KURTf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for KURTf at 37M_8kHz: 8733 points
+  Checking NBPEAKS at 9M_FullBW: found 8616 data points
+  Checking NBPEAKS at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for NBPEAKS at 9M_8kHz: 8615 points
+  Checking NBPEAKS at 14M_FullBW: found 8735 data points
+  Checking NBPEAKS at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for NBPEAKS at 14M_8kHz: 8734 points
+  Checking NBPEAKS at 37M_FullBW: found 8727 data points
+  Checking NBPEAKS at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for NBPEAKS at 37M_8kHz: 8733 points
+  Checking LEQf at 9M_FullBW: found 8616 data points
+  Checking LEQf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for LEQf at 9M_8kHz: 8615 points
+  Checking LEQf at 14M_FullBW: found 8735 data points
+  Checking LEQf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for LEQf at 14M_8kHz: 8734 points
+  Checking LEQf at 37M_FullBW: found 8727 data points
+  Checking LEQf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for LEQf at 37M_8kHz: 8733 points
+  Checking ENRf at 9M_FullBW: found 8616 data points
+  Checking ENRf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ENRf at 9M_8kHz: 8615 points
+  Checking ENRf at 14M_FullBW: found 8735 data points
+  Checking ENRf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ENRf at 14M_8kHz: 8734 points
+  Checking ENRf at 37M_FullBW: found 8727 data points
+  Checking ENRf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ENRf at 37M_8kHz: 8733 points
+  Checking BGNf at 9M_FullBW: found 8616 data points
+  Checking BGNf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for BGNf at 9M_8kHz: 8615 points
+  Checking BGNf at 14M_FullBW: found 8735 data points
+  Checking BGNf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for BGNf at 14M_8kHz: 8734 points
+  Checking BGNf at 37M_FullBW: found 8727 data points
+  Checking BGNf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for BGNf at 37M_8kHz: 8733 points
+  Checking SNRf at 9M_FullBW: found 8616 data points
+  Checking SNRf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for SNRf at 9M_8kHz: 8615 points
+  Checking SNRf at 14M_FullBW: found 8735 data points
+  Checking SNRf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for SNRf at 14M_8kHz: 8734 points
+  Checking SNRf at 37M_FullBW: found 8727 data points
+  Checking SNRf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for SNRf at 37M_8kHz: 8733 points
+  Checking Hf at 9M_FullBW: found 8616 data points
+  Checking Hf at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for Hf at 9M_8kHz: 8615 points
+  Checking Hf at 14M_FullBW: found 8735 data points
+  Checking Hf at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for Hf at 14M_8kHz: 8734 points
+  Checking Hf at 37M_FullBW: found 8727 data points
+  Checking Hf at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for Hf at 37M_8kHz: 8733 points
+  Checking EAS at 9M_FullBW: found 8616 data points
+  Checking EAS at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EAS at 9M_8kHz: 8615 points
+  Checking EAS at 14M_FullBW: found 8735 data points
+  Checking EAS at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EAS at 14M_8kHz: 8734 points
+  Checking EAS at 37M_FullBW: found 8727 data points
+  Checking EAS at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EAS at 37M_8kHz: 8733 points
+  Checking ECU at 9M_FullBW: found 8616 data points
+  Checking ECU at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ECU at 9M_8kHz: 8615 points
+  Checking ECU at 14M_FullBW: found 8735 data points
+  Checking ECU at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ECU at 14M_8kHz: 8734 points
+  Checking ECU at 37M_FullBW: found 8727 data points
+  Checking ECU at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ECU at 37M_8kHz: 8733 points
+  Checking ECV at 9M_FullBW: found 8616 data points
+  Checking ECV at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ECV at 9M_8kHz: 8615 points
+  Checking ECV at 14M_FullBW: found 8735 data points
+  Checking ECV at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ECV at 14M_8kHz: 8734 points
+  Checking ECV at 37M_FullBW: found 8727 data points
+  Checking ECV at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ECV at 37M_8kHz: 8733 points
+  Checking EPS at 9M_FullBW: found 8616 data points
+  Checking EPS at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EPS at 9M_8kHz: 8615 points
+  Checking EPS at 14M_FullBW: found 8735 data points
+  Checking EPS at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EPS at 14M_8kHz: 8734 points
+  Checking EPS at 37M_FullBW: found 8727 data points
+  Checking EPS at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EPS at 37M_8kHz: 8733 points
+  Checking EPS_KURT at 9M_FullBW: found 8616 data points
+  Checking EPS_KURT at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EPS_KURT at 9M_8kHz: 8615 points
+  Checking EPS_KURT at 14M_FullBW: found 8735 data points
+  Checking EPS_KURT at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EPS_KURT at 14M_8kHz: 8734 points
+  Checking EPS_KURT at 37M_FullBW: found 8727 data points
+  Checking EPS_KURT at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EPS_KURT at 37M_8kHz: 8733 points
+  Checking EPS_SKEW at 9M_FullBW: found 8616 data points
+  Checking EPS_SKEW at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EPS_SKEW at 9M_8kHz: 8615 points
+  Checking EPS_SKEW at 14M_FullBW: found 8735 data points
+  Checking EPS_SKEW at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EPS_SKEW at 14M_8kHz: 8734 points
+  Checking EPS_SKEW at 37M_FullBW: found 8727 data points
+  Checking EPS_SKEW at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EPS_SKEW at 37M_8kHz: 8733 points
+  Checking ACI at 9M_FullBW: found 8616 data points
+  Checking ACI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACI at 9M_8kHz: 8615 points
+  Checking ACI at 14M_FullBW: found 8735 data points
+  Checking ACI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACI at 14M_8kHz: 8734 points
+  Checking ACI at 37M_FullBW: found 8727 data points
+  Checking ACI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACI at 37M_8kHz: 8733 points
+Warning: No metadata found for index ACI_by_band, skipping...
+Warning: No metadata found for index FrequencyResolution, skipping...
+  Checking NDSI at 9M_FullBW: found 8616 data points
+  Checking NDSI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for NDSI at 9M_8kHz: 8615 points
+  Checking NDSI at 14M_FullBW: found 8735 data points
+  Checking NDSI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for NDSI at 14M_8kHz: 8734 points
+  Checking NDSI at 37M_FullBW: found 8727 data points
+  Checking NDSI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for NDSI at 37M_8kHz: 8733 points
+  Checking rBA at 9M_FullBW: found 8616 data points
+  Checking rBA at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for rBA at 9M_8kHz: 8615 points
+  Checking rBA at 14M_FullBW: found 8735 data points
+  Checking rBA at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for rBA at 14M_8kHz: 8734 points
+  Checking rBA at 37M_FullBW: found 8727 data points
+  Checking rBA at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for rBA at 37M_8kHz: 8733 points
+  Checking AnthroEnergy at 9M_FullBW: found 8616 data points
+  Checking AnthroEnergy at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for AnthroEnergy at 9M_8kHz: 8615 points
+  Checking AnthroEnergy at 14M_FullBW: found 8735 data points
+  Checking AnthroEnergy at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for AnthroEnergy at 14M_8kHz: 8734 points
+  Checking AnthroEnergy at 37M_FullBW: found 8727 data points
+  Checking AnthroEnergy at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for AnthroEnergy at 37M_8kHz: 8733 points
+  Checking BioEnergy at 9M_FullBW: found 8616 data points
+  Checking BioEnergy at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for BioEnergy at 9M_8kHz: 8615 points
+  Checking BioEnergy at 14M_FullBW: found 8735 data points
+  Checking BioEnergy at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for BioEnergy at 14M_8kHz: 8734 points
+  Checking BioEnergy at 37M_FullBW: found 8727 data points
+  Checking BioEnergy at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for BioEnergy at 37M_8kHz: 8733 points
+  Checking BI at 9M_FullBW: found 8616 data points
+  Checking BI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for BI at 9M_8kHz: 8615 points
+  Checking BI at 14M_FullBW: found 8735 data points
+  Checking BI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for BI at 14M_8kHz: 8734 points
+  Checking BI at 37M_FullBW: found 8727 data points
+  Checking BI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for BI at 37M_8kHz: 8733 points
+  Checking ROU at 9M_FullBW: found 8616 data points
+  Checking ROU at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ROU at 9M_8kHz: 8615 points
+  Checking ROU at 14M_FullBW: found 8735 data points
+  Checking ROU at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ROU at 14M_8kHz: 8734 points
+  Checking ROU at 37M_FullBW: found 8727 data points
+  Checking ROU at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ROU at 37M_8kHz: 8733 points
+  Checking ADI at 9M_FullBW: found 8616 data points
+  Checking ADI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ADI at 9M_8kHz: 8615 points
+  Checking ADI at 14M_FullBW: found 8735 data points
+  Checking ADI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ADI at 14M_8kHz: 8734 points
+  Checking ADI at 37M_FullBW: found 8727 data points
+  Checking ADI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ADI at 37M_8kHz: 8733 points
+  Checking AEI at 9M_FullBW: found 8616 data points
+  Checking AEI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for AEI at 9M_8kHz: 8615 points
+  Checking AEI at 14M_FullBW: found 8735 data points
+  Checking AEI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for AEI at 14M_8kHz: 8734 points
+  Checking AEI at 37M_FullBW: found 8727 data points
+  Checking AEI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for AEI at 37M_8kHz: 8733 points
+  Checking LFC at 9M_FullBW: found 8616 data points
+  Checking LFC at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for LFC at 9M_8kHz: 8615 points
+  Checking LFC at 14M_FullBW: found 8735 data points
+  Checking LFC at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for LFC at 14M_8kHz: 8734 points
+  Checking LFC at 37M_FullBW: found 8727 data points
+  Checking LFC at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for LFC at 37M_8kHz: 8733 points
+  Checking MFC at 9M_FullBW: found 8616 data points
+  Checking MFC at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for MFC at 9M_8kHz: 8615 points
+  Checking MFC at 14M_FullBW: found 8735 data points
+  Checking MFC at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for MFC at 14M_8kHz: 8734 points
+  Checking MFC at 37M_FullBW: found 8727 data points
+  Checking MFC at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for MFC at 37M_8kHz: 8733 points
+  Checking HFC at 9M_FullBW: found 8616 data points
+  Checking HFC at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for HFC at 9M_8kHz: 8615 points
+  Checking HFC at 14M_FullBW: found 8735 data points
+  Checking HFC at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for HFC at 14M_8kHz: 8734 points
+  Checking HFC at 37M_FullBW: found 8727 data points
+  Checking HFC at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for HFC at 37M_8kHz: 8733 points
+  Checking ACTspFract at 9M_FullBW: found 8616 data points
+  Checking ACTspFract at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTspFract at 9M_8kHz: 8615 points
+  Checking ACTspFract at 14M_FullBW: found 8735 data points
+  Checking ACTspFract at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTspFract at 14M_8kHz: 8734 points
+  Checking ACTspFract at 37M_FullBW: found 8727 data points
+  Checking ACTspFract at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTspFract at 37M_8kHz: 8733 points
+  Checking ACTspCount at 9M_FullBW: found 8616 data points
+  Checking ACTspCount at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTspCount at 9M_8kHz: 8615 points
+  Checking ACTspCount at 14M_FullBW: found 8735 data points
+  Checking ACTspCount at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTspCount at 14M_8kHz: 8734 points
+  Checking ACTspCount at 37M_FullBW: found 8727 data points
+  Checking ACTspCount at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTspCount at 37M_8kHz: 8733 points
+  Checking ACTspMean at 9M_FullBW: found 8616 data points
+  Checking ACTspMean at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for ACTspMean at 9M_8kHz: 8615 points
+  Checking ACTspMean at 14M_FullBW: found 8735 data points
+  Checking ACTspMean at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for ACTspMean at 14M_8kHz: 8734 points
+  Checking ACTspMean at 37M_FullBW: found 8727 data points
+  Checking ACTspMean at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for ACTspMean at 37M_8kHz: 8733 points
+  Checking EVNspFract at 9M_FullBW: found 8616 data points
+  Checking EVNspFract at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNspFract at 9M_8kHz: 8615 points
+  Checking EVNspFract at 14M_FullBW: found 8735 data points
+  Checking EVNspFract at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNspFract at 14M_8kHz: 8734 points
+  Checking EVNspFract at 37M_FullBW: found 8727 data points
+  Checking EVNspFract at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNspFract at 37M_8kHz: 8733 points
+  Checking EVNspMean at 9M_FullBW: found 8616 data points
+  Checking EVNspMean at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNspMean at 9M_8kHz: 8615 points
+  Checking EVNspMean at 14M_FullBW: found 8735 data points
+  Checking EVNspMean at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNspMean at 14M_8kHz: 8734 points
+  Checking EVNspMean at 37M_FullBW: found 8727 data points
+  Checking EVNspMean at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNspMean at 37M_8kHz: 8733 points
+  Checking EVNspCount at 9M_FullBW: found 8616 data points
+  Checking EVNspCount at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for EVNspCount at 9M_8kHz: 8615 points
+  Checking EVNspCount at 14M_FullBW: found 8735 data points
+  Checking EVNspCount at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for EVNspCount at 14M_8kHz: 8734 points
+  Checking EVNspCount at 37M_FullBW: found 8727 data points
+  Checking EVNspCount at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for EVNspCount at 37M_8kHz: 8733 points
+  Checking TFSD at 9M_FullBW: found 8616 data points
+  Checking TFSD at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for TFSD at 9M_8kHz: 8615 points
+  Checking TFSD at 14M_FullBW: found 8735 data points
+  Checking TFSD at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for TFSD at 14M_8kHz: 8734 points
+  Checking TFSD at 37M_FullBW: found 8727 data points
+  Checking TFSD at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for TFSD at 37M_8kHz: 8733 points
+  Checking H_Havrda at 9M_FullBW: found 8616 data points
+  Checking H_Havrda at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for H_Havrda at 9M_8kHz: 8615 points
+  Checking H_Havrda at 14M_FullBW: found 8735 data points
+  Checking H_Havrda at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for H_Havrda at 14M_8kHz: 8734 points
+  Checking H_Havrda at 37M_FullBW: found 8727 data points
+  Checking H_Havrda at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for H_Havrda at 37M_8kHz: 8733 points
+  Checking H_Renyi at 9M_FullBW: found 8616 data points
+  Checking H_Renyi at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for H_Renyi at 9M_8kHz: 8615 points
+  Checking H_Renyi at 14M_FullBW: found 8735 data points
+  Checking H_Renyi at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for H_Renyi at 14M_8kHz: 8734 points
+  Checking H_Renyi at 37M_FullBW: found 8727 data points
+  Checking H_Renyi at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for H_Renyi at 37M_8kHz: 8733 points
+  Checking H_pairedShannon at 9M_FullBW: found 8616 data points
+  Checking H_pairedShannon at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for H_pairedShannon at 9M_8kHz: 8615 points
+  Checking H_pairedShannon at 14M_FullBW: found 8735 data points
+  Checking H_pairedShannon at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for H_pairedShannon at 14M_8kHz: 8734 points
+  Checking H_pairedShannon at 37M_FullBW: found 8727 data points
+  Checking H_pairedShannon at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for H_pairedShannon at 37M_8kHz: 8733 points
+  Checking H_gamma at 9M_FullBW: found 8616 data points
+  Checking H_gamma at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for H_gamma at 9M_8kHz: 8615 points
+  Checking H_gamma at 14M_FullBW: found 8735 data points
+  Checking H_gamma at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for H_gamma at 14M_8kHz: 8734 points
+  Checking H_gamma at 37M_FullBW: found 8727 data points
+  Checking H_gamma at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for H_gamma at 37M_8kHz: 8733 points
+  Checking H_GiniSimpson at 9M_FullBW: found 8616 data points
+  Checking H_GiniSimpson at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for H_GiniSimpson at 9M_8kHz: 8615 points
+  Checking H_GiniSimpson at 14M_FullBW: found 8735 data points
+  Checking H_GiniSimpson at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for H_GiniSimpson at 14M_8kHz: 8734 points
+  Checking H_GiniSimpson at 37M_FullBW: found 8727 data points
+  Checking H_GiniSimpson at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for H_GiniSimpson at 37M_8kHz: 8733 points
+  Checking RAOQ at 9M_FullBW: found 8616 data points
+  Checking RAOQ at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for RAOQ at 9M_8kHz: 8615 points
+  Checking RAOQ at 14M_FullBW: found 8735 data points
+  Checking RAOQ at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for RAOQ at 14M_8kHz: 8734 points
+  Checking RAOQ at 37M_FullBW: found 8727 data points
+  Checking RAOQ at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for RAOQ at 37M_8kHz: 8733 points
+  Checking AGI at 9M_FullBW: found 8616 data points
+  Checking AGI at 9M_8kHz: found 8615 data points
+  ✓ KDE calculated for AGI at 9M_8kHz: 8615 points
+  Checking AGI at 14M_FullBW: found 8735 data points
+  Checking AGI at 14M_8kHz: found 8734 data points
+  ✓ KDE calculated for AGI at 14M_8kHz: 8734 points
+  Checking AGI at 37M_FullBW: found 8727 data points
+  Checking AGI at 37M_8kHz: found 8733 data points
+  ✓ KDE calculated for AGI at 37M_8kHz: 8733 points
+Warning: No metadata found for index nROI, skipping...
+Warning: No metadata found for index aROI, skipping...
+✅ Generated acoustic_indices_distributions.json
+   Size: 592.48 KB
+   Path: /Users/michelleweirathmueller/Documents/WORKSPACE/MBON-USC-2025/mbon-dash-2025/python/data/views/acoustic_indices_distributions.json
+   Records: 5

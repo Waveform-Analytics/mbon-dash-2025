@@ -29,7 +29,7 @@ export default function AcousticIndicesSmallMultiples({
 }: AcousticIndicesSmallMultiplesProps) {
   const [filters, setFilters] = useState<FilterState>({
     stations: data.summary.stations,
-    bandwidth: 'FullBW',
+    bandwidth: '8kHz',
     searchTerm: '',
     category: 'All',
   });
@@ -50,11 +50,12 @@ export default function AcousticIndicesSmallMultiples({
         return false;
       }
       
-      // Check if index has data for selected stations
+      // Check if index has data for selected stations and bandwidth
       const indexDistributions = data.distributions[indexName];
-      const hasDataForSelectedStations = filters.stations.some(station => 
-        indexDistributions[station] && indexDistributions[station].count > 0
-      );
+      const hasDataForSelectedStations = filters.stations.some(station => {
+        const key = `${station}_${filters.bandwidth}`;
+        return indexDistributions[key] && indexDistributions[key].count > 0;
+      });
       
       return hasDataForSelectedStations;
     });
@@ -63,24 +64,39 @@ export default function AcousticIndicesSmallMultiples({
   // Prepare chart data for each index
   const prepareChartData = (indexName: string, distributions: IndexDistributions) => {
     return filters.stations
-      .filter(station => distributions[station] && distributions[station].count > 0)
-      .map(station => ({
-        id: station,
-        color: STATION_COLORS[station as keyof typeof STATION_COLORS],
-        data: distributions[station].x.map((x, i) => ({
-          x,
-          y: distributions[station].y[i]
-        }))
-      }));
+      .map(station => {
+        const key = `${station}_${filters.bandwidth}`;
+        const stationData = distributions[key];
+        
+        if (!stationData || stationData.count === 0) {
+          return null;
+        }
+        
+        return {
+          id: station,
+          color: STATION_COLORS[station as keyof typeof STATION_COLORS],
+          data: stationData.x.map((x, i) => ({
+            x,
+            y: stationData.y[i]
+          }))
+        };
+      })
+      .filter(Boolean) as Array<{
+        id: string;
+        color: string;
+        data: Array<{x: number; y: number}>;
+      }>;
   };
 
   // Get unique categories for filter
   const categories = useMemo(() => {
     const cats = new Set(['All']);
     Object.values(data.indices_metadata).forEach(meta => {
-      if (meta.category) cats.add(meta.category);
+      if (meta.category && meta.category !== 'Unknown') {
+        cats.add(meta.category);
+      }
     });
-    return Array.from(cats);
+    return Array.from(cats).sort();
   }, [data.indices_metadata]);
 
   return (
@@ -186,48 +202,49 @@ export default function AcousticIndicesSmallMultiples({
           const indexMeta = data.indices_metadata[indexName];
 
           return (
-            <div key={indexName} className="bg-white rounded-lg border p-4">
-              {/* Index Header */}
-              <div className="mb-3">
-                <h3 className="font-medium text-sm text-gray-900 truncate" title={indexName}>
+            <div key={indexName} className="bg-white rounded-lg border p-4 flex flex-col h-56">
+              {/* Index Header - Fixed Height */}
+              <div className="mb-3 h-12 flex-shrink-0">
+                <h3 className="font-medium text-sm text-gray-900 truncate leading-tight" title={indexName}>
                   {indexName}
                 </h3>
-                {indexMeta?.category && (
-                  <p className="text-xs text-gray-500 mt-1">{indexMeta.category}</p>
-                )}
+                <div className="h-4 mt-1">
+                  {indexMeta?.category && (
+                    <p className="text-xs text-gray-500 truncate">{indexMeta.category}</p>
+                  )}
+                </div>
               </div>
 
-              {/* Mini Chart */}
-              <div className="h-32">
+              {/* Mini Chart - Fixed Height */}
+              <div className="h-32 flex-shrink-0 mb-2">
                 {chartData.length > 0 ? (
                   <ResponsiveLine
                     data={chartData}
-                    margin={{ top: 10, right: 10, bottom: 20, left: 25 }}
+                    margin={{ top: 5, right: 5, bottom: 15, left: 5 }}
                     xScale={{ type: 'linear' }}
-                    yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+                    yScale={{ 
+                      type: 'linear', 
+                      min: 'auto', 
+                      max: 'auto',
+                      stacked: false,
+                      reverse: false
+                    }}
                     curve="monotoneX"
                     enableArea={false}
                     enablePoints={false}
                     enableGridX={false}
                     enableGridY={false}
                     colors={({ id }) => STATION_COLORS[id as keyof typeof STATION_COLORS]}
-                    lineWidth={2}
+                    lineWidth={1.5}
                     axisTop={null}
                     axisRight={null}
-                    axisBottom={{
-                      tickSize: 0,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      tickValues: 0, // Hide ticks for cleaner look
-                    }}
-                    axisLeft={{
-                      tickSize: 0,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      tickValues: 0, // Hide ticks for cleaner look
-                    }}
-                    animate={false} // Disable animation for better performance
-                    isInteractive={false} // Disable interactions for small multiples
+                    axisBottom={null} // Completely hide bottom axis
+                    axisLeft={null}   // Completely hide left axis
+                    animate={false}
+                    isInteractive={false}
+                    useMesh={false}
+                    enableSlices={false}
+                    enableCrosshair={false}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-xs text-gray-400">
@@ -236,20 +253,23 @@ export default function AcousticIndicesSmallMultiples({
                 )}
               </div>
 
-              {/* Station Counts */}
-              <div className="mt-2 text-xs text-gray-500">
-                {filters.stations.map(station => {
-                  const stationData = distributions[station];
-                  return stationData ? (
-                    <span 
-                      key={station} 
-                      className="inline-block mr-2"
-                      style={{ color: STATION_COLORS[station as keyof typeof STATION_COLORS] }}
-                    >
-                      {station}: {stationData.count}
-                    </span>
-                  ) : null;
-                }).filter(Boolean)}
+              {/* Station Counts - Fixed Height, Flex Grow */}
+              <div className="text-xs text-gray-500 flex-grow overflow-hidden">
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  {filters.stations.map(station => {
+                    const key = `${station}_${filters.bandwidth}`;
+                    const stationData = distributions[key];
+                    return stationData ? (
+                      <span 
+                        key={station} 
+                        className="inline-flex items-center"
+                        style={{ color: STATION_COLORS[station as keyof typeof STATION_COLORS] }}
+                      >
+                        {station}: {stationData.count.toLocaleString()}
+                      </span>
+                    ) : null;
+                  }).filter(Boolean)}
+                </div>
               </div>
             </div>
           );

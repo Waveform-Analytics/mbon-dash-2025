@@ -153,14 +153,17 @@ export interface StationDistribution {
   std: number;
   min: number;
   max: number;
+  station: string;
+  bandwidth: string;
 }
 
 export interface IndexDistributions {
-  [stationId: string]: StationDistribution;
+  [stationBandwidthKey: string]: StationDistribution; // e.g., "9M_FullBW", "14M_8kHz"
 }
 
 export interface IndexMetadata {
   category: string;
+  subcategory: string;
   description: string;
   unit: string;
 }

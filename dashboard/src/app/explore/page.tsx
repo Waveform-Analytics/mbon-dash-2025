@@ -2,9 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, TrendingUp, Layers, Zap, Loader2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Layers, Zap } from 'lucide-react';
 import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
 import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
+import VisualizationCard from '@/components/ui/VisualizationCard';
+import NarrativeSection from '@/components/ui/NarrativeSection';
 
 export default function ExplorePage() {
   const { distributionsData, loading, error } = useAcousticDistributions();
@@ -87,61 +89,73 @@ export default function ExplorePage() {
           </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mb-12"
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Acoustic Indices Distributions</CardTitle>
-                  <CardDescription>
-                    Probability density distributions of acoustic indices across monitoring stations
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2 text-muted-foreground">Loading acoustic data...</span>
-                </div>
-              )}
-              
-              {error && (
-                <div className="text-center py-12">
-                  <div className="text-red-600 mb-2">Error loading data</div>
-                  <div className="text-sm text-muted-foreground">{error.message}</div>
-                </div>
-              )}
-              
-              {distributionsData && (
-                <AcousticIndicesSmallMultiples 
-                  data={distributionsData}
-                  className="mt-4"
-                />
-              )}
-              
-              {!loading && !error && !distributionsData && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No acoustic indices data available
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Narrative Section: Introduction to Analysis */}
+        <NarrativeSection delay={0.4}>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Understanding Acoustic Patterns
+          </h2>
+          <p className="text-lg text-gray-600 leading-relaxed">
+            Marine soundscapes contain rich information about biodiversity and ecosystem health. 
+            Our research analyzes over <strong>60 acoustic indices</strong> computed from hydrophone recordings 
+            at three monitoring stations in South Carolina estuaries.
+          </p>
+          <p className="text-base text-gray-500">
+            Each visualization below reveals different aspects of how acoustic complexity, 
+            temporal patterns, and frequency distributions vary across our monitoring locations.
+          </p>
+        </NarrativeSection>
 
+        {/* Analysis Section 1: Acoustic Indices Distributions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
+          className="mb-12"
+        >
+          <VisualizationCard
+            title="Acoustic Indices Distributions"
+            description="Probability density distributions of acoustic indices across monitoring stations"
+            icon={BarChart3}
+            loading={loading}
+            error={error}
+          >
+            {distributionsData && (
+              <AcousticIndicesSmallMultiples 
+                data={distributionsData}
+                className="mt-4"
+              />
+            )}
+          </VisualizationCard>
+        </motion.div>
+
+        {/* Narrative Section: Interpreting the Distributions */}
+        <NarrativeSection 
+          title="What do these distributions tell us?"
+          emoji="📊"
+          variant="info"
+          delay={0.6}
+        >
+          <div className="space-y-2">
+            <p>
+              • <strong>Station Differences:</strong> Notice how the three colored lines (stations 9M, 14M, 37M) 
+              show different distribution shapes for many indices, indicating distinct acoustic environments.
+            </p>
+            <p>
+              • <strong>Index Categories:</strong> Use the category filter to focus on specific types - 
+              Complexity Indices reveal soundscape richness, while Diversity Indices relate to species variety.
+            </p>
+            <p>
+              • <strong>Bandwidth Effects:</strong> Switch between FullBW and 8kHz to see how frequency range 
+              affects index calculations and station comparisons.
+            </p>
+          </div>
+        </NarrativeSection>
+
+        {/* Future Analysis Sections Placeholder */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
         >
           <Card>
             <CardHeader>

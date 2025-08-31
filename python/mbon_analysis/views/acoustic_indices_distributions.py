@@ -103,27 +103,35 @@ class AcousticIndicesDistributionsGenerator(BaseViewGenerator):
         
         # Generate KDE distributions for each index
         for index_name in numeric_cols:
+            # Skip indices without proper metadata
+            if index_name not in ref_lookup:
+                print(f"Warning: No metadata found for index {index_name}, skipping...")
+                continue
+                
             distributions_data[index_name] = {}
             
             # Get metadata for this index
-            index_meta = ref_lookup.get(index_name, {
-                'category': 'Unknown',
-                'description': f'Acoustic index: {index_name}',
-                'unit': ''
-            })
+            index_meta = ref_lookup[index_name]
             indices_metadata[index_name] = index_meta
             
-            # Calculate distributions for each station
+            # Calculate distributions for each station-bandwidth combination
             station_distributions = {}
             
             for station in stations:
-                station_data = combined_df[
-                    (combined_df['station'] == station) & 
-                    (combined_df[index_name].notna())
-                ][index_name]
-                
-                if len(station_data) < 5:  # Need at least 5 points for KDE
-                    continue
+                for bandwidth in bandwidths:
+                    station_bw_key = f"{station}_{bandwidth}"
+                    station_data = combined_df[
+                        (combined_df['station'] == station) & 
+                        (combined_df['bandwidth'] == bandwidth) &
+                        (combined_df[index_name].notna())
+                    ][index_name]
+                    
+                    print(f"  Checking {index_name} at {station_bw_key}: found {len(station_data)} data points")
+                    
+                    if len(station_data) < 5:  # Need at least 5 points for KDE
+                        if len(station_data) > 0:
+                            print(f"  Skipping {index_name} at {station_bw_key}: only {len(station_data)} data points")
+                        continue
                 
                 try:
                     # Calculate KDE
@@ -141,18 +149,21 @@ class AcousticIndicesDistributionsGenerator(BaseViewGenerator):
                     eval_points = np.linspace(eval_min, eval_max, 50)
                     density_values = kde(eval_points)
                     
-                    station_distributions[station] = {
+                    station_distributions[station_bw_key] = {
                         'x': eval_points.tolist(),
                         'y': density_values.tolist(),
                         'count': len(station_data),
                         'mean': float(station_data.mean()),
                         'std': float(station_data.std()),
                         'min': float(data_min),
-                        'max': float(data_max)
+                        'max': float(data_max),
+                        'station': station,
+                        'bandwidth': bandwidth
                     }
+                    print(f"  ✓ KDE calculated for {index_name} at {station_bw_key}: {len(station_data)} points")
                     
                 except Exception as e:
-                    print(f"Error calculating KDE for {index_name} at {station}: {e}")
+                    print(f"Error calculating KDE for {index_name} at {station_bw_key}: {e}")
                     continue
             
             distributions_data[index_name] = station_distributions

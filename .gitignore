@@ -35,6 +35,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyo
+*.pyd
 .Python
 env/
 venv/
@@ -42,6 +44,23 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Python package build artifacts
+*.egg-info/
+dist/
+build/
+.tox/
+
+# Python development tool caches
+.ruff_cache/
+.mypy_cache/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Python package manager files
+pip-log.txt
+pip-delete-this-directory.txt
 
 # IDE
 .vscode/
