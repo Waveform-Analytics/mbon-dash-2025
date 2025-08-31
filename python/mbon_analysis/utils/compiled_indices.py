@@ -43,6 +43,7 @@ def compile_indices_data(data_root: Path, output_path: Path) -> Dict[str, Any]:
         "stations": {},
         "summary": {
             "stations": {},
+            "years": {},
             "bandwidths": {},
             "total_files": 0,
             "total_records": 0
@@ -58,70 +59,103 @@ def compile_indices_data(data_root: Path, output_path: Path) -> Dict[str, Any]:
         compiled_data["stations"][station] = {}
         compiled_data["summary"]["stations"][station] = {
             "total_records": 0,
-            "bandwidths": {}
+            "years": {}
         }
         
-        for bandwidth in bandwidths:
-            try:
-                logger.info(f"  Loading {bandwidth} data for {station}")
-                
-                # Load the indices data
-                df = loader.load_acoustic_indices(station, bandwidth)
-                
-                # Convert DataFrame to records (list of dictionaries)
-                records = df.to_dict('records')
-                
-                # Store the data
-                compiled_data["stations"][station][bandwidth] = {
-                    "data": records,
-                    "columns": list(df.columns),
-                    "shape": df.shape,
-                    "file_info": {
-                        "filename": f"Acoustic_Indices_{station}_2021_{bandwidth}_v2_Final.csv",
-                        "records_count": len(records),
-                        "columns_count": len(df.columns)
+        # Find all available years for this station
+        station_years = set()
+        indices_path = data_root / "raw" / "indices"
+        if indices_path.exists():
+            for file in indices_path.glob(f"Acoustic_Indices_{station}_*_*_v2_Final.csv"):
+                # Extract year from filename: Acoustic_Indices_14M_2021_8kHz_v2_Final.csv
+                parts = file.stem.split('_')
+                if len(parts) >= 4:
+                    year = parts[3]  # e.g., '2021'
+                    station_years.add(year)
+        
+        if not station_years:
+            logger.warning(f"No indices files found for station {station}")
+            continue
+            
+        for year in sorted(station_years):
+            logger.info(f"  Processing year: {year}")
+            compiled_data["stations"][station][year] = {}
+            compiled_data["summary"]["stations"][station]["years"][year] = {
+                "total_records": 0,
+                "bandwidths": {}
+            }
+            
+            for bandwidth in bandwidths:
+                try:
+                    logger.info(f"    Loading {bandwidth} data for {station} {year}")
+                    
+                    # Load the indices data for this specific year
+                    indices_file = data_root / "raw" / "indices" / f"Acoustic_Indices_{station}_{year}_{bandwidth}_v2_Final.csv"
+                    
+                    if not indices_file.exists():
+                        logger.warning(f"    File not found: {indices_file}")
+                        compiled_data["stations"][station][year][bandwidth] = {
+                            "error": "File not found",
+                            "data": [],
+                            "columns": [],
+                            "shape": (0, 0),
+                            "file_info": {
+                                "filename": f"Acoustic_Indices_{station}_{year}_{bandwidth}_v2_Final.csv",
+                                "records_count": 0,
+                                "columns_count": 0
+                            }
+                        }
+                        continue
+                    
+                    # Load the CSV file directly
+                    df = pd.read_csv(indices_file)
+                    
+                    # Convert DataFrame to records (list of dictionaries)
+                    records = df.to_dict('records')
+                    
+                    # Store the data
+                    compiled_data["stations"][station][year][bandwidth] = {
+                        "data": records,
+                        "columns": list(df.columns),
+                        "shape": df.shape,
+                        "file_info": {
+                            "filename": f"Acoustic_Indices_{station}_{year}_{bandwidth}_v2_Final.csv",
+                            "records_count": len(records),
+                            "columns_count": len(df.columns)
+                        }
                     }
-                }
+                    
+                    # Update summary statistics
+                    compiled_data["summary"]["stations"][station]["years"][year]["bandwidths"][bandwidth] = len(records)
+                    compiled_data["summary"]["stations"][station]["years"][year]["total_records"] += len(records)
+                    compiled_data["summary"]["stations"][station]["total_records"] += len(records)
+                    
+                    if year not in compiled_data["summary"]["years"]:
+                        compiled_data["summary"]["years"][year] = 0
+                    compiled_data["summary"]["years"][year] += len(records)
+                    
+                    if bandwidth not in compiled_data["summary"]["bandwidths"]:
+                        compiled_data["summary"]["bandwidths"][bandwidth] = 0
+                    compiled_data["summary"]["bandwidths"][bandwidth] += len(records)
+                    
+                    total_files += 1
+                    total_records += len(records)
+                    
+                    logger.info(f"      Loaded {len(records)} records from {year} {bandwidth} data")
                 
-                # Update summary statistics
-                compiled_data["summary"]["stations"][station]["bandwidths"][bandwidth] = len(records)
-                compiled_data["summary"]["stations"][station]["total_records"] += len(records)
-                
-                if bandwidth not in compiled_data["summary"]["bandwidths"]:
-                    compiled_data["summary"]["bandwidths"][bandwidth] = 0
-                compiled_data["summary"]["bandwidths"][bandwidth] += len(records)
-                
-                total_files += 1
-                total_records += len(records)
-                
-                logger.info(f"    Loaded {len(records)} records from {bandwidth} data")
-                
-            except FileNotFoundError as e:
-                logger.warning(f"    File not found for {station} {bandwidth}: {e}")
-                compiled_data["stations"][station][bandwidth] = {
-                    "error": "File not found",
-                    "data": [],
-                    "columns": [],
-                    "shape": (0, 0),
-                    "file_info": {
-                        "filename": f"Acoustic_Indices_{station}_2021_{bandwidth}_v2_Final.csv",
-                        "records_count": 0,
-                        "columns_count": 0
+                except Exception as e:
+                    logger.error(f"      Error processing {station} {year} {bandwidth}: {e}")
+                    compiled_data["stations"][station][year][bandwidth] = {
+                        "error": str(e),
+                        "data": [],
+                        "columns": [],
+                        "shape": (0, 0),
+                        "file_info": {
+                            "filename": f"Acoustic_Indices_{station}_{year}_{bandwidth}_v2_Final.csv",
+                            "records_count": 0,
+                            "columns_count": 0
+                        }
                     }
-                }
-            except Exception as e:
-                logger.error(f"    Error processing {station} {bandwidth}: {e}")
-                compiled_data["stations"][station][bandwidth] = {
-                    "error": str(e),
-                    "data": [],
-                    "columns": [],
-                    "shape": (0, 0),
-                    "file_info": {
-                        "filename": f"Acoustic_Indices_{station}_2021_{bandwidth}_v2_Final.csv",
-                        "records_count": 0,
-                        "columns_count": 0
-                    }
-                }
     
     # Update final metadata
     compiled_data["metadata"]["total_files_processed"] = total_files

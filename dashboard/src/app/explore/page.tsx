@@ -27,67 +27,7 @@ export default function ExplorePage() {
           <div className="w-24 h-1 bg-gradient-to-r from-primary to-accent-foreground mx-auto mt-6"></div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="h-full border-l-4 border-l-primary/50">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <BarChart3 className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Acoustic Analysis</CardTitle>
-                    <CardDescription>Time series and comparative analysis of acoustic indices</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Explore temporal patterns in acoustic complexity, biodiversity indices, and environmental correlations across monitoring stations.
-                </p>
-                <div className="text-sm text-muted-foreground">
-                  <p>• Time series visualization</p>
-                  <p>• Station comparisons</p>
-                  <p>• Environmental correlations</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <Card className="h-full border-l-4 border-l-chart-1/50">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-chart-1/10 rounded-lg">
-                    <TrendingUp className="h-6 w-6 text-chart-1" />
-                  </div>
-                  <div>
-                    <CardTitle>Species Detection</CardTitle>
-                    <CardDescription>Marine life detection patterns and biodiversity metrics</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Analyze species detection events, occurrence patterns, and relationships between acoustic indices and biodiversity.
-                </p>
-                <div className="text-sm text-muted-foreground">
-                  <p>• Detection timeline</p>
-                  <p>• Species occurrence maps</p>
-                  <p>• Diversity calculations</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
 
         {/* Narrative Section: Introduction to Analysis */}
         <NarrativeSection delay={0.4}>
