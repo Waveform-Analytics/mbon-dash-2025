@@ -1,0 +1,3 @@
+Data has been migrated to: /Users/michelleweirathmueller/Documents/WORKSPACE/MBON-USC-2025/mbon-dash-2025/data
+Migration date: 2025-08-30T21:27:33.203110
+Backup location: /Users/michelleweirathmueller/Documents/WORKSPACE/MBON-USC-2025/mbon-dash-2025/python/data_backup_20250830_212733

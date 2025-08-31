@@ -9,7 +9,7 @@ from .views.stations import StationsViewGenerator
 from .views.datasets_summary import DatasetsSummaryViewGenerator
 from .views.indices_reference import IndicesReferenceViewGenerator
 from .views.project_metadata import ProjectMetadataViewGenerator
-from .views.acoustic_indices_distributions import AcousticIndicesDistributionsViewGenerator
+from .views.acoustic_indices_distributions import AcousticIndicesDistributionsGenerator
 from .utils.compiled_indices import CompiledIndicesManager
 from .utils.data_migration import DataMigrator
 from .utils.dashboard_testing import DashboardDataTester
@@ -221,7 +221,7 @@ def generate_views(
         "datasets": DatasetsSummaryViewGenerator,
         "indices": IndicesReferenceViewGenerator,
         "metadata": ProjectMetadataViewGenerator,
-        "acoustic": AcousticIndicesDistributionsViewGenerator,
+        "acoustic": AcousticIndicesDistributionsGenerator,
     }
     
     if view_name == "all":
