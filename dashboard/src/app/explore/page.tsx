@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Calendar } from 'lucide-react';
+import { BarChart3, Calendar, Activity } from 'lucide-react';
 import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
 import AcousticDetectionHeatmap from '@/components/charts/AcousticDetectionHeatmap';
+import AcousticIndicesHeatmap from '@/components/charts/AcousticIndicesHeatmap';
 import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
 import VisualizationCard from '@/components/ui/VisualizationCard';
 import NarrativeSection from '@/components/ui/NarrativeSection';
@@ -78,30 +79,65 @@ export default function ExplorePage() {
           </VisualizationCard>
         </motion.div>
 
-        {/* Narrative Section: Interpreting the Distributions */}
+        {/* Analysis Section 3: Acoustic Indices Heatmap */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="mb-12"
+        >
+          <VisualizationCard
+            title="Acoustic Indices Temporal Patterns (2021)"
+            description="Interactive heatmap showing how acoustic indices vary across time and hours of day for 2021 data"
+            icon={Activity}
+          >
+            <AcousticIndicesHeatmap className="mt-4" />
+          </VisualizationCard>
+        </motion.div>
+
+        {/* Narrative Section: Interpreting the Visualizations */}
         <NarrativeSection 
-          title="What do these distributions tell us?"
+          title="Understanding Acoustic Patterns"
           emoji="📊"
           variant="info"
-          delay={0.7}
+          delay={0.8}
         >
-          <div className="space-y-2">
-            <p>
-              • <strong>Station Differences:</strong> Notice how the three colored lines (stations 9M, 14M, 37M) 
-              show different distribution shapes for many indices, indicating distinct acoustic environments.
-            </p>
-            <p>
-              • <strong>Index Categories:</strong> Use the category filter to focus on specific types - 
-              Complexity Indices reveal soundscape richness, while Diversity Indices relate to species variety.
-            </p>
-            <p>
-              • <strong>Bandwidth Effects:</strong> Switch between FullBW and 8kHz to see how frequency range 
-              affects index calculations and station comparisons.
-            </p>
-            <p>
-              • <strong>Interactive Details:</strong> Click the info icon (ℹ️) on any chart to flip the card and view 
-              detailed descriptions of each acoustic index, including their scientific meaning and calculation methods.
-            </p>
+          <div className="space-y-3">
+            <h4 className="font-semibold text-gray-800">Distribution Analysis:</h4>
+            <div className="space-y-2 ml-3">
+              <p>
+                • <strong>Station Differences:</strong> Notice how the three colored lines (stations 9M, 14M, 37M) 
+                show different distribution shapes for many indices, indicating distinct acoustic environments.
+              </p>
+              <p>
+                • <strong>Index Categories:</strong> Use the category filter to focus on specific types - 
+                Complexity Indices reveal soundscape richness, while Diversity Indices relate to species variety.
+              </p>
+              <p>
+                • <strong>Bandwidth Effects:</strong> Switch between FullBW and 8kHz to see how frequency range 
+                affects index calculations and station comparisons.
+              </p>
+            </div>
+            
+            <h4 className="font-semibold text-gray-800 mt-4">Temporal Pattern Analysis:</h4>
+            <div className="space-y-2 ml-3">
+              <p>
+                • <strong>Daily Rhythms:</strong> The heatmap reveals daily patterns - look for consistent bands 
+                of high/low activity at specific hours across multiple days.
+              </p>
+              <p>
+                • <strong>Seasonal Changes:</strong> Notice how index values change across dates, potentially 
+                reflecting seasonal shifts in marine activity and soundscapes.
+              </p>
+              <p>
+                • <strong>Index Comparison:</strong> Switch between different acoustic indices to see how 
+                various measures of complexity, diversity, and energy show different temporal patterns.
+              </p>
+              <p>
+                • <strong>Interactive Exploration:</strong> Use the dropdowns to explore different stations, 
+                years, and bandwidth settings to understand how environmental factors influence acoustic patterns.
+              </p>
+            </div>
           </div>
         </NarrativeSection>
       </div>
