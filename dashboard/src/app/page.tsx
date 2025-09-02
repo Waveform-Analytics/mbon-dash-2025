@@ -61,21 +61,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary via-primary/90 to-chart-3 text-primary-foreground pb-24 pt-8 overflow-hidden">
-        {/* Animated background pattern */}
-        <motion.div
-          className="absolute inset-0 opacity-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.1 }}
-          transition={{ duration: 2 }}
+      <div className="relative text-primary-foreground pb-24 pt-8 overflow-hidden">
+        {/* Background image with overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('/images/yohan-marion-daufuskie-unsplash.jpg')`
+          }}
         >
-          <div 
-            className="absolute inset-0" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }}
-          />
-        </motion.div>
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/70 via-primary/60 to-chart-3/65" />
+        </div>
         
         <div className="container mx-auto px-4 py-16 relative">
           <motion.div
