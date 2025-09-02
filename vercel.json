@@ -6,17 +6,8 @@
   "devCommand": "cd dashboard && npm run dev",
   "framework": "nextjs",
   "functions": {
-    "dashboard/src/app/api/views/[name]/route.ts": {
-      "maxDuration": 10
-    },
-    "dashboard/src/app/api/indices-heatmap/route.ts": {
+    "dashboard/src/app/api/**": {
       "maxDuration": 30
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ]
+  }
 }
