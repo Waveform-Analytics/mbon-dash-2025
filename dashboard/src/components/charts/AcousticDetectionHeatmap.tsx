@@ -282,7 +282,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
       .style('color', '#666')
       .text(`${valueRange[0]} - ${valueRange[1]} detections`);
 
-  }, [data, selectedDetection, selectedStation]);
+  }, [data, selectedDetection, selectedStation, width, height, margin]);
 
   if (loading) {
     return (

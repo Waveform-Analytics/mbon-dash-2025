@@ -226,41 +226,6 @@ export function useIndicesHeatmap(params: UseIndicesHeatmapParams = {}): UseIndi
     paramsRef.current = params;
   }, [params]);
   
-  const _fetchMetadataCallback = useCallback(async () => {
-    // Abort previous request if still pending
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    // Create new abort controller
-    abortControllerRef.current = new AbortController();
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await fetchMetadata();
-      
-      // Check if this is still the current request
-      if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
-        setMetadata(result);
-        setError(null);
-      }
-    } catch (err) {
-      // Check if this is still the current request and not an abort error
-      if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
-        const error = err instanceof Error ? err : new Error('Unknown error occurred');
-        setError(error);
-        setMetadata(null);
-        console.error('Error fetching metadata:', error);
-      }
-    } finally {
-      // Only update loading state if this is still the current request
-      if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
-        setLoading(false);
-      }
-    }
-  }, []);
   
   const fetchData = useCallback(async () => {
     const currentParams = paramsRef.current;

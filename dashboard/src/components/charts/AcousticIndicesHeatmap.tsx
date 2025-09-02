@@ -386,7 +386,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
       d3.select('body').selectAll('.tooltip').remove();
     };
 
-  }, [data, selectedIndex, selectedStation, selectedBandwidth]);
+  }, [data, selectedIndex, selectedStation, selectedBandwidth, width, height, margin]);
 
   // Always render the container with consistent height
   const showLoadingOverlay = loading && (selectedIndex || selectedStation || selectedBandwidth);

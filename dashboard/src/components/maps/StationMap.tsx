@@ -188,7 +188,7 @@ export default function StationMap({ stations, className = '', height = '500px',
       map.current?.remove();
       map.current = null;
     };
-  }, [stations]);
+  }, [stations, focusStations]);
 
   // Add popups for selected stations
   useEffect(() => {

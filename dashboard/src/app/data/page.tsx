@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { 
   Map, 
   MapPin, 
-  Activity, 
   TrendingUp, 
   Calendar,
   Waves,
@@ -15,8 +14,6 @@ import {
   Volume2,
   Thermometer,
   BarChart3,
-  Users,
-  Globe,
   FileText
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -78,7 +75,6 @@ export default function DataPage() {
   const analysisStations = stationsData?.stations.filter(s => analysisStationIds.includes(s.id)) || [];
 
   // Calculate stats from the data
-  const detectionTypes = datasetsData?.datasets.find(d => d.id === 'detection_data')?.record_count || 0;
   const acousticIndicesCount = 56; // From project description
   const totalRecords = datasetsData?.summary.total_records || 0;
   const stations = stationsData?.summary.total_stations || 0;
