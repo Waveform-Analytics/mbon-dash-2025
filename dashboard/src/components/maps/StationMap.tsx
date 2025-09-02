@@ -14,13 +14,16 @@ interface StationMapProps {
   stations: Station[];
   className?: string;
   height?: string;
+  focusStations?: string[]; // Station IDs to focus on by default
 }
 
-export default function StationMap({ stations, className = '', height = '500px' }: StationMapProps) {
+export default function StationMap({ stations, className = '', height = '500px', focusStations = [] }: StationMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [viewMode, setViewMode] = useState<'focused' | 'full'>(focusStations.length > 0 ? 'focused' : 'full');
+  const boundsRef = useRef<{ focused: mapboxgl.LngLatBounds | null; full: mapboxgl.LngLatBounds | null }>({ focused: null, full: null });
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -33,12 +36,30 @@ export default function StationMap({ stations, className = '', height = '500px' 
       return;
     }
 
-    const bounds = new mapboxgl.LngLatBounds();
+    // Calculate full bounds for all stations
+    const fullBounds = new mapboxgl.LngLatBounds();
     validStations.forEach(station => {
       if (station.coordinates.latitude && station.coordinates.longitude) {
-        bounds.extend([station.coordinates.longitude, station.coordinates.latitude]);
+        fullBounds.extend([station.coordinates.longitude, station.coordinates.latitude]);
       }
     });
+    boundsRef.current.full = fullBounds;
+
+    // Calculate focused bounds for specific stations
+    let initialBounds = fullBounds;
+    if (focusStations.length > 0) {
+      const focusedBounds = new mapboxgl.LngLatBounds();
+      const focusedStations = validStations.filter(s => focusStations.includes(s.id));
+      focusedStations.forEach(station => {
+        if (station.coordinates.latitude && station.coordinates.longitude) {
+          focusedBounds.extend([station.coordinates.longitude, station.coordinates.latitude]);
+        }
+      });
+      if (focusedStations.length > 0) {
+        boundsRef.current.focused = focusedBounds;
+        initialBounds = focusedBounds;
+      }
+    }
 
     // Initialize map with clean, minimal style
     map.current = new mapboxgl.Map({
@@ -48,7 +69,7 @@ export default function StationMap({ stations, className = '', height = '500px' 
       // style: 'mapbox://styles/mapbox/streets-v12', // Classic street map  
       // style: 'mapbox://styles/mapbox/outdoors-v12', // Terrain-focused
       // style: 'mapbox://styles/mapbox/navigation-day-v1', // Navigation style
-      center: bounds.getCenter(),
+      center: initialBounds.getCenter(),
       zoom: 10,
       pitch: 0,
       bearing: 0,
@@ -62,8 +83,8 @@ export default function StationMap({ stations, className = '', height = '500px' 
     map.current.on('load', () => {
       setMapLoaded(true);
       
-      // Fit to bounds with padding
-      map.current?.fitBounds(bounds, {
+      // Fit to initial bounds with padding
+      map.current?.fitBounds(initialBounds, {
         padding: { top: 100, bottom: 100, left: 100, right: 100 },
         duration: 1000
       });
@@ -145,14 +166,7 @@ export default function StationMap({ stations, className = '', height = '500px' 
           setSelectedStation(station);
         }
 
-        // Center on clicked station with animation
-        if (feature.geometry.type === 'Point') {
-          map.current?.flyTo({
-            center: feature.geometry.coordinates as [number, number],
-            zoom: 12,
-            duration: 1000
-          });
-        }
+        // Remove auto-zoom - just show popup without changing view
       });
 
       // Change cursor on hover
@@ -217,6 +231,22 @@ export default function StationMap({ stations, className = '', height = '500px' 
     }
   }, [selectedStation, mapLoaded]);
 
+  // Handle view mode changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    
+    const bounds = viewMode === 'focused' && boundsRef.current.focused 
+      ? boundsRef.current.focused 
+      : boundsRef.current.full;
+    
+    if (bounds) {
+      map.current.fitBounds(bounds, {
+        padding: { top: 100, bottom: 100, left: 100, right: 100 },
+        duration: 1000
+      });
+    }
+  }, [viewMode, mapLoaded]);
+
   return (
     <div className={`relative ${className}`}>
       <div 
@@ -224,6 +254,34 @@ export default function StationMap({ stations, className = '', height = '500px' 
         className="w-full rounded-lg shadow-xl overflow-hidden"
         style={{ height }}
       />
+      
+      {/* Zoom Toggle Button - only show if we have focus stations */}
+      {focusStations.length > 0 && mapLoaded && (
+        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-xl shadow-xl border border-border">
+          <div className="flex">
+            <button
+              onClick={() => setViewMode('focused')}
+              className={`px-4 py-2 text-xs font-medium transition-colors rounded-l-xl ${
+                viewMode === 'focused' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-transparent text-card-foreground hover:bg-accent'
+              }`}
+            >
+              Study Area
+            </button>
+            <button
+              onClick={() => setViewMode('full')}
+              className={`px-4 py-2 text-xs font-medium transition-colors rounded-r-xl border-l ${
+                viewMode === 'full' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-transparent text-card-foreground hover:bg-accent'
+              }`}
+            >
+              All Stations
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Map Legend */}
       <div className="absolute bottom-4 right-4 bg-card/95 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-border">

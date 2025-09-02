@@ -20,22 +20,37 @@ class StationsViewGenerator(BaseViewGenerator):
         # Load deployment metadata
         deployment_df = loader.load_deployment_metadata()
         
-        # Get available stations from detection files
-        available_stations = loader.get_available_stations()
+        # Get available stations from detection files (stations with data)
+        stations_with_detection_data = loader.get_available_stations()
         available_years = loader.get_available_years()
         
-        # Process station data
+        # Get ALL unique stations from deployment metadata
+        all_unique_stations = deployment_df['Station'].dropna().unique()
+        
+        # Process station data for ALL stations
         stations = []
         
-        for station_id in available_stations:
+        for station_id in all_unique_stations:
             # Find deployment records for this station
             station_deployments = deployment_df[
-                deployment_df['Station'].str.contains(station_id, na=False)
+                deployment_df['Station'] == station_id
             ]
             
             if not station_deployments.empty:
-                # Get the most complete deployment record
-                deployment = station_deployments.iloc[0]
+                # Get the first deployment record with valid GPS coordinates
+                deployment = None
+                for _, dep in station_deployments.iterrows():
+                    if pd.notna(dep.get('GPS Lat')) and pd.notna(dep.get('GPS Long')):
+                        deployment = dep
+                        break
+                
+                # If no valid GPS found, use first record
+                if deployment is None:
+                    deployment = station_deployments.iloc[0]
+                
+                # Determine data availability
+                has_detection_data = station_id in stations_with_detection_data
+                has_acoustic_indices = station_id in ['9M', '14M', '37M']
                 
                 station_data = {
                     "id": station_id,
@@ -48,10 +63,10 @@ class StationsViewGenerator(BaseViewGenerator):
                     "platform": deployment.get('Platform Type', 'Unknown'),
                     "deployment_periods": [],
                     "data_availability": {
-                        "years": available_years,
-                        "detection_data": True,  # All available stations have detection data
-                        "environmental_data": True,  # All available stations have environmental data
-                        "acoustic_indices": station_id in ['9M', '14M', '37M']  # Based on indices files
+                        "years": available_years if has_detection_data else [],
+                        "detection_data": has_detection_data,
+                        "environmental_data": has_detection_data,  # Environmental data available where detection data exists
+                        "acoustic_indices": has_acoustic_indices
                     }
                 }
                 
@@ -59,8 +74,8 @@ class StationsViewGenerator(BaseViewGenerator):
                 for _, dep in station_deployments.iterrows():
                     if pd.notna(dep.get('Start date')):
                         period = {
-                            "deploy_date": dep.get('Start date'),
-                            "recover_date": dep.get('End date'),
+                            "deploy_date": str(dep.get('Start date')) if pd.notna(dep.get('Start date')) else None,
+                            "recover_date": str(dep.get('End date')) if pd.notna(dep.get('End date')) else None,
                             "duration_days": float(dep.get('Duration', 0)) if pd.notna(dep.get('Duration')) else None
                         }
                         station_data["deployment_periods"].append(period)

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Waves, Home, BarChart3 } from 'lucide-react';
+import { Waves, Home, BarChart3, Database } from 'lucide-react';
 
 const navItems = [
   {
@@ -11,6 +11,12 @@ const navItems = [
     label: 'Overview',
     icon: Home,
     description: 'Project overview and station map'
+  },
+  {
+    href: '/data',
+    label: 'Data',
+    icon: Database,
+    description: 'Data overview, stations, and statistics'
   },
   {
     href: '/explore',
