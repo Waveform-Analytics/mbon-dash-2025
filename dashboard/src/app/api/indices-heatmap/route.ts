@@ -32,64 +32,62 @@ interface HeatmapData {
   data: FilteredDataPoint[];
 }
 
-// Cache for the compiled data file fetched from CDN
-interface CompiledData {
-  metadata?: {
-    total_records?: number;
-    [key: string]: unknown;
+// Cache for optimized data files fetched from CDN
+interface OptimizedData {
+  metadata: {
+    station: string;
+    year: number;
+    bandwidth: string;
+    generated_at?: string;
+    total_records: number;
+    optimization_version: string;
+    description: string;
   };
-  stations?: {
-    [station: string]: {
-      [year: string]: {
-        [bandwidth: string]: {
-          data: RawDataPoint[];
-          columns?: string[];
-          file_info?: unknown;
-          shape?: number[];
-        } | RawDataPoint[]; // Support both nested and flat structures
-      };
-    };
-  };
-  data?: RawDataPoint[];
+  data: RawDataPoint[];
 }
-let compiledData: CompiledData | null = null;
-let compiledDataTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // CDN configuration
 const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
+
+// In-memory cache for optimized files
+const optimizedDataCache = new Map<string, { data: OptimizedData; timestamp: number }>();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 // In-memory cache for filtered results
 const resultCache = new Map<string, { data: HeatmapData; timestamp: number }>();
 const RESULT_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-async function loadCompiledData() {
+async function loadOptimizedData(station: string, year: number, bandwidth: string): Promise<OptimizedData> {
+  const cacheKey = `${station}_${year}_${bandwidth}`;
   const now = Date.now();
   
   // Return cached data if still valid
-  if (compiledData && (now - compiledDataTimestamp) < CACHE_TTL) {
-    return compiledData;
+  const cached = optimizedDataCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    return cached.data;
   }
   
   try {
-    const dataUrl = `${CDN_BASE_URL}/processed/compiled_indices.json`;
-    console.log(`Fetching compiled indices from CDN: ${dataUrl}`);
+    const filename = `indices_${station}_${year}_${bandwidth}.json`;
+    const dataUrl = `${CDN_BASE_URL}/processed/optimized/${filename}`;
+    console.log(`Fetching optimized indices from CDN: ${dataUrl}`);
     
     const response = await fetch(dataUrl);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const fileContent = await response.text();
-    compiledData = JSON.parse(fileContent);
-    compiledDataTimestamp = now;
+    const optimizedData: OptimizedData = await response.json();
     
-    console.log(`Successfully loaded compiled indices: ${(compiledData as CompiledData)?.metadata?.total_records || 'unknown'} total records`);
+    // Cache the data
+    optimizedDataCache.set(cacheKey, { data: optimizedData, timestamp: now });
     
-    return compiledData;
+    console.log(`Successfully loaded optimized indices: ${optimizedData.metadata.total_records} records for ${cacheKey}`);
+    
+    return optimizedData;
   } catch (error) {
-    console.error('Error loading compiled indices from CDN:', error);
-    throw new Error('Failed to load compiled indices data from CDN');
+    console.error(`Error loading optimized indices from CDN for ${cacheKey}:`, error);
+    throw new Error(`Failed to load optimized indices data for ${station}/${year}/${bandwidth}`);
   }
 }
 
@@ -164,38 +162,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached.data);
     }
     
-    // Load compiled data from CDN
-    const compiledIndices = await loadCompiledData();
+    // Load optimized data directly from CDN
+    const optimizedData = await loadOptimizedData(station, year, bandwidth);
+    const rawData = optimizedData.data;
     
-    // Navigate to the specific dataset
-    const stationData = compiledIndices?.stations?.[station];
-    if (!stationData) {
-      return NextResponse.json(
-        { error: `Station '${station}' not found` },
-        { status: 404 }
-      );
-    }
-    
-    const yearData = stationData[year.toString()];
-    if (!yearData) {
-      return NextResponse.json(
-        { error: `Year '${year}' not found for station '${station}'` },
-        { status: 404 }
-      );
-    }
-    
-    const bandwidthData = yearData[bandwidth];
-    if (!bandwidthData) {
-      return NextResponse.json(
-        { error: `Bandwidth '${bandwidth}' not found for station '${station}' year '${year}'` },
-        { status: 404 }
-      );
-    }
-    
-    // Handle nested data structure - data is under bandwidthData.data
-    const rawData: RawDataPoint[] = Array.isArray(bandwidthData) 
-      ? bandwidthData 
-      : bandwidthData.data;
     if (!rawData || !Array.isArray(rawData)) {
       return NextResponse.json(
         { error: 'No data found for the specified parameters' },
@@ -246,20 +216,11 @@ export async function GET(request: NextRequest) {
       key => key !== 'Date' && key !== 'Filename' && typeof sampleRecord[key] === 'number'
     );
     
-    const stations = Object.keys(compiledIndices.stations || {});
-    const years = [...new Set(
-      stations.flatMap(s => 
-        Object.keys(compiledIndices.stations?.[s] || {}).map(y => parseInt(y, 10))
-      )
-    )].filter(y => !isNaN(y));
-    
-    const bandwidths = [...new Set(
-      stations.flatMap(s => 
-        Object.keys(compiledIndices.stations?.[s] || {}).flatMap(y =>
-          Object.keys(compiledIndices.stations?.[s]?.[y] || {})
-        )
-      )
-    )];
+    // Since we're loading individual files, provide known metadata
+    // You can expand this based on your actual data combinations
+    const stations = ['9M', '14M', '37M']; // Known stations
+    const years = [2021]; // Known years
+    const bandwidths = ['FullBW', '8kHz']; // Known bandwidths
     
     const valueRanges = getValueRanges(filteredData);
     

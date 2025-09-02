@@ -89,6 +89,13 @@ def upload_views_to_cdn():
         json_files.append(compiled_indices_file)
         logger.info(f"Found compiled_indices.json in processed directory")
     
+    # Check for optimized files in processed/optimized directory
+    optimized_dir = processed_dir / 'optimized'
+    if optimized_dir.exists():
+        optimized_files = list(optimized_dir.glob('*.json'))
+        json_files.extend(optimized_files)
+        logger.info(f"Found {len(optimized_files)} optimized files in processed/optimized directory")
+    
     for json_file in json_files:
         try:
             # Determine content type
@@ -97,6 +104,8 @@ def upload_views_to_cdn():
             # Determine upload path based on source directory
             if json_file.parent.name == 'processed':
                 upload_key = f'processed/{json_file.name}'
+            elif json_file.parent.name == 'optimized':
+                upload_key = f'processed/optimized/{json_file.name}'
             else:
                 upload_key = f'views/{json_file.name}'
             
