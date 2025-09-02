@@ -166,7 +166,6 @@ export async function GET(request: NextRequest) {
     
     // Load compiled data from CDN
     const compiledIndices = await loadCompiledData();
-    console.log(`Available stations: ${Object.keys(compiledIndices?.stations || {})}`);
     
     // Navigate to the specific dataset
     const stationData = compiledIndices?.stations?.[station];
