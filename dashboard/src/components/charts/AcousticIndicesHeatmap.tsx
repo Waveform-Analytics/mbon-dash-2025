@@ -49,7 +49,23 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
   }, [metadata, selectedIndex, selectedStation, selectedBandwidth]);
 
   useEffect(() => {
-    if (!containerRef.current || !data || !selectedIndex || !selectedStation || !selectedBandwidth) return;
+    if (!containerRef.current || !selectedIndex || !selectedStation || !selectedBandwidth) return;
+    
+    // If data is null (loading new data), clear the visualization immediately
+    if (!data) {
+      const container = d3.select(containerRef.current);
+      const cellsGroup = container.select('.cells-group');
+      
+      if (!cellsGroup.empty()) {
+        // Immediately hide existing cells when data becomes null
+        cellsGroup.selectAll('rect.heatmap-cell')
+          .transition()
+          .duration(150)
+          .style('opacity', 0)
+          .remove();
+      }
+      return;
+    }
 
     const container = d3.select(containerRef.current);
     

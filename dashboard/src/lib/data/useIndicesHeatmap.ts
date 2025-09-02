@@ -267,17 +267,20 @@ export function useIndicesHeatmap(params: UseIndicesHeatmapParams = {}): UseIndi
     
     console.log('useIndicesHeatmap: fetchData called with params:', currentParams);
     
+    // Clear data immediately when parameters change to prevent showing stale data
+    setData(null);
+    setLoading(true);
+    setError(null);
+    
     // If we don't have all parameters, just fetch metadata
     if (!currentParams.index || !currentParams.station || !currentParams.year || !currentParams.bandwidth || 
         currentParams.index === '' || currentParams.station === '' || currentParams.year === 0 || currentParams.bandwidth === '') {
       console.log('useIndicesHeatmap: No complete parameters, fetching metadata only');
       
       try {
-        setLoading(true);
-        setError(null);
         const metadataResult = await fetchMetadata();
         setMetadata(metadataResult);
-        setData(null); // Clear any previous data
+        // Data remains null - already cleared above
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error occurred');
         setError(error);
@@ -290,9 +293,6 @@ export function useIndicesHeatmap(params: UseIndicesHeatmapParams = {}): UseIndi
     }
     
     console.log('useIndicesHeatmap: Have complete parameters, fetching data');
-    
-    setLoading(true);
-    setError(null);
     
     try {
       const result = await fetchHeatmapData(currentParams);
