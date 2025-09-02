@@ -67,6 +67,7 @@ def upload_views_to_cdn():
     
     bucket_name = os.getenv('CLOUDFLARE_R2_BUCKET_NAME')
     views_dir = root_dir / 'data' / 'views'
+    processed_dir = root_dir / 'data' / 'processed'
     
     if not views_dir.exists():
         logger.error(f"Views directory not found: {views_dir}")
@@ -78,21 +79,33 @@ def upload_views_to_cdn():
     uploaded_count = 0
     errors = []
     
-    # Get list of JSON files
+    # Get list of JSON files from views directory
     json_files = list(views_dir.glob('*.json'))
     logger.info(f"Found {len(json_files)} view files to upload")
+    
+    # Also check for compiled_indices.json in processed directory
+    compiled_indices_file = processed_dir / 'compiled_indices.json'
+    if compiled_indices_file.exists():
+        json_files.append(compiled_indices_file)
+        logger.info(f"Found compiled_indices.json in processed directory")
     
     for json_file in json_files:
         try:
             # Determine content type
             content_type = mimetypes.guess_type(str(json_file))[0] or 'application/json'
             
-            # Upload file to views/ subfolder in bucket
+            # Determine upload path based on source directory
+            if json_file.parent.name == 'processed':
+                upload_key = f'processed/{json_file.name}'
+            else:
+                upload_key = f'views/{json_file.name}'
+            
+            # Upload file
             with open(json_file, 'rb') as f:
                 r2.upload_fileobj(
                     f,
                     bucket_name,
-                    f'views/{json_file.name}',
+                    upload_key,
                     ExtraArgs={
                         'ContentType': content_type,
                         'CacheControl': 'public, max-age=3600'  # 1 hour cache
@@ -100,7 +113,7 @@ def upload_views_to_cdn():
                     }
                 )
             
-            logger.info(f"✅ Uploaded: {json_file.name}")
+            logger.info(f"✅ Uploaded: {upload_key}")
             uploaded_count += 1
             
         except Exception as e:
