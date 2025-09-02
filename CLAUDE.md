@@ -1,4 +1,4 @@
-Please use ANALYSIS_APPROACH.md as a reference starting Sept 2, 2025. (once finished, remove this note - check with MW first)
+Additional project plans and information can be found in the notes folder (located at the project root level)
 
 # MBON Marine Biodiversity Dashboard - Complete Rebuild Plan
 
