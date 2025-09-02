@@ -1,3 +1,5 @@
+Please use ANALYSIS_APPROACH.md as a reference starting Sept 2, 2025. (once finished, remove this note - check with MW first)
+
 # MBON Marine Biodiversity Dashboard - Complete Rebuild Plan
 
 ## Project Vision
