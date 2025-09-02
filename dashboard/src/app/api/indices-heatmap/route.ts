@@ -41,7 +41,12 @@ interface CompiledData {
   stations?: {
     [station: string]: {
       [year: string]: {
-        [bandwidth: string]: RawDataPoint[];
+        [bandwidth: string]: {
+          data: RawDataPoint[];
+          columns?: string[];
+          file_info?: unknown;
+          shape?: number[];
+        } | RawDataPoint[]; // Support both nested and flat structures
       };
     };
   };
@@ -187,7 +192,10 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const rawData: RawDataPoint[] = bandwidthData;
+    // Handle nested data structure - data is under bandwidthData.data
+    const rawData: RawDataPoint[] = Array.isArray(bandwidthData) 
+      ? bandwidthData 
+      : bandwidthData.data;
     if (!rawData || !Array.isArray(rawData)) {
       return NextResponse.json(
         { error: 'No data found for the specified parameters' },
