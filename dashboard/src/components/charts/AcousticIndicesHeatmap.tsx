@@ -19,13 +19,6 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
   const selectedYear = 2021; // Fixed to 2021 (only year with acoustic indices)
 
   // Fetch data and metadata
-  console.log('AcousticIndicesHeatmap hook params:', {
-    index: selectedIndex,
-    station: selectedStation,
-    year: selectedYear,
-    bandwidth: selectedBandwidth,
-  });
-  
   const { data, loading, error, metadata } = useIndicesHeatmap({
     index: selectedIndex,
     station: selectedStation,
@@ -41,29 +34,16 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
 
   // Set initial selections when metadata loads
   useEffect(() => {
-    console.log('AcousticIndicesHeatmap useEffect:', { 
-      hasMetadata: !!metadata, 
-      selectedIndex, 
-      selectedStation, 
-      selectedBandwidth,
-      availableIndices: metadata?.available_indices?.length || 0,
-      stations: metadata?.stations?.length || 0,
-      bandwidths: metadata?.bandwidths?.length || 0
-    });
-
     if (!metadata) return;
 
     if (metadata.available_indices.length > 0 && !selectedIndex) {
-      console.log('Setting selectedIndex to ACI');
       setSelectedIndex('ACI'); // Default to ACI (Acoustic Complexity Index)
     }
     if (metadata.stations.length > 0 && !selectedStation) {
-      console.log('Setting selectedStation to 14M');
       setSelectedStation('14M'); // Default to station 14M (has most reliable data)
     }
     // Note: Year is fixed to 2021 (only year with acoustic indices data)
     if (metadata.bandwidths.length > 0 && !selectedBandwidth) {
-      console.log('Setting selectedBandwidth to FullBW');
       setSelectedBandwidth('FullBW'); // Default to Full Bandwidth (has more data)
     }
   }, [metadata, selectedIndex, selectedStation, selectedBandwidth]);
