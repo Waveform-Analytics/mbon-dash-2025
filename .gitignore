@@ -86,11 +86,14 @@ combined_df_export.csv
 # Data files - CDN-first approach
 # All data stored on CDN, reproduced locally via scripts
 
-# Ignore entire data folder - everything is CDN-based
-data/
-
-# Legacy: Remove old public/data structure (data now served from CDN)
+# Ignore specific data folders - everything is CDN-based
+/data/
+/python/data/
+python/data/
 public/data/
+
+# IMPORTANT: Allow dashboard/src/lib/data/ for React hooks
+!dashboard/src/lib/data/
 
 # MkDocs generated site
 site/
@@ -116,7 +119,10 @@ htmlcov/
 
 # Temporary test utilities
 test_runner.py
-/python/data_backup_20250830_212733
+/python/data_backup_*
 
-
+# Specific data processing output directories
 data/processed/
+data/views/
+python/data/processed/
+python/data/views/
