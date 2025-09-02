@@ -6,7 +6,7 @@
   "devCommand": "cd dashboard && npm run dev",
   "framework": "nextjs",
   "functions": {
-    "dashboard/src/app/api/**": {
+    "**": {
       "maxDuration": 30
     }
   }
