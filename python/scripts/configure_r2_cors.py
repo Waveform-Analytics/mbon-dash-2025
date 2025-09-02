@@ -46,7 +46,8 @@ def configure_r2_cors():
                     'http://localhost:3002',
                     'http://localhost:3003',
                     'http://localhost:3004',
-                    'https://your-production-domain.com'  # Replace with your actual production domain
+                    'https://mbon-dash-2025.vercel.app',
+                    'https://mbon-dash-2025-*.vercel.app'
                 ],
                 'AllowedMethods': ['GET', 'HEAD'],
                 'AllowedHeaders': ['*'],
