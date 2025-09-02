@@ -249,7 +249,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
       .style('opacity', 0);
     
     // Update all cells (new and existing) - position first, then transition colors and opacity
-    const allCells = cells.merge(cellsEnter);
+    const allCells = cells.merge(cellsEnter as unknown as d3.Selection<d3.BaseType, { key: string; date: string; hour: number; value: number; index_name: string; station: string; year: number; bandwidth: string; }, d3.BaseType, unknown>);
     
     // Update positions immediately (no transition for layout)
     allCells
@@ -285,7 +285,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     // Update axes
     const xAxis = d3.axisBottom(xScale)
       .tickFormat((d: unknown) => {
-        const date = new Date(d);
+        const date = new Date(d as string);
         return d3.timeFormat('%b %d')(date);
       })
       .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / 8) === 0)); // Show ~8 ticks
@@ -295,14 +295,13 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
       .tickValues(['0', '4', '8', '12', '16', '20']); // Show every 4 hours
 
     // Update x-axis
-    g.select('.x-axis')
+    const xAxisSelection = g.select('.x-axis')
       .attr('transform', `translate(0,${height})`)
       .style('font-size', '11px')
       .style('color', '#666')
-      .transition()
-      .duration(300)
-      .call(xAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void)
-      .selectAll('text')
+      .call(xAxis as unknown as (selection: unknown) => void);
+    
+    xAxisSelection.selectAll('text')
       .attr('transform', 'rotate(-45)')
       .style('text-anchor', 'end');
 
@@ -310,9 +309,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     g.select('.y-axis')
       .style('font-size', '11px')
       .style('color', '#666')
-      .transition()
-      .duration(300)
-      .call(yAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void);
+      .call(yAxis as unknown as (selection: unknown) => void);
 
     // Update axis labels
     g.select('.x-label')
@@ -344,7 +341,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     
     gradientStops.enter()
       .append('stop')
-      .merge(gradientStops)
+      .merge(gradientStops as unknown as d3.Selection<SVGStopElement, number, d3.BaseType, unknown>)
       .attr('offset', (d: number) => `${d * 100}%`)
       .transition()
       .duration(300)
