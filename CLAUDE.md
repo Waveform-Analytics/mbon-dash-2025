@@ -321,28 +321,134 @@ python/data/raw/
 3. **Environmental Files**: Supporting data - third priority
 4. **Legacy RMS Files**: Will be deprecated in favor of indices
 
-## View-Based Data Architecture
+## Data Architecture: Two-Tier System
 
 ### Core Principle
-Each dashboard page loads only the data it needs through optimized view files.
+The dashboard uses a **two-tier data architecture** optimized for different use cases:
 
-### Initial View Files (< 50KB each)
+1. **Small View Files (< 50KB)**: Pre-processed, optimized data served directly from CDN
+2. **Large Datasets (> 50MB)**: Progressive loading via API endpoints that fetch from CDN and filter server-side
+
+### Tier 1: Small View Files (< 50KB each)
+Direct CDN access for immediate loading:
 ```json
 views/
 ├── stations.json                      # Station metadata, coordinates, deployment info (8KB)
 ├── datasets_summary.json              # Dataset overview, record counts, date ranges (12KB)
 ├── indices_reference.json             # All acoustic indices with descriptions, categories (25KB)
+├── heatmap.json                       # Species detection heatmap data (42KB)
+├── acoustic_indices_distributions.json # Index distribution summaries (35KB)
 └── project_metadata.json              # Project info, research context, methods (6KB)
 ```
 
-### Future View Files (to be added incrementally)
-```json
-future_views/
-├── acoustic_summary.json              # PCA, index rankings, correlations (planned)
-├── species_timeline.json              # Detection patterns over time (planned)
-├── environmental_trends.json          # Temperature/depth patterns (planned)
-└── biodiversity_metrics.json          # Diversity indices, richness (planned)
+**Usage Pattern**:
+```typescript
+// Direct CDN loading for small files
+const { data, loading, error } = useViewData<StationData>('stations.json');
 ```
+
+### Tier 2: Large Datasets (Progressive Loading)
+API-based progressive loading for large datasets:
+```json
+processed/
+└── compiled_indices.json              # Full acoustic indices dataset (279MB)
+```
+
+**Usage Pattern**:
+```typescript
+// API-based progressive loading for large files
+const { data, loading, error, metadata } = useIndicesHeatmap({
+  index: 'ACI',
+  station: '14M', 
+  year: 2021,
+  bandwidth: 'FullBW'
+});
+```
+
+**How Progressive Loading Works**:
+1. **API Route**: `/api/indices-heatmap` fetches the large file from CDN once and caches in memory
+2. **Filtering**: Server-side filtering returns only requested subset (e.g., 8,735 records from 50,000+)
+3. **Caching**: Multiple cache layers prevent redundant CDN requests and processing
+4. **Performance**: ~16 second initial load, then sub-second responses for subsequent requests
+
+### Creating New Progressive Loading Endpoints
+
+When you need to add a new large dataset with progressive loading, follow this pattern:
+
+**1. Create API Route** (`dashboard/src/app/api/[endpoint-name]/route.ts`):
+```typescript
+// Example: dashboard/src/app/api/species-timeline/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+interface CompiledData {
+  stations?: {
+    [station: string]: {
+      [year: string]: {
+        data: RawDataPoint[]; // Handle nested structure
+      };
+    };
+  };
+}
+
+const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
+
+// Cache large file in memory
+let compiledData: CompiledData | null = null;
+
+async function loadCompiledData() {
+  if (compiledData) return compiledData;
+  
+  const response = await fetch(`${CDN_BASE_URL}/processed/species_detections.json`);
+  compiledData = await response.json();
+  return compiledData;
+}
+
+export async function GET(request: NextRequest) {
+  // Extract query parameters
+  const { searchParams } = new URL(request.url);
+  const station = searchParams.get('station');
+  const year = searchParams.get('year');
+  
+  // Load and filter data
+  const data = await loadCompiledData();
+  const filteredData = data.stations?.[station]?.[year]?.data || [];
+  
+  return NextResponse.json({ data: filteredData });
+}
+```
+
+**2. Create Data Hook** (`dashboard/src/lib/data/useSpeciesTimeline.ts`):
+```typescript
+export function useSpeciesTimeline(params: { station: string; year: string }) {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    if (!params.station || !params.year) return;
+    
+    fetch(`/api/species-timeline?station=${params.station}&year=${params.year}`)
+      .then(res => res.json())
+      .then(setData);
+  }, [params]);
+  
+  return { data, loading: !data };
+}
+```
+
+**3. Use in Component**:
+```typescript
+function SpeciesTimelineChart() {
+  const { data } = useSpeciesTimeline({ station: '14M', year: '2021' });
+  return <div>{/* Render data */}</div>;
+}
+```
+
+**Key Progressive Loading Principles**:
+- **CDN Source**: Always fetch large files from `${CDN_BASE_URL}/processed/`
+- **Memory Caching**: Cache the full dataset in API route memory to avoid repeated CDN fetches
+- **Parameter Filtering**: Filter server-side based on query parameters
+- **Error Handling**: Handle missing data gracefully
+- **TypeScript**: Use proper interfaces for data structures
+- **Nested Data**: Handle nested structures like `data.stations[station][year].data`
 
 ### Data Loading Pattern
 ```typescript
@@ -502,15 +608,65 @@ git add python/data/views/           # Commit new views
 git commit -m "Update views with new data"
 ```
 
+### CDN Upload and Management
+The CDN upload script (`scripts/upload_to_cdn.py`) handles both small view files and large processed datasets:
+
+```bash
+# Upload all data to CDN (both small and large files)
+cd python/
+uv run scripts/upload_to_cdn.py
+```
+
+**What Gets Uploaded**:
+- **Small view files** (< 50KB): From `data/views/` → CDN `views/` folder
+- **Large processed files** (> 50MB): From `data/processed/` → CDN `processed/` folder
+
+**Upload Script Behavior**:
+1. **Automatic Detection**: Scans both `views/` and `processed/` directories
+2. **Smart Routing**: Places files in appropriate CDN folders based on source directory
+3. **Large File Handling**: Handles files up to 279MB (tested with `compiled_indices.json`)
+4. **Progress Tracking**: Shows upload progress with file sizes and timing
+5. **Error Handling**: Reports failed uploads and provides retry guidance
+
+**Example Output**:
+```
+✅ Uploaded: views/stations.json
+✅ Uploaded: views/datasets_summary.json  
+✅ Uploaded: processed/compiled_indices.json (279MB, 19 seconds)
+📊 Upload Summary: ✅ 11 files uploaded successfully
+```
+
+### Data Architecture Decision Matrix
+When adding new data/visualizations, choose the appropriate tier:
+
+| Data Size | Processing Needs | User Interaction | Recommended Approach |
+|-----------|------------------|------------------|----------------------|
+| < 50KB | Pre-processed | Static display | **Tier 1**: Small view file |
+| < 50KB | Pre-processed | Simple filtering | **Tier 1**: Small view file |
+| > 50MB | Dynamic filtering | Complex user selections | **Tier 2**: Progressive loading |
+| > 50MB | Real-time analysis | Parameter-based queries | **Tier 2**: Progressive loading |
+
+**Examples**:
+- **Station map data** → Tier 1 (small, static)
+- **Species detection heatmap** → Tier 1 (42KB, pre-processed)
+- **Acoustic indices analysis** → Tier 2 (279MB, user-filtered)
+- **Full dataset exports** → Tier 2 (large, parameter-based)
+
 ### Deployment Workflow
 ```bash
-# Deploy new views to CDN
+# Deploy new data to CDN
 cd python/
-uv run scripts/03_upload_cdn.py
+uv run scripts/upload_to_cdn.py
 
 # Deploy dashboard updates
 cd dashboard/
-vercel deploy --prod
+npm run build                        # Test build locally first
+git add . && git commit -m "feat: add new visualization"
+git push                            # Automatic Vercel deployment
+
+# Configure CORS if needed (after adding new domains)
+cd python/
+uv run scripts/configure_r2_cors.py
 ```
 
 

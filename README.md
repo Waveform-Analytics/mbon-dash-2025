@@ -173,11 +173,65 @@ Interactive small multiples visualization showing probability density distributi
 - **Indices Reference**: Filterable table of all acoustic indices with descriptions
 - **Project Metadata**: Research context, methodology, and citations
 
-## Creating New Views and Plots
+## Two-Tier Data Architecture
 
-This section explains how to add new data views and visualizations to the dashboard.
+This project uses a **two-tier data architecture** optimized for different use cases:
 
-### 1. Create a New View (Python)
+### Tier 1: Small View Files (< 50KB) - Direct CDN Access
+For small datasets that can be pre-processed and served directly:
+
+```json
+views/
+├── stations.json                      # Station metadata (8KB)
+├── datasets_summary.json              # Dataset overview (12KB)  
+├── indices_reference.json             # Acoustic indices reference (25KB)
+├── heatmap.json                       # Species detection heatmap (42KB)
+└── acoustic_indices_distributions.json # Index distributions (35KB)
+```
+
+**Usage Pattern:**
+```typescript
+const { data, loading, error } = useViewData<StationData>('stations.json');
+```
+
+### Tier 2: Large Datasets (> 50MB) - Progressive Loading
+For large datasets requiring server-side filtering:
+
+```json
+processed/
+└── compiled_indices.json              # Full acoustic indices (279MB)
+```
+
+**Usage Pattern:**
+```typescript
+const { data, loading, error, metadata } = useIndicesHeatmap({
+  index: 'ACI',
+  station: '14M',
+  year: 2021,
+  bandwidth: 'FullBW'
+});
+```
+
+**How Progressive Loading Works:**
+1. API route (`/api/indices-heatmap`) fetches large file from CDN once and caches in memory
+2. Server-side filtering returns only requested subset (e.g., 8,735 records from 50,000+)
+3. Multiple cache layers prevent redundant processing
+4. Performance: ~16 second initial load, then sub-second responses
+
+### Decision Matrix: Which Approach to Use?
+
+| Data Size | Processing Needs | User Interaction | Recommended Approach |
+|-----------|------------------|------------------|----------------------|
+| < 50KB | Pre-processed | Static display | **Tier 1**: Small view file |
+| < 50KB | Pre-processed | Simple filtering | **Tier 1**: Small view file |
+| > 50MB | Dynamic filtering | Complex user selections | **Tier 2**: Progressive loading |
+| > 50MB | Real-time analysis | Parameter-based queries | **Tier 2**: Progressive loading |
+
+## Creating New Views and Visualizations
+
+### Tier 1: Small View Files (< 50KB)
+
+#### 1. Create a New View (Python)
 
 Views are small, optimized JSON files (<50KB) that contain pre-processed data for the dashboard.
 
@@ -433,6 +487,271 @@ export default function MyPage() {
 
 Option B: Add to existing page like `explore/page.tsx`.
 
+### Tier 2: Progressive Loading (> 50MB)
+
+For large datasets that require server-side filtering and progressive loading:
+
+#### 1. Create Large Dataset (Python)
+First, create a script to compile your large dataset:
+
+```python
+# python/scripts/generate_large_dataset.py
+import json
+from pathlib import Path
+
+def create_large_dataset():
+    """Create a large compiled dataset for progressive loading."""
+    
+    # Load and combine your data sources
+    # compiled_data = process_large_datasets()
+    
+    compiled_data = {
+        "metadata": {
+            "generated_at": "2025-01-01T00:00:00",
+            "total_records": 50000,
+            "stations": ["14M", "37M", "9M"],
+            "years": [2018, 2021]
+        },
+        "stations": {
+            "14M": {
+                "2021": {
+                    "data": [
+                        # Large array of records
+                    ]
+                }
+            }
+        }
+    }
+    
+    # Save to processed directory
+    output_path = Path("data/processed/my_large_dataset.json")
+    with open(output_path, 'w') as f:
+        json.dump(compiled_data, f)
+    
+    print(f"Created {output_path} ({output_path.stat().st_size / 1024 / 1024:.1f} MB)")
+
+if __name__ == "__main__":
+    create_large_dataset()
+```
+
+#### 2. Create API Route
+Create an API endpoint for server-side filtering:
+
+```typescript
+// dashboard/src/app/api/my-large-data/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+interface CompiledData {
+  metadata?: {
+    total_records?: number;
+    stations?: string[];
+    years?: number[];
+  };
+  stations?: {
+    [station: string]: {
+      [year: string]: {
+        data: RawDataPoint[];
+      };
+    };
+  };
+}
+
+const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
+let compiledData: CompiledData | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function loadCompiledData() {
+  if (compiledData) return compiledData;
+  
+  try {
+    const dataUrl = `${CDN_BASE_URL}/processed/my_large_dataset.json`;
+    const response = await fetch(dataUrl);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    compiledData = await response.json();
+    return compiledData;
+  } catch (error) {
+    console.error('Error loading compiled data from CDN:', error);
+    throw new Error('Failed to load compiled data from CDN');
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const station = searchParams.get('station');
+  const year = searchParams.get('year');
+  
+  if (!station || !year) {
+    return NextResponse.json(
+      { error: 'Missing required parameters: station, year' },
+      { status: 400 }
+    );
+  }
+  
+  try {
+    const compiledDataset = await loadCompiledData();
+    
+    // Handle nested data structure
+    const stationData = compiledDataset?.stations?.[station];
+    if (!stationData) {
+      return NextResponse.json(
+        { error: `Station '${station}' not found` },
+        { status: 404 }
+      );
+    }
+    
+    const yearData = stationData[year];
+    if (!yearData) {
+      return NextResponse.json(
+        { error: `Year '${year}' not found` },
+        { status: 404 }
+      );
+    }
+    
+    const rawData = yearData.data || [];
+    
+    return NextResponse.json({
+      metadata: {
+        stations: Object.keys(compiledDataset?.stations || {}),
+        years: compiledDataset?.metadata?.years || [],
+        filtered_records: rawData.length,
+      },
+      data: rawData
+    });
+    
+  } catch (error) {
+    console.error('Error in API route:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### 3. Create Progressive Loading Hook
+Create a data hook that handles metadata fetching and progressive loading:
+
+```typescript
+// dashboard/src/lib/data/useMyLargeData.ts
+import { useState, useEffect, useCallback } from 'react';
+
+interface MyLargeDataParams {
+  station?: string;
+  year?: number;
+}
+
+export function useMyLargeData(params: MyLargeDataParams) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [metadata, setMetadata] = useState(null);
+  
+  // Fetch metadata first (using default params to get available options)
+  useEffect(() => {
+    if (!params.station || !params.year) {
+      // Fetch metadata to get available stations/years
+      fetchMetadata();
+      return;
+    }
+    
+    // Fetch actual data
+    fetchData();
+  }, [params]);
+  
+  const fetchMetadata = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Use default params to get metadata
+      const response = await fetch(`/api/my-large-data?station=14M&year=2021`);
+      const result = await response.json();
+      setMetadata(result.metadata);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  const fetchData = useCallback(async () => {
+    if (!params.station || !params.year) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/my-large-data?station=${params.station}&year=${params.year}`
+      );
+      const result = await response.json();
+      setData(result);
+      setMetadata(result.metadata);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [params]);
+  
+  return { data, loading, error, metadata };
+}
+```
+
+#### 4. Upload to CDN
+Upload your large dataset to CDN:
+
+```bash
+cd python/
+uv run scripts/generate_large_dataset.py    # Create the large file
+uv run scripts/upload_to_cdn.py            # Upload to CDN (includes processed/ files)
+```
+
+#### 5. Use in Component
+Use the progressive loading hook in your component:
+
+```tsx
+function MyLargeDataChart() {
+  const [selectedStation, setSelectedStation] = useState('');
+  const [selectedYear, setSelectedYear] = useState(0);
+  
+  const { data, loading, error, metadata } = useMyLargeData({
+    station: selectedStation,
+    year: selectedYear
+  });
+  
+  // Set defaults when metadata loads
+  useEffect(() => {
+    if (!metadata) return;
+    
+    if (metadata.stations.length > 0 && !selectedStation) {
+      setSelectedStation(metadata.stations[0]);
+    }
+    if (metadata.years.length > 0 && !selectedYear) {
+      setSelectedYear(metadata.years[0]);
+    }
+  }, [metadata]);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!data) return null;
+  
+  return (
+    <div>
+      {/* Controls */}
+      <select value={selectedStation} onChange={(e) => setSelectedStation(e.target.value)}>
+        {metadata?.stations?.map(station => (
+          <option key={station} value={station}>{station}</option>
+        ))}
+      </select>
+      
+      {/* Chart */}
+      <MyChart data={data.data} />
+    </div>
+  );
+}
+```
+
 ### 6. Add Navigation (Optional)
 
 Update navigation in `dashboard/src/components/layout/Navigation.tsx`:
@@ -586,34 +905,93 @@ npm run test                               # Run tests (when configured)
 npm run typecheck                          # Type checking
 ```
 
+## CDN Upload and Management
+
+### Automatic CDN Upload
+The CDN upload script handles both small and large files automatically:
+
+```bash
+cd python/
+uv run scripts/upload_to_cdn.py
+```
+
+**What gets uploaded:**
+- **Small view files** (< 50KB): From `data/views/` → CDN `views/` folder  
+- **Large processed files** (> 50MB): From `data/processed/` → CDN `processed/` folder
+
+**Example output:**
+```
+✅ Uploaded: views/stations.json
+✅ Uploaded: views/datasets_summary.json  
+✅ Uploaded: processed/compiled_indices.json (279MB, 19 seconds)
+📊 Upload Summary: ✅ 11 files uploaded successfully
+```
+
+### CORS Configuration
+If you add new domains or encounter CORS issues:
+
+```bash
+cd python/
+uv run scripts/configure_r2_cors.py
+```
+
+This updates the CORS policy to allow requests from:
+- Local development: `http://localhost:3000-3004`
+- Vercel deployments: `https://mbon-dash-2025.vercel.app`, `https://mbon-dash-2025-*.vercel.app`
+
 ## Deployment
 
-### Development
+### Development Workflow
 ```bash
-# Generate views
-cd python/ && uv run scripts/generate_all_views.py
+# 1. Generate/update data views
+cd python/
+uv run scripts/generate_all_views.py
 
-# Start dashboard
-cd dashboard/ && npm run dev
+# 2. Upload to CDN (optional for local dev)
+uv run scripts/upload_to_cdn.py
+
+# 3. Start dashboard
+cd dashboard/
+npm run dev                          # http://localhost:3000
 ```
 
-### Production
+### Production Deployment
 ```bash
-# Build dashboard
-cd dashboard/ && npm run build
+# 1. Generate and upload data
+cd python/
+uv run scripts/generate_all_views.py    # Generate all views
+uv run scripts/upload_to_cdn.py         # Upload to CDN
 
-# Deploy to Vercel
-vercel deploy --prod
+# 2. Build and deploy dashboard  
+cd dashboard/
+npm run build                           # Test build locally
+git add . && git commit -m "feat: update data"
+git push                               # Automatic Vercel deployment
 ```
 
-**Important for Vercel Deployment:**
-When deploying to Vercel, you need to add all environment variables from your `.env.local` file to the Vercel project settings:
+### Environment Variables for Vercel
+When deploying to Vercel, add these environment variables to the Vercel project settings:
+
+**Required Variables:**
+```bash
+NEXT_PUBLIC_CDN_BASE_URL=https://waveformdata.work
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+```
+
+**Optional (for Python script access in Vercel Functions, if needed):**
+```bash
+CLOUDFLARE_R2_ACCOUNT_ID=your_account_id
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_access_key
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_secret_key
+CLOUDFLARE_R2_BUCKET_NAME=mbon-usc-2025
+CLOUDFLARE_R2_ENDPOINT=https://your_account_id.r2.cloudflarestorage.com
+```
+
+**How to add in Vercel:**
 1. Go to your Vercel project dashboard
-2. Navigate to Settings → Environment Variables
-3. Add each environment variable (both CLOUDFLARE_R2_* and NEXT_PUBLIC_* variables)
-4. The deployment will automatically use these variables
-
-Note: The custom `next.config.ts` configuration that loads from `../.env.local` only works locally. In production, Vercel provides environment variables directly to the Next.js application.
+2. Navigate to Settings → Environment Variables  
+3. Add each environment variable
+4. Redeploy the project
 
 ## Common Issues
 

@@ -16,7 +16,7 @@ This document outlines a comprehensive analytical approach for investigating whe
 #### Phase 1: Temporal Alignment
 ```python
 # Options for handling temporal mismatch:
-1. Aggregate indices to 2-hour windows (mean, max, min, std) -- MW - I want this one
+1. Aggregate indices to 2-hour windows (mean, max, min, std) -- MW - I want this one, except don't aggregate: just decimate. 
 2. Assign detections to nearest hour (with overlap handling)
 3. Use sliding windows with overlap
 ```
