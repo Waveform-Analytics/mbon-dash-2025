@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
 
 interface RawDataPoint {
   Date: string;
@@ -34,7 +32,7 @@ interface HeatmapData {
   data: FilteredDataPoint[];
 }
 
-// Cache for the compiled data file
+// Cache for the compiled data file fetched from CDN
 interface CompiledData {
   metadata?: {
     total_records?: number;
@@ -53,11 +51,14 @@ let compiledData: CompiledData | null = null;
 let compiledDataTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// CDN configuration
+const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
+
 // In-memory cache for filtered results
 const resultCache = new Map<string, { data: HeatmapData; timestamp: number }>();
 const RESULT_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-function loadCompiledData() {
+async function loadCompiledData() {
   const now = Date.now();
   
   // Return cached data if still valid
@@ -66,10 +67,15 @@ function loadCompiledData() {
   }
   
   try {
-    const dataPath = path.join(process.cwd(), '..', 'data', 'processed', 'compiled_indices.json');
-    console.log(`Loading compiled indices from: ${dataPath}`);
+    const dataUrl = `${CDN_BASE_URL}/processed/compiled_indices.json`;
+    console.log(`Fetching compiled indices from CDN: ${dataUrl}`);
     
-    const fileContent = fs.readFileSync(dataPath, 'utf-8');
+    const response = await fetch(dataUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const fileContent = await response.text();
     compiledData = JSON.parse(fileContent);
     compiledDataTimestamp = now;
     
@@ -77,8 +83,8 @@ function loadCompiledData() {
     
     return compiledData;
   } catch (error) {
-    console.error('Error loading compiled indices:', error);
-    throw new Error('Failed to load compiled indices data');
+    console.error('Error loading compiled indices from CDN:', error);
+    throw new Error('Failed to load compiled indices data from CDN');
   }
 }
 
@@ -153,8 +159,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached.data);
     }
     
-    // Load compiled data
-    const compiledIndices = loadCompiledData();
+    // Load compiled data from CDN
+    const compiledIndices = await loadCompiledData();
     
     // Navigate to the specific dataset
     const stationData = compiledIndices?.stations?.[station];
