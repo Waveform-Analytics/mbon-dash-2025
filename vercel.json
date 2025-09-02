@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd dashboard && npm run build",
+  "outputDirectory": "dashboard/.next",
+  "installCommand": "cd dashboard && npm install",
+  "devCommand": "cd dashboard && npm run dev",
+  "framework": "nextjs",
+  "functions": {
+    "dashboard/src/app/api/views/[name]/route.ts": {
+      "maxDuration": 10
+    },
+    "dashboard/src/app/api/indices-heatmap/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
