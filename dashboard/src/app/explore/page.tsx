@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Calendar, Activity, Waves } from 'lucide-react';
 import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSmallMultiples';
 import AcousticDetectionHeatmap from '@/components/charts/AcousticDetectionHeatmap';

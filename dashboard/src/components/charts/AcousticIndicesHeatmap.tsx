@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useIndicesHeatmap } from '@/lib/data/useIndicesHeatmap';
-import type { HeatmapData, HeatmapDataPoint, HeatmapMetadata } from '@/lib/data/useIndicesHeatmap';
+// Types are imported but not used in this file currently
 
 interface AcousticIndicesHeatmapProps {
   className?: string;
@@ -54,25 +54,25 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     const container = d3.select(containerRef.current);
     
     // Check if the complete structure exists
-    let svgContainer = container.select('div.heatmap-svg-container');
-    let legendContainer = container.select('div.legend-container');
+    let svgContainer: d3.Selection<d3.BaseType, unknown, null, undefined> = container.select('div.heatmap-svg-container');
+    let legendContainer: d3.Selection<d3.BaseType, unknown, null, undefined> = container.select('div.legend-container');
     
     // Create complete structure if it doesn't exist (only happens first time)
     if (svgContainer.empty()) {
       // Clear any existing content first
       container.selectAll('*').remove();
       // Create container structure
-      svgContainer = container.append('div')
+      svgContainer = (container.append('div')
         .attr('class', 'heatmap-svg-container')
-        .style('position', 'relative');
+        .style('position', 'relative') as unknown) as d3.Selection<d3.BaseType, unknown, null, undefined>;
       
-      legendContainer = container.append('div')
+      legendContainer = (container.append('div')
         .attr('class', 'legend-container')
         .style('margin-top', '15px')
         .style('display', 'flex')
         .style('align-items', 'center')
         .style('justify-content', 'center')
-        .style('gap', '10px');
+        .style('gap', '10px') as unknown) as d3.Selection<d3.BaseType, unknown, null, undefined>;
       
       // Create SVG
       const svg = svgContainer.append('svg')
@@ -204,9 +204,9 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     });
 
     // Create or select tooltip
-    let tooltip = d3.select('body').select('div.d3-tooltip');
+    let tooltip: d3.Selection<d3.BaseType, unknown, HTMLElement, unknown> = d3.select('body').select('div.d3-tooltip');
     if (tooltip.empty()) {
-      tooltip = d3.select('body').append('div')
+      tooltip = (d3.select('body').append('div')
         .attr('class', 'd3-tooltip')
         .style('position', 'absolute')
         .style('padding', '8px 12px')
@@ -217,7 +217,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
         .style('pointer-events', 'none')
         .style('z-index', '1000')
         .style('opacity', '0')
-        .style('transition', 'opacity 0.2s');
+        .style('transition', 'opacity 0.2s') as unknown) as d3.Selection<d3.BaseType, unknown, HTMLElement, unknown>;
     }
 
     // Create unique keys for data binding
@@ -228,7 +228,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
 
     // Draw heatmap cells in the cells group with proper data binding
     const cells = cellsGroup.selectAll('rect.heatmap-cell')
-      .data(keyedData, (d: any) => d.key);
+      .data(keyedData, (d: unknown) => (d as {key: string}).key);
     
     // Remove old cells first (cells that no longer exist in new data)
     cells.exit()
@@ -267,7 +267,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     
     // Add hover interactions to all cells (apply to the merged selection)
     allCells
-      .on('mouseover', function(event, d: any) {
+      .on('mouseover', function(event, d: {date: string; hour: number; value: number}) {
         tooltip
           .style('opacity', 1)
           .html(`
@@ -284,14 +284,14 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
 
     // Update axes
     const xAxis = d3.axisBottom(xScale)
-      .tickFormat((d: any) => {
+      .tickFormat((d: unknown) => {
         const date = new Date(d);
         return d3.timeFormat('%b %d')(date);
       })
       .tickValues(dates.filter((_, i) => i % Math.ceil(dates.length / 8) === 0)); // Show ~8 ticks
 
     const yAxis = d3.axisLeft(yScale)
-      .tickFormat((d: any) => `${d}:00`)
+      .tickFormat((d: unknown) => `${d}:00`)
       .tickValues(['0', '4', '8', '12', '16', '20']); // Show every 4 hours
 
     // Update x-axis
@@ -301,7 +301,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
       .style('color', '#666')
       .transition()
       .duration(300)
-      .call(xAxis as any)
+      .call(xAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void)
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
       .style('text-anchor', 'end');
@@ -312,7 +312,7 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
       .style('color', '#666')
       .transition()
       .duration(300)
-      .call(yAxis as any);
+      .call(yAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void);
 
     // Update axis labels
     g.select('.x-label')
@@ -345,10 +345,10 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
     gradientStops.enter()
       .append('stop')
       .merge(gradientStops)
-      .attr('offset', (d: any) => `${d * 100}%`)
+      .attr('offset', (d: number) => `${d * 100}%`)
       .transition()
       .duration(300)
-      .attr('stop-color', (d: any) => colorScale(valueRange[0] + d * (valueRange[1] - valueRange[0])));
+      .attr('stop-color', (d: number) => colorScale(valueRange[0] + d * (valueRange[1] - valueRange[0])));
     
     gradientStops.exit().remove();
     
@@ -376,7 +376,6 @@ export default function AcousticIndicesHeatmap({ className = '' }: AcousticIndic
   }, [data, selectedIndex, selectedStation, selectedBandwidth]);
 
   // Always render the container with consistent height
-  const hasValidData = data && selectedIndex && selectedStation && selectedBandwidth && !loading && !error;
   const showLoadingOverlay = loading && (selectedIndex || selectedStation || selectedBandwidth);
   const showError = error && !loading;
 

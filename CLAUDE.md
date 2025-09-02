@@ -40,6 +40,7 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 - **Data Storage**: Cloudflare R2 CDN for global distribution (already have it set up at waveformdata.work - bucket name mbon-usc-2025)
 - **Deployment**: Vercel (frontend), Python processing runs locally
 - **Environment**: Docker optional, uv-based Python environment
+- **Environment Variables**: Stored in `.env.local` at the project root level (not in dashboard/), making them accessible to both Python scripts and Next.js application through dotenv configuration
 
 ## Project Structure
 
@@ -604,6 +605,34 @@ make documentation-review           # Update docs as needed
 - **Managers**: Can understand high-level findings from homepage
 - **Technical Users**: Can export data views as json and images as png and reproduce analysis
 - **Public**: Can understand research context and importance
+
+## Environment Configuration
+
+### Important: Root-Level Environment Variables
+The `.env.local` file is located at the **project root** (not inside the dashboard/ directory). This strategic placement allows:
+- **Python scripts** to access environment variables for CDN uploads and data processing
+- **Next.js application** to access the same variables through the custom dotenv configuration in `next.config.ts`
+- **Single source of truth** for all configuration across the entire project
+
+### Required Environment Variables
+```bash
+# Cloudflare R2 Configuration (used by Python scripts)
+CLOUDFLARE_R2_ACCOUNT_ID=your_account_id
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_access_key
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_secret_key
+CLOUDFLARE_R2_BUCKET_NAME=mbon-usc-2025
+CLOUDFLARE_R2_ENDPOINT=https://your_account_id.r2.cloudflarestorage.com
+CLOUDFLARE_R2_PUBLIC_URL=https://waveformdata.work
+
+# Dashboard Configuration (used by Next.js)
+NEXT_PUBLIC_CDN_BASE_URL=https://waveformdata.work
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+```
+
+### How It Works
+1. **Next.js Configuration**: The `dashboard/next.config.ts` file uses `dotenv.config({ path: '../.env.local' })` to load the root-level environment file
+2. **Python Scripts**: Python scripts use `python-dotenv` to load the same `.env.local` file from the project root
+3. **Vercel Deployment**: When deploying to Vercel, add these environment variables to the Vercel project settings
 
 ---
 

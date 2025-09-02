@@ -76,6 +76,37 @@ Raw Data (Excel/CSV) � Python Processing � Optimized Views (<50KB) � Dashb
 - Python 3.12+ with `uv` package manager
 - Node.js 18+ with `npm`
 - Mapbox token (for maps) - set as `NEXT_PUBLIC_MAPBOX_TOKEN`
+- Cloudflare R2 credentials for CDN (optional for local development)
+
+### Environment Configuration
+
+**Important:** The `.env.local` file must be placed at the **project root** (not inside the dashboard/ directory). This allows both Python scripts and the Next.js application to access the same environment variables.
+
+```bash
+# Create .env.local at project root
+touch .env.local
+```
+
+Add the following environment variables:
+
+```bash
+# Cloudflare R2 Configuration (used by Python scripts for CDN uploads)
+CLOUDFLARE_R2_ACCOUNT_ID=your_account_id
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_access_key
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_secret_key
+CLOUDFLARE_R2_BUCKET_NAME=mbon-usc-2025
+CLOUDFLARE_R2_ENDPOINT=https://your_account_id.r2.cloudflarestorage.com
+CLOUDFLARE_R2_PUBLIC_URL=https://waveformdata.work
+
+# Dashboard Configuration (used by Next.js)
+NEXT_PUBLIC_CDN_BASE_URL=https://waveformdata.work
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+```
+
+The Next.js configuration (`dashboard/next.config.ts`) is set up to automatically load environment variables from the root-level `.env.local` file using:
+```javascript
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+```
 
 ### Setup
 
@@ -574,6 +605,15 @@ cd dashboard/ && npm run build
 # Deploy to Vercel
 vercel deploy --prod
 ```
+
+**Important for Vercel Deployment:**
+When deploying to Vercel, you need to add all environment variables from your `.env.local` file to the Vercel project settings:
+1. Go to your Vercel project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add each environment variable (both CLOUDFLARE_R2_* and NEXT_PUBLIC_* variables)
+4. The deployment will automatically use these variables
+
+Note: The custom `next.config.ts` configuration that loads from `../.env.local` only works locally. In production, Vercel provides environment variables directly to the Next.js application.
 
 ## Common Issues
 

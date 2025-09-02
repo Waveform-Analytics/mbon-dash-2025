@@ -5,7 +5,7 @@ import fs from 'fs';
 interface RawDataPoint {
   Date: string;
   Filename: string;
-  [key: string]: any; // For all the acoustic indices
+  [key: string]: string | number; // For all the acoustic indices
 }
 
 interface FilteredDataPoint {
@@ -35,7 +35,21 @@ interface HeatmapData {
 }
 
 // Cache for the compiled data file
-let compiledData: any = null;
+interface CompiledData {
+  metadata?: {
+    total_records?: number;
+    [key: string]: unknown;
+  };
+  stations?: {
+    [station: string]: {
+      [year: string]: {
+        [bandwidth: string]: RawDataPoint[];
+      };
+    };
+  };
+  data?: RawDataPoint[];
+}
+let compiledData: CompiledData | null = null;
 let compiledDataTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -59,7 +73,7 @@ function loadCompiledData() {
     compiledData = JSON.parse(fileContent);
     compiledDataTimestamp = now;
     
-    console.log(`Successfully loaded compiled indices: ${compiledData.metadata?.total_records || 'unknown'} total records`);
+    console.log(`Successfully loaded compiled indices: ${(compiledData as CompiledData)?.metadata?.total_records || 'unknown'} total records`);
     
     return compiledData;
   } catch (error) {
@@ -143,7 +157,7 @@ export async function GET(request: NextRequest) {
     const compiledIndices = loadCompiledData();
     
     // Navigate to the specific dataset
-    const stationData = compiledIndices.stations?.[station];
+    const stationData = compiledIndices?.stations?.[station];
     if (!stationData) {
       return NextResponse.json(
         { error: `Station '${station}' not found` },
@@ -167,7 +181,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const rawData: RawDataPoint[] = bandwidthData.data;
+    const rawData: RawDataPoint[] = bandwidthData;
     if (!rawData || !Array.isArray(rawData)) {
       return NextResponse.json(
         { error: 'No data found for the specified parameters' },
@@ -207,7 +221,7 @@ export async function GET(request: NextRequest) {
           year,
           bandwidth,
         });
-      } catch (error) {
+      } catch {
         console.warn('Skipping record with invalid date:', record.Date);
         continue;
       }
@@ -221,14 +235,14 @@ export async function GET(request: NextRequest) {
     const stations = Object.keys(compiledIndices.stations || {});
     const years = [...new Set(
       stations.flatMap(s => 
-        Object.keys(compiledIndices.stations[s] || {}).map(y => parseInt(y, 10))
+        Object.keys(compiledIndices.stations?.[s] || {}).map(y => parseInt(y, 10))
       )
     )].filter(y => !isNaN(y));
     
     const bandwidths = [...new Set(
       stations.flatMap(s => 
-        Object.keys(compiledIndices.stations[s] || {}).flatMap(y =>
-          Object.keys(compiledIndices.stations[s][y] || {})
+        Object.keys(compiledIndices.stations?.[s] || {}).flatMap(y =>
+          Object.keys(compiledIndices.stations?.[s]?.[y] || {})
         )
       )
     )];

@@ -148,7 +148,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
 
       // Draw cells
       for (let day = 1; day <= 365; day++) {
-        for (let hour of data.metadata.hours) {
+        for (const hour of data.metadata.hours) {
           const key = `${day}-${hour}`;
           const value = dataMap.get(key) || 0;
           const x = (day - 1) * cellWidth;
@@ -186,11 +186,11 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
 
       // Add axes
       const xAxis = d3.axisBottom(xScale)
-        .tickFormat((d: any) => d3.timeFormat('%b')(d))
+        .tickFormat((d: unknown) => d3.timeFormat('%b')(d as Date))
         .ticks(d3.timeMonth.every(1));
 
       const yAxis = d3.axisLeft(yScale)
-        .tickFormat((d: any) => `${d}:00`)
+        .tickFormat((d: unknown) => `${d}:00`)
         .tickValues([0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(h => h.toString())); // Show only even hours
 
       // Only show x-axis on the bottom plot (2021)
@@ -199,13 +199,13 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
           .attr('transform', `translate(0,${height})`)
           .style('font-size', '11px')
           .style('color', '#666')
-          .call(xAxis as any);
+          .call(xAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void);
       }
 
       g.append('g')
         .style('font-size', '11px')
         .style('color', '#666')
-        .call(yAxis as any);
+        .call(yAxis as unknown as (selection: d3.Selection<SVGGElement, unknown, null, undefined>) => void);
 
       // Add year label to the right side of each plot (rotated 90 degrees clockwise)
       g.append('text')
@@ -264,8 +264,8 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
       .data(stops)
       .enter()
       .append('stop')
-      .attr('offset', (d: any) => `${d * 100}%`)
-      .attr('stop-color', (d: any) => colorScale(valueRange[0] + d * (valueRange[1] - valueRange[0])));
+      .attr('offset', (d: number) => `${d * 100}%`)
+      .attr('stop-color', (d: number) => colorScale(valueRange[0] + d * (valueRange[1] - valueRange[0])));
 
     legendSvg.append('rect')
       .attr('width', 200)
