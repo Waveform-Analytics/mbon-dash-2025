@@ -4,10 +4,5 @@
   "outputDirectory": "dashboard/.next",
   "installCommand": "cd dashboard && npm install",
   "devCommand": "cd dashboard && npm run dev",
-  "framework": "nextjs",
-  "functions": {
-    "**": {
-      "maxDuration": 30
-    }
-  }
+  "framework": "nextjs"
 }
