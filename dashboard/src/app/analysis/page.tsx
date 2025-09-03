@@ -24,7 +24,7 @@ export default function AnalysisOverviewPage() {
               Analysis Methodology Coming Soon
             </h2>
             <p className="text-muted-foreground mb-6">
-              We're building comprehensive analysis tools and visualizations to explore the relationships between acoustic indices and marine biodiversity.
+              We&apos;re building comprehensive analysis tools and visualizations to explore the relationships between acoustic indices and marine biodiversity.
             </p>
             <div className="text-sm text-muted-foreground">
               <p>This section will include:</p>

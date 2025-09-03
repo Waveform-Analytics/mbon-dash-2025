@@ -24,7 +24,7 @@ export default function EnvironmentalDataPage() {
               Environmental Analysis Coming Soon
             </h2>
             <p className="text-muted-foreground mb-6">
-              We're preparing comprehensive visualizations and analysis tools for temperature and depth data from our monitoring stations.
+              We&apos;re preparing comprehensive visualizations and analysis tools for temperature and depth data from our monitoring stations.
             </p>
             <div className="text-sm text-muted-foreground">
               <p>This section will include:</p>

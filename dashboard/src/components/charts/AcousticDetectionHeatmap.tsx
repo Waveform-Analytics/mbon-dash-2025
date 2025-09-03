@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import { useViewData } from '@/lib/data/useViewData';
 
@@ -43,7 +43,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
   const [selectedStation, setSelectedStation] = useState<string>('');
 
   // Dimensions
-  const margin = { top: 40, right: 40, bottom: 80, left: 60 };
+  const margin = useMemo(() => ({ top: 40, right: 40, bottom: 80, left: 60 }), []);
   const width = 700 - margin.left - margin.right;
   const height = 300 - margin.top - margin.bottom;
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Waves, Home, BarChart3, Database, ChevronDown, TrendingUp } from 'lucide-react';
+import { Waves, Home, Database, ChevronDown, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [

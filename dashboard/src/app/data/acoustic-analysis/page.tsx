@@ -7,7 +7,6 @@ import {
   BarChart3, 
   Info,
   ChevronRight,
-  Waves,
   Volume2,
   Users,
   AlertCircle
@@ -17,17 +16,14 @@ import AcousticIndicesSmallMultiples from '@/components/charts/AcousticIndicesSm
 import AcousticDetectionHeatmap from '@/components/charts/AcousticDetectionHeatmap';
 import AcousticIndicesHeatmap from '@/components/charts/AcousticIndicesHeatmap';
 import { useAcousticDistributions } from '@/lib/data/useAcousticDistributions';
-import { useViewData } from '@/lib/data/useViewData';
-import { ProjectMetadata } from '@/types/data';
 import VisualizationCard from '@/components/ui/VisualizationCard';
 import NarrativeSection from '@/components/ui/NarrativeSection';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function AcousticAnalysisPage() {
   const { distributionsData, loading, error } = useAcousticDistributions();
-  const { data: projectData } = useViewData<ProjectMetadata>('project_metadata.json');
 
   return (
     <div className="min-h-screen bg-background">

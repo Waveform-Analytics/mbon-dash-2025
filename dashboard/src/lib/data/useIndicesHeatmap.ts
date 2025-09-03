@@ -288,10 +288,11 @@ export function useIndicesHeatmap(params: UseIndicesHeatmapParams = {}): UseIndi
     console.log('useIndicesHeatmap: Parameters changed, refetching data');
     fetchData();
     
-    // Cleanup function
+    // Cleanup function - capture the current value to avoid stale reference warning
+    const currentController = abortControllerRef.current;
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (currentController) {
+        currentController.abort();
       }
     };
   }, [params.index, params.station, params.year, params.bandwidth, fetchData]);  // Re-fetch when any parameter changes
