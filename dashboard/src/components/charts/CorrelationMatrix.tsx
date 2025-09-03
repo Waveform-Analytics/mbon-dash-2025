@@ -42,25 +42,6 @@ export function CorrelationMatrix({ data }: CorrelationMatrixProps) {
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showOnlyHigh}
-              onChange={(e) => setShowOnlyHigh(e.target.checked)}
-              className="rounded"
-            />
-            Show only indices with high correlations (|r| ≥ {data.metadata.threshold})
-          </label>
-        </div>
-        
-        <div className="text-sm text-gray-600">
-          Showing {filteredIndices.length} of {data.statistics.total_indices} indices
-        </div>
-      </div>
-
       {/* Matrix visualization */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main matrix */}
@@ -71,6 +52,25 @@ export function CorrelationMatrix({ data }: CorrelationMatrixProps) {
               <p className="text-sm text-gray-600">
                 Click on cells to see correlation details. Colors: blue (negative) to red (positive).
               </p>
+              
+              {/* Controls inside the card */}
+              <div className="flex flex-wrap gap-4 items-center justify-between pt-2 border-t">
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={showOnlyHigh}
+                      onChange={(e) => setShowOnlyHigh(e.target.checked)}
+                      className="rounded"
+                    />
+                    Show only indices with high correlations (|r| ≥ {data.metadata.threshold})
+                  </label>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  Showing {filteredIndices.length} of {data.statistics.total_indices} indices
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="relative overflow-auto max-h-[600px]">
@@ -79,12 +79,11 @@ export function CorrelationMatrix({ data }: CorrelationMatrixProps) {
                   <div className="grid gap-0.5 text-xs" 
                        style={{ gridTemplateColumns: `100px repeat(${filteredIndices.length}, 25px)` }}>
                     
-                    {/* Header row - sticky */}
+                    {/* Header row - no labels */}
                     <div className="sticky top-0 left-0 z-20 bg-white border-b border-r border-gray-300"></div>
                     {filteredIndices.map(colIndex => (
                       <div key={colIndex} 
-                           className="sticky top-0 z-10 bg-white border-b border-gray-300 h-20 flex items-end justify-center text-gray-600 font-mono text-xs">
-                        <span className="transform -rotate-90 whitespace-nowrap origin-bottom" title={colIndex}>{colIndex}</span>
+                           className="sticky top-0 z-10 bg-white border-b border-gray-300 h-6">
                       </div>
                     ))}
                     
