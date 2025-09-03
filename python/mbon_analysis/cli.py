@@ -11,6 +11,7 @@ from .views.indices_reference import IndicesReferenceViewGenerator
 from .views.project_metadata import ProjectMetadataViewGenerator
 from .views.acoustic_indices_distributions import AcousticIndicesDistributionsGenerator
 from .views.heatmap_data import HeatmapDataGenerator
+from .views.correlation_matrix import CorrelationMatrixViewGenerator
 from .utils.compiled_indices import CompiledIndicesManager
 from .utils.compiled_detections import CompiledDetectionsManager
 from .utils.data_migration import DataMigrator
@@ -65,7 +66,7 @@ Examples:
     )
     views_parser.add_argument(
         "--view",
-        choices=["stations", "datasets", "indices", "metadata", "acoustic", "heatmap", "all"],
+        choices=["stations", "datasets", "indices", "metadata", "acoustic", "heatmap", "correlation", "all"],
         default="all",
         help="Specific view to generate (default: all)"
     )
@@ -275,6 +276,7 @@ def generate_views(
         "metadata": ProjectMetadataViewGenerator,
         "acoustic": AcousticIndicesDistributionsGenerator,
         "heatmap": HeatmapDataGenerator,
+        "correlation": CorrelationMatrixViewGenerator,
     }
     
     if view_name == "all":
@@ -650,7 +652,7 @@ def generate_views_cli() -> int:
     )
     parser.add_argument(
         "--view",
-        choices=["stations", "datasets", "indices", "metadata", "acoustic", "heatmap", "all"],
+        choices=["stations", "datasets", "indices", "metadata", "acoustic", "heatmap", "correlation", "all"],
         default="all",
         help="Specific view to generate (default: all)"
     )

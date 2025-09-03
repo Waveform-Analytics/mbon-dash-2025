@@ -39,7 +39,7 @@ export default function NarrativeSection({
       transition={{ duration: 0.6, delay }}
       className={`mb-8 ${className}`}
     >
-      <div className="max-w-4xl mx-auto space-y-4 px-4">
+      <div className="space-y-4">
         {title ? (
           <div className={`${variantStyles[variant]} p-6 rounded-r-lg`}>
             {title && (
@@ -52,7 +52,7 @@ export default function NarrativeSection({
             </div>
           </div>
         ) : (
-          <div className="text-center space-y-4">
+          <div className="space-y-4">
             {children}
           </div>
         )}

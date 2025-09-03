@@ -14,9 +14,11 @@ import {
   Volume2,
   Thermometer,
   BarChart3,
-  FileText
+  FileText,
+  ArrowRight
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 // Dynamically import the map to avoid SSR issues with Mapbox
 const StationMap = dynamic(
@@ -446,6 +448,54 @@ export default function DataPage() {
               </Card>
             </motion.div>
           </div>
+        </motion.div>
+
+        {/* Acoustic Analysis Link */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.65 }}
+          className="mb-12"
+        >
+          <Link href="/data/acoustic-analysis" className="block group">
+            <Card className="overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-background via-accent/5 to-primary/5">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                        <Volume2 className="h-8 w-8 text-primary" />
+                      </div>
+                      <h2 className="text-2xl font-bold group-hover:text-primary transition-colors">
+                        Explore Acoustic Analysis
+                      </h2>
+                    </div>
+                    <p className="text-muted-foreground text-lg leading-relaxed mb-4">
+                      Deep dive into the acoustic dataset with interactive visualizations comparing manual 
+                      annotations with computational indices. Explore temporal patterns, statistical distributions, 
+                      and discover correlations between different analysis methods.
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                        Manual Detections Heatmap
+                      </span>
+                      <span className="bg-chart-2/10 text-chart-2 px-3 py-1 rounded-full text-sm font-medium">
+                        Acoustic Indices Heatmap
+                      </span>
+                      <span className="bg-chart-3/10 text-chart-3 px-3 py-1 rounded-full text-sm font-medium">
+                        Distribution Analysis
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-6">
+                    <div className="p-4 bg-primary/10 rounded-full group-hover:bg-primary/20 transition-all duration-300 group-hover:translate-x-2">
+                      <ArrowRight className="h-8 w-8 text-primary" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </motion.div>
 
         {/* Project Overview */}

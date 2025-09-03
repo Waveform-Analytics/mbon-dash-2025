@@ -50,10 +50,10 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link 
-                href="/explore"
+                href="/data"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
               >
-                Explore the Data
+                View the Data
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </motion.div>
@@ -167,7 +167,7 @@ export default function HomePage() {
           </motion.h2>
           
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 2.4 }}
@@ -236,26 +236,6 @@ export default function HomePage() {
               </Link>
             </motion.div>
 
-            {/* Interactive Explorer */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 3.2 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <Link 
-                href="/explore" 
-                className="group bg-card p-6 rounded-lg shadow hover:shadow-lg transition-shadow border block h-full"
-              >
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-chart-4/20 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-chart-4/30 transition-colors">
-                    <BarChart3 className="h-6 w-6 text-chart-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-card-foreground mb-2">Interactive Explorer</h3>
-                  <p className="text-sm text-muted-foreground">Custom analysis and data export tools</p>
-                </div>
-              </Link>
-            </motion.div>
 
           </motion.div>
         </div>
