@@ -157,25 +157,25 @@ export default function ReducingComplexityPage() {
                 <div className="grid md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600 mb-1">
-                      {pcaData.summary.total_indices}
+                      {pcaData.summary.total_indices || 0}
                     </div>
                     <div className="text-muted-foreground">Original indices</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600 mb-1">
-                      {pcaData.summary.components_for_80_percent}
+                      {pcaData.summary.components_for_80_percent || 0}
                     </div>
                     <div className="text-muted-foreground">Components for 80% variance</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 mb-1">
-                      {pcaData.summary.components_for_90_percent}
+                      {pcaData.summary.components_for_90_percent || 0}
                     </div>
                     <div className="text-muted-foreground">Components for 90% variance</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600 mb-1">
-                      {Math.round(pcaData.summary.variance_explained_top_5)}%
+                      {Math.round(pcaData.summary.variance_explained_top_5 || 0)}%
                     </div>
                     <div className="text-muted-foreground">Top 5 components</div>
                   </div>
@@ -185,9 +185,9 @@ export default function ReducingComplexityPage() {
                   <div className="text-sm text-center">
                     <strong className="text-green-800">Remarkable dimensionality reduction:</strong> Just {' '}
                     <span className="text-lg font-bold text-green-700">
-                      {pcaData.summary.components_for_80_percent} component{pcaData.summary.components_for_80_percent === 1 ? '' : 's'}
+                      {pcaData.summary.components_for_80_percent || 0} component{(pcaData.summary.components_for_80_percent || 0) === 1 ? '' : 's'}
                     </span>{' '}
-                    capture{pcaData.summary.components_for_80_percent === 1 ? 's' : ''} 80% of acoustic variation from {pcaData.summary.total_indices} original indices!
+                    capture{(pcaData.summary.components_for_80_percent || 0) === 1 ? 's' : ''} 80% of acoustic variation from {pcaData.summary.total_indices || 0} original indices!
                   </div>
                 </div>
               </div>

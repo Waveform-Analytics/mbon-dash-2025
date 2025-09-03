@@ -10,6 +10,18 @@ interface PCAAnalysisProps {
 }
 
 export function PCAAnalysis({ data }: PCAAnalysisProps) {
+  // Validate and sanitize summary data
+  const safeValue = (value: any, fallback: number = 0): number => {
+    return typeof value === 'number' && !isNaN(value) && isFinite(value) ? value : fallback;
+  };
+
+  const safeSummary = {
+    total_indices: safeValue(data.summary.total_indices),
+    components_for_80_percent: safeValue(data.summary.components_for_80_percent),
+    components_for_90_percent: safeValue(data.summary.components_for_90_percent),
+    variance_explained_top_5: safeValue(data.summary.variance_explained_top_5)
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -18,7 +30,7 @@ export function PCAAnalysis({ data }: PCAAnalysisProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 mb-1">
-                {data.summary.total_indices}
+                {safeSummary.total_indices}
               </div>
               <div className="text-sm text-muted-foreground">Original indices</div>
             </div>
@@ -29,7 +41,7 @@ export function PCAAnalysis({ data }: PCAAnalysisProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600 mb-1">
-                {data.summary.components_for_80_percent}
+                {safeSummary.components_for_80_percent}
               </div>
               <div className="text-sm text-muted-foreground">Components for 80% variance</div>
             </div>
@@ -40,7 +52,7 @@ export function PCAAnalysis({ data }: PCAAnalysisProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600 mb-1">
-                {data.summary.components_for_90_percent}
+                {safeSummary.components_for_90_percent}
               </div>
               <div className="text-sm text-muted-foreground">Components for 90% variance</div>
             </div>
@@ -51,7 +63,7 @@ export function PCAAnalysis({ data }: PCAAnalysisProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600 mb-1">
-                {Math.round(data.summary.variance_explained_top_5)}%
+                {Math.round(safeSummary.variance_explained_top_5)}%
               </div>
               <div className="text-sm text-muted-foreground">Top 5 components variance</div>
             </div>

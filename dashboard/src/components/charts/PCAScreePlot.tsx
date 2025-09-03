@@ -8,27 +8,48 @@ interface PCAScreePlotProps {
 }
 
 export function PCAScreePlot({ data, className = '' }: PCAScreePlotProps) {
-  // Prepare data for nivo
+  // Validate and clean data to prevent NaN values
+  const cleanData = data
+    .slice(0, 10)
+    .filter(d => 
+      typeof d.component_number === 'number' && 
+      !isNaN(d.component_number) &&
+      typeof d.explained_variance === 'number' && 
+      !isNaN(d.explained_variance) &&
+      typeof d.cumulative_variance === 'number' && 
+      !isNaN(d.cumulative_variance)
+    );
+
+  // Prepare data for nivo with validation
   const chartData = [
     {
       id: 'explained_variance',
       color: 'hsl(142, 76%, 36%)', // Green
-      data: data.slice(0, 10).map(d => ({
+      data: cleanData.map(d => ({
         x: d.component_number,
-        y: d.explained_variance,
+        y: Math.max(0, d.explained_variance), // Ensure positive values
         component: d.component
       }))
     },
     {
       id: 'cumulative_variance',
       color: 'hsl(217, 91%, 60%)', // Blue
-      data: data.slice(0, 10).map(d => ({
+      data: cleanData.map(d => ({
         x: d.component_number,
-        y: d.cumulative_variance,
+        y: Math.max(0, Math.min(100, d.cumulative_variance)), // Clamp to 0-100
         component: d.component
       }))
     }
   ];
+
+  // Don't render if we don't have clean data
+  if (cleanData.length === 0) {
+    return (
+      <div className={`h-80 flex items-center justify-center ${className}`}>
+        <div className="text-muted-foreground">No valid data for visualization</div>
+      </div>
+    );
+  }
 
   return (
     <div className={`h-80 ${className}`}>

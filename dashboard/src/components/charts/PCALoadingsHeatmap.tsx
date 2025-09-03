@@ -19,10 +19,20 @@ function getLoadingColor(loading: number): string {
 export function PCALoadingsHeatmap({ data, indices, components, className = '' }: PCALoadingsHeatmapProps) {
   const [selectedCell, setSelectedCell] = useState<{ index: string; component: string; loading: number } | null>(null);
 
-  // Create lookup map for loadings
+  // Validate input data
+  if (!data || !indices || !components || data.length === 0 || indices.length === 0 || components.length === 0) {
+    return (
+      <div className={`h-64 flex items-center justify-center ${className}`}>
+        <div className="text-muted-foreground">No valid data for heatmap visualization</div>
+      </div>
+    );
+  }
+
+  // Create lookup map for loadings with NaN protection
   const loadingMap = new Map<string, number>();
   data.forEach(item => {
-    loadingMap.set(`${item.index}-${item.component}`, item.loading);
+    const loading = typeof item.loading === 'number' && !isNaN(item.loading) ? item.loading : 0;
+    loadingMap.set(`${item.index}-${item.component}`, loading);
   });
 
   return (
