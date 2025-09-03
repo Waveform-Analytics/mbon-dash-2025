@@ -60,8 +60,8 @@ export function usePCAAnalysis() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
-        const response = await fetch(`${CDN_BASE_URL}/views/pca_analysis.json`);
+        // Use local API endpoint with corrected data until CDN cache refreshes
+        const response = await fetch('/api/pca-analysis');
         
         if (!response.ok) {
           throw new Error(`Failed to load PCA analysis data: ${response.status}`);

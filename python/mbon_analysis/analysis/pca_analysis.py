@@ -170,9 +170,13 @@ class PCAAnalyzer:
         explained_variance_ratio = self.pca.explained_variance_ratio_
         cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
         
-        # Find number of components for 80% variance
-        components_80 = np.argmax(cumulative_variance_ratio >= 0.8) + 1
-        components_90 = np.argmax(cumulative_variance_ratio >= 0.9) + 1
+        # Find number of components for 80% and 90% variance
+        # If threshold is never reached, use all components
+        components_80 = np.where(cumulative_variance_ratio >= 0.8)[0]
+        components_80 = components_80[0] + 1 if len(components_80) > 0 else self.pca.n_components_
+        
+        components_90 = np.where(cumulative_variance_ratio >= 0.9)[0]
+        components_90 = components_90[0] + 1 if len(components_90) > 0 else self.pca.n_components_
         
         # Get component loadings
         loadings = pd.DataFrame(

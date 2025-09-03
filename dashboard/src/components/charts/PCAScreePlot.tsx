@@ -1,5 +1,5 @@
 import React from 'react';
-import { Line } from '@nivo/line';
+import { ResponsiveLine } from '@nivo/line';
 import { PCAComponent } from '../../lib/data/usePCAAnalysis';
 
 interface PCAScreePlotProps {
@@ -53,7 +53,7 @@ export function PCAScreePlot({ data, className = '' }: PCAScreePlotProps) {
 
   return (
     <div className={`h-80 ${className}`}>
-      <Line
+      <ResponsiveLine
         data={chartData}
         margin={{ top: 20, right: 110, bottom: 50, left: 60 }}
         xScale={{
@@ -66,6 +66,8 @@ export function PCAScreePlot({ data, className = '' }: PCAScreePlotProps) {
           min: 0,
           max: 100
         }}
+        animate={false}
+        motionConfig="gentle"
         axisTop={null}
         axisRight={null}
         axisBottom={{
@@ -118,14 +120,17 @@ export function PCAScreePlot({ data, className = '' }: PCAScreePlotProps) {
             ]
           }
         ]}
-        tooltip={({ point }) => (
-          <div className="bg-white p-3 shadow-lg rounded border">
-            <div className="font-semibold">{(point.data as any).component}</div>
-            <div className="text-sm text-gray-600">
-              {point.serieId === 'explained_variance' ? 'Individual' : 'Cumulative'}: {point.data.yFormatted}%
+        tooltip={({ point }) => {
+          const pointData = point.data as { component?: string; yFormatted?: string };
+          return (
+            <div className="bg-white p-3 shadow-lg rounded border">
+              <div className="font-semibold">{pointData.component || 'PC'}</div>
+              <div className="text-sm text-gray-600">
+                {point.seriesId === 'explained_variance' ? 'Individual' : 'Cumulative'}: {pointData.yFormatted || point.data.y}%
+              </div>
             </div>
-          </div>
-        )}
+          );
+        }}
         theme={{
           background: 'transparent',
           text: {
