@@ -116,6 +116,7 @@ htmlcov/
 
 # Log files
 *.log
+*.txt
 
 # Temporary test utilities
 test_runner.py
