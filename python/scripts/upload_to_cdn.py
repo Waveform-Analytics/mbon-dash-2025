@@ -83,11 +83,10 @@ def upload_views_to_cdn():
     json_files = list(views_dir.glob('*.json'))
     logger.info(f"Found {len(json_files)} view files to upload")
     
-    # Also check for compiled_indices.json in processed directory
-    compiled_indices_file = processed_dir / 'compiled_indices.json'
-    if compiled_indices_file.exists():
-        json_files.append(compiled_indices_file)
-        logger.info(f"Found compiled_indices.json in processed directory")
+    # Also check for JSON files directly in processed directory  
+    processed_files = list(processed_dir.glob('*.json'))
+    json_files.extend(processed_files)
+    logger.info(f"Found {len(processed_files)} files in processed directory")
     
     # Check for optimized files in processed/optimized directory
     optimized_dir = processed_dir / 'optimized'

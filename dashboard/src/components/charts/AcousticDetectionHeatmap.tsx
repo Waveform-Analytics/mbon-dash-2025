@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
-import { useViewData } from '@/lib/data/useViewData';
+import { useHeatmapData } from '@/lib/data/useHeatmapData';
 
 interface DetectionData {
   date: string;
@@ -37,7 +37,7 @@ interface AcousticDetectionHeatmapProps {
 
 export default function AcousticDetectionHeatmap({ className = '' }: AcousticDetectionHeatmapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, loading, error } = useViewData<HeatmapData>('heatmap.json');
+  const { data, metadata, loading, error } = useHeatmapData();
   
   const [selectedDetection, setSelectedDetection] = useState<string>('');
   const [selectedStation, setSelectedStation] = useState<string>('');
@@ -48,14 +48,14 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
   const height = 300 - margin.top - margin.bottom;
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || !metadata) return;
 
     // Set initial selections
-    if (data.metadata.detection_types.length > 0 && !selectedDetection) {
-      setSelectedDetection(data.metadata.detection_types[0].long_name);
+    if (metadata.detection_types?.length > 0 && !selectedDetection) {
+      setSelectedDetection(metadata.detection_types[0].long_name);
     }
-    if (data.metadata.stations.length > 0 && !selectedStation) {
-      setSelectedStation(data.metadata.stations[0]);
+    if (metadata.stations?.length > 0 && !selectedStation) {
+      setSelectedStation(metadata.stations[0]);
     }
   }, [data, selectedDetection, selectedStation]);
 

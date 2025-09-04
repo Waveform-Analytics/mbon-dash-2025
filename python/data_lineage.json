@@ -1,0 +1,16 @@
+{
+  "stations.json": [
+    "raw/metadata/1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
+  ],
+  "indices_reference.json": [
+    "raw/metadata/Updated_Index_Categories_v2.csv"
+  ],
+  "heatmap.json": [
+    "raw/2018/detections/Master_Manual_*_2h_2018.xlsx",
+    "raw/2021/detections/Master_Manual_*_2h_2021.xlsx",
+    "raw/metadata/det_column_names.csv"
+  ],
+  "acoustic_indices_distributions.json": [
+    "raw/indices/Acoustic_Indices_*_2021_*_v2_Final.csv"
+  ]
+}

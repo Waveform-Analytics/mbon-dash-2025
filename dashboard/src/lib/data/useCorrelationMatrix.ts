@@ -39,7 +39,13 @@ export interface CorrelationMatrixData {
 
 const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
 
-export function useCorrelationMatrix() {
+interface UseCorrelationMatrixParams {
+  station?: string;
+  bandwidth?: string;
+  threshold?: number;
+}
+
+export function useCorrelationMatrix(params: UseCorrelationMatrixParams = {}) {
   const [data, setData] = useState<CorrelationMatrixData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +56,16 @@ export function useCorrelationMatrix() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`${CDN_BASE_URL}/views/correlation_matrix.json`);
+        // Build query parameters
+        const searchParams = new URLSearchParams();
+        if (params.station) searchParams.set('station', params.station);
+        if (params.bandwidth) searchParams.set('bandwidth', params.bandwidth);
+        if (params.threshold) searchParams.set('threshold', params.threshold.toString());
+        
+        const apiUrl = `/api/correlation-matrix?${searchParams.toString()}`;
+        console.log(`useCorrelationMatrix: Loading from ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error(`Failed to fetch correlation matrix: ${response.status}`);
         }
@@ -66,7 +81,7 @@ export function useCorrelationMatrix() {
     }
 
     fetchData();
-  }, []);
+  }, [params.station, params.bandwidth, params.threshold]);
 
   return { data, loading, error };
 }
