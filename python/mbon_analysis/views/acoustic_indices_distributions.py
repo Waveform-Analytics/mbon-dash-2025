@@ -132,43 +132,43 @@ class AcousticIndicesDistributionsGenerator(BaseViewGenerator):
                         if len(station_data) > 0:
                             print(f"  Skipping {index_name} at {station_bw_key}: only {len(station_data)} data points")
                         continue
-                
-                try:
-                    # Calculate KDE
-                    kde = stats.gaussian_kde(station_data)
                     
-                    # Create evaluation points
-                    data_min, data_max = station_data.min(), station_data.max()
-                    data_range = data_max - data_min
-                    
-                    # Extend range slightly for better visualization
-                    eval_min = data_min - 0.1 * data_range
-                    eval_max = data_max + 0.1 * data_range
-                    
-                    # Create evaluation points (50 points for smooth curves)
-                    eval_points = np.linspace(eval_min, eval_max, 50)
-                    density_values = kde(eval_points)
-                    
-                    # Normalize density values to 0-1 range for better visualization
-                    if len(density_values) > 0 and np.max(density_values) > 0:
-                        density_values = (density_values - np.min(density_values)) / (np.max(density_values) - np.min(density_values))
-                    
-                    station_distributions[station_bw_key] = {
-                        'x': eval_points.tolist(),
-                        'y': density_values.tolist(),
-                        'count': len(station_data),
-                        'mean': float(station_data.mean()),
-                        'std': float(station_data.std()),
-                        'min': float(data_min),
-                        'max': float(data_max),
-                        'station': station,
-                        'bandwidth': bandwidth
-                    }
-                    print(f"  ✓ KDE calculated for {index_name} at {station_bw_key}: {len(station_data)} points")
-                    
-                except Exception as e:
-                    print(f"Error calculating KDE for {index_name} at {station_bw_key}: {e}")
-                    continue
+                    try:
+                        # Calculate KDE
+                        kde = stats.gaussian_kde(station_data)
+                        
+                        # Create evaluation points
+                        data_min, data_max = station_data.min(), station_data.max()
+                        data_range = data_max - data_min
+                        
+                        # Extend range slightly for better visualization
+                        eval_min = data_min - 0.1 * data_range
+                        eval_max = data_max + 0.1 * data_range
+                        
+                        # Create evaluation points (50 points for smooth curves)
+                        eval_points = np.linspace(eval_min, eval_max, 50)
+                        density_values = kde(eval_points)
+                        
+                        # Normalize density values to 0-1 range for better visualization
+                        if len(density_values) > 0 and np.max(density_values) > 0:
+                            density_values = (density_values - np.min(density_values)) / (np.max(density_values) - np.min(density_values))
+                        
+                        station_distributions[station_bw_key] = {
+                            'x': eval_points.tolist(),
+                            'y': density_values.tolist(),
+                            'count': len(station_data),
+                            'mean': float(station_data.mean()),
+                            'std': float(station_data.std()),
+                            'min': float(data_min),
+                            'max': float(data_max),
+                            'station': station,
+                            'bandwidth': bandwidth
+                        }
+                        print(f"  ✓ KDE calculated for {index_name} at {station_bw_key}: {len(station_data)} points")
+                        
+                    except Exception as e:
+                        print(f"Error calculating KDE for {index_name} at {station_bw_key}: {e}")
+                        continue
             
             distributions_data[index_name] = station_distributions
         

@@ -6,8 +6,8 @@ from mbon_analysis.views.acoustic_indices_distributions import AcousticIndicesDi
 
 def main():
     """Generate the view."""
-    # Path to data directory
-    data_root = Path(__file__).parent.parent / "data"
+    # Path to data directory (in project root, not python folder)
+    data_root = Path(__file__).parent.parent.parent / "data"
     
     print("🎵 Generating acoustic indices distributions view...")
     print(f"   Data root: {data_root}")

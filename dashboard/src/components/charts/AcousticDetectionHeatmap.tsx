@@ -48,16 +48,29 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
   const height = 300 - margin.top - margin.bottom;
 
   useEffect(() => {
+    console.log('AcousticDetectionHeatmap DEBUG:', {
+      hasData: !!data,
+      hasMetadata: !!metadata,
+      dataLength: data?.length || 0,
+      metadataKeys: metadata ? Object.keys(metadata) : 'no metadata',
+      detectionTypes: metadata?.detection_types?.length || 0,
+      stations: metadata?.stations?.length || 0,
+      selectedDetection,
+      selectedStation
+    });
+    
     if (!data || !metadata) return;
 
     // Set initial selections
-    if (metadata.detection_types?.length > 0 && !selectedDetection) {
+    if (metadata?.detection_types?.length > 0 && !selectedDetection) {
+      console.log('Setting initial detection:', metadata.detection_types[0].long_name);
       setSelectedDetection(metadata.detection_types[0].long_name);
     }
-    if (metadata.stations?.length > 0 && !selectedStation) {
+    if (metadata?.stations?.length > 0 && !selectedStation) {
+      console.log('Setting initial station:', metadata.stations[0]);
       setSelectedStation(metadata.stations[0]);
     }
-  }, [data, selectedDetection, selectedStation]);
+  }, [data, selectedDetection, selectedStation, metadata]);
 
   useEffect(() => {
     if (!containerRef.current || !data || !selectedDetection || !selectedStation) return;
@@ -66,20 +79,26 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
     container.selectAll('*').remove();
 
     // Filter data for both years
-    const yearData2018 = data.data.filter(d => 
+    const yearData2018 = (data || []).filter(d => 
       d.detection_type === selectedDetection &&
       d.station === selectedStation &&
       d.year === 2018
     );
     
-    const yearData2021 = data.data.filter(d => 
+    const yearData2021 = (data || []).filter(d => 
       d.detection_type === selectedDetection &&
       d.station === selectedStation &&
       d.year === 2021
     );
 
-    // Create color scale
-    const valueRange = data.metadata.value_ranges[selectedDetection] || [0, 1];
+    // Calculate actual value range from the filtered data
+    const allValues = [...yearData2018, ...yearData2021].map(d => d.value).filter(v => v > 0);
+    const actualMin = allValues.length > 0 ? Math.min(...allValues) : 0;
+    const actualMax = allValues.length > 0 ? Math.max(...allValues) : 1;
+    const valueRange = [actualMin, actualMax];
+    
+    console.log(`Color scale for ${selectedDetection}: ${actualMin} - ${actualMax} (${allValues.length} non-zero values)`);
+    
     const colorScale = d3.scaleSequential(d3.interpolateViridis)
       .domain(valueRange);
 
@@ -118,7 +137,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
         .range([0, width]);
 
       const yScale = d3.scaleBand()
-        .domain(data.metadata.hours.map(h => h.toString()))
+        .domain((metadata?.hours || []).map(h => h.toString()))
         .range([0, height])
         .padding(0.02);
 
@@ -148,7 +167,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
 
       // Draw cells
       for (let day = 1; day <= 365; day++) {
-        for (const hour of data.metadata.hours) {
+        for (const hour of metadata?.hours || []) {
           const key = `${day}-${hour}`;
           const value = dataMap.get(key) || 0;
           const x = (day - 1) * cellWidth;
@@ -243,7 +262,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
     legendContainer.append('span')
       .style('font-size', '11px')
       .style('color', '#666')
-      .text('Low');
+      .text(actualMin.toString());
 
     const legendGradient = legendContainer.append('div')
       .style('height', '15px')
@@ -275,12 +294,18 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
     legendContainer.append('span')
       .style('font-size', '11px')
       .style('color', '#666')
-      .text('High');
+      .text(actualMax.toString());
 
+    // Add detection type description
+    const detectionTypeInfo = actualMin === actualMax ? 
+      (actualMin === 1 ? 'presence/absence' : `level ${actualMin}`) : 
+      (actualMax <= 3 ? 'detection levels' : 'detection counts');
+    
     legendContainer.append('span')
       .style('font-size', '11px')
       .style('color', '#666')
-      .text(`${valueRange[0]} - ${valueRange[1]} detections`);
+      .style('margin-left', '15px')
+      .text(`(${detectionTypeInfo})`);
 
   }, [data, selectedDetection, selectedStation, width, height, margin]);
 
@@ -321,7 +346,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
             onChange={(e) => setSelectedDetection(e.target.value)}
             className="px-3 py-2 border border-border rounded-md text-sm bg-background"
           >
-            {data.metadata.detection_types.map(detType => (
+            {(metadata?.detection_types || []).map(detType => (
               <option key={detType.long_name} value={detType.long_name}>
                 {detType.long_name}
               </option>
@@ -338,7 +363,7 @@ export default function AcousticDetectionHeatmap({ className = '' }: AcousticDet
             onChange={(e) => setSelectedStation(e.target.value)}
             className="px-3 py-2 border border-border rounded-md text-sm bg-background"
           >
-            {data.metadata.stations.map(station => (
+            {(metadata?.stations || []).map(station => (
               <option key={station} value={station}>
                 Station {station}
               </option>

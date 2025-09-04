@@ -21,6 +21,15 @@ interface HeatmapData {
     total_records: number;
     filtered_records: number;
     processing_time_ms: number;
+    stations: string[];
+    years: number[];
+    detection_types: Array<{
+      long_name: string;
+      short_name: string;
+      type: string;
+    }>;
+    value_ranges: Record<string, [number, number]>;
+    hours: number[];
     filters_applied: {
       station: string | null;
       year: string | null;

@@ -2,12 +2,12 @@
  * API route to serve view JSON files
  */
 
-import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
+
+const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformdata.work';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
@@ -21,43 +21,31 @@ export async function GET(
       );
     }
     
-    // Try multiple possible paths for views directory
-    const possiblePaths = [
-      // New top-level data directory (recommended)
-      path.join(process.cwd(), '..', 'data', 'views', name),
-      // Legacy python/data directory (fallback)
-      path.join(process.cwd(), '..', 'python', 'data', 'views', name),
-      // Current directory fallback (for development)
-      path.join(process.cwd(), 'data', 'views', name),
-    ];
-    
-    let viewPath: string | null = null;
-    
-    // Find the first path that exists
-    for (const possiblePath of possiblePaths) {
-      try {
-        await fs.access(possiblePath);
-        viewPath = possiblePath;
-        break;
-      } catch {
-        // Continue to next path
+    // Try to fetch from CDN first
+    try {
+      const cdnUrl = `${CDN_BASE_URL}/views/${name}`;
+      console.log(`API /api/views/${name}: Trying CDN: ${cdnUrl}`);
+      
+      const cdnResponse = await fetch(cdnUrl);
+      if (cdnResponse.ok) {
+        const data = await cdnResponse.json();
+        console.log(`API /api/views/${name}: Successfully loaded from CDN`);
+        return NextResponse.json(data);
+      } else {
+        console.log(`API /api/views/${name}: CDN returned ${cdnResponse.status}`);
       }
+    } catch (cdnError) {
+      console.log(`API /api/views/${name}: CDN error:`, cdnError);
     }
     
-    if (!viewPath) {
-      return NextResponse.json(
-        { error: 'View not found in any expected location' },
-        { status: 404 }
-      );
-    }
+    // If CDN fails, return error (we're not using local files anymore)
+    return NextResponse.json(
+      { error: 'View not available - CDN access failed' },
+      { status: 404 }
+    );
     
-    // Read and return the JSON file
-    const data = await fs.readFile(viewPath, 'utf-8');
-    const json = JSON.parse(data);
-    
-    return NextResponse.json(json);
   } catch (error) {
-    console.error('Error loading view:', error);
+    console.error('Error in /api/views route:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

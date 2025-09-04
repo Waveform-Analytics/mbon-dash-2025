@@ -256,8 +256,17 @@ export default function AcousticIndicesSmallMultiples({
   data, 
   className = '' 
 }: AcousticIndicesSmallMultiplesProps) {
+  // Early return if data is not available
+  if (!data) {
+    return (
+      <div className={`p-8 text-center text-gray-500 ${className}`}>
+        No data available
+      </div>
+    );
+  }
+
   const [filters, setFilters] = useState<FilterState>({
-    stations: data.summary.stations,
+    stations: data.summary?.stations || [],
     bandwidth: '8kHz',
     searchTerm: '',
     category: 'All',
@@ -282,7 +291,14 @@ export default function AcousticIndicesSmallMultiples({
 
   // Filter and prepare indices data
   const filteredIndices = useMemo(() => {
-    const indices = Object.keys(data.distributions);
+    const indices = Object.keys(data.distributions || {});
+    console.log('AcousticIndicesSmallMultiples DEBUG:', {
+      totalIndices: indices.length,
+      sampleIndices: indices.slice(0, 3),
+      filters,
+      dataKeys: data ? Object.keys(data) : 'no data',
+      summaryStations: data?.summary?.stations
+    });
     
     return indices.filter(indexName => {
       // Search filter
@@ -291,16 +307,23 @@ export default function AcousticIndicesSmallMultiples({
       }
       
       // Category filter
-      const indexMeta = data.indices_metadata[indexName];
+      const indexMeta = data.indices_metadata?.[indexName];
       if (filters.category !== 'All' && indexMeta?.category !== filters.category) {
         return false;
       }
       
       // Check if index has data for selected stations and bandwidth
-      const indexDistributions = data.distributions[indexName];
+      const indexDistributions = data.distributions?.[indexName];
+      
+      // If no stations are selected, show all indices that have any data
+      if (filters.stations.length === 0) {
+        return indexDistributions && Object.keys(indexDistributions).length > 0;
+      }
+      
+      // If stations are selected, only show indices that have data for those stations
       const hasDataForSelectedStations = filters.stations.some(station => {
         const key = `${station}_${filters.bandwidth}`;
-        return indexDistributions[key] && indexDistributions[key].count > 0;
+        return indexDistributions?.[key] && indexDistributions[key].count > 0;
       });
       
       return hasDataForSelectedStations;
@@ -309,7 +332,12 @@ export default function AcousticIndicesSmallMultiples({
 
   // Prepare chart data for each index
   const prepareChartData = (indexName: string, distributions: IndexDistributions) => {
-    return filters.stations
+    // Use selected stations, or all available stations if none selected
+    const stationsToShow = filters.stations.length > 0 
+      ? filters.stations 
+      : data.summary?.stations || [];
+    
+    return stationsToShow
       .map(station => {
         const key = `${station}_${filters.bandwidth}`;
         const stationData = distributions[key];
@@ -320,7 +348,7 @@ export default function AcousticIndicesSmallMultiples({
         
         return {
           id: station,
-          color: STATION_COLORS[station as keyof typeof STATION_COLORS],
+          color: STATION_COLORS[station as keyof typeof STATION_COLORS] || '#999999',
           data: stationData.x.map((x, i) => ({
             x,
             y: stationData.y[i]
@@ -337,7 +365,7 @@ export default function AcousticIndicesSmallMultiples({
   // Get unique categories for filter
   const categories = useMemo(() => {
     const cats = new Set(['All']);
-    Object.values(data.indices_metadata).forEach(meta => {
+    Object.values(data.indices_metadata || {}).forEach(meta => {
       if (meta.category && meta.category !== 'Unknown') {
         cats.add(meta.category);
       }
@@ -369,7 +397,7 @@ export default function AcousticIndicesSmallMultiples({
               Stations
             </label>
             <div className="space-y-1">
-              {data.summary.stations.map(station => (
+              {(data.summary?.stations || []).map(station => (
                 <label key={station} className="flex items-center">
                   <input
                     type="checkbox"
@@ -410,7 +438,7 @@ export default function AcousticIndicesSmallMultiples({
               onChange={(e) => setFilters(prev => ({ ...prev, bandwidth: e.target.value }))}
               className="w-full p-2 border rounded-md text-sm"
             >
-              {data.summary.bandwidths.map(bw => (
+              {(data.summary?.bandwidths || []).map(bw => (
                 <option key={bw} value={bw}>{bw}</option>
               ))}
             </select>
@@ -450,7 +478,7 @@ export default function AcousticIndicesSmallMultiples({
 
       {/* Results Summary */}
       <div className="text-sm text-gray-600">
-        Showing {filteredIndices.length} of {Object.keys(data.distributions).length} acoustic indices
+        Showing {filteredIndices.length} of {Object.keys(data.distributions || {}).length} acoustic indices
         <span className="ml-2 text-xs text-gray-400">
           • Click the info icon to view index descriptions
         </span>
@@ -459,7 +487,7 @@ export default function AcousticIndicesSmallMultiples({
       {/* Small Multiples Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredIndices.map(indexName => {
-          const distributions = data.distributions[indexName];
+          const distributions = data.distributions?.[indexName];
           const chartData = prepareChartData(indexName, distributions);
           const indexMeta = indexMetadataMap.get(indexName);
           const isFlipped = flippedCards.has(indexName);

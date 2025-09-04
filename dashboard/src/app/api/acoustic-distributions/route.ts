@@ -52,7 +52,7 @@ const CDN_BASE_URL = process.env.NEXT_PUBLIC_CDN_BASE_URL || 'https://waveformda
 // Cache large file in memory
 let distributionsData: AcousticDistributionsData | null = null;
 let lastLoadTime = 0;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour cache
+const CACHE_TTL = 5 * 60 * 1000; // 5 minute cache for development
 
 async function loadDistributionsData(): Promise<AcousticDistributionsData> {
   const now = Date.now();
@@ -122,22 +122,19 @@ export async function GET(request: NextRequest) {
       for (const [indexName, indexData] of Object.entries(filteredDistributions)) {
         const filteredIndexData: typeof indexData = {};
         
-        for (const [stationName, stationData] of Object.entries(indexData)) {
+        for (const [compoundKey, stats] of Object.entries(indexData)) {
+          // Parse compound key like "9M_8kHz" or "14M_FullBW"
+          const parts = compoundKey.split('_');
+          const keyStation = parts[0]; // e.g., "9M"
+          const keyBandwidth = parts[1]; // e.g., "8kHz" or "FullBW"
+          
           // Skip if station filter specified and doesn't match
-          if (station && stationName !== station) continue;
+          if (station && keyStation !== station) continue;
           
-          const filteredStationData: typeof stationData = {};
+          // Skip if bandwidth filter specified and doesn't match
+          if (bandwidth && keyBandwidth !== bandwidth) continue;
           
-          for (const [bandwidthName, stats] of Object.entries(stationData)) {
-            // Skip if bandwidth filter specified and doesn't match
-            if (bandwidth && bandwidthName !== bandwidth) continue;
-            
-            filteredStationData[bandwidthName] = stats;
-          }
-          
-          if (Object.keys(filteredStationData).length > 0) {
-            filteredIndexData[stationName] = filteredStationData;
-          }
+          filteredIndexData[compoundKey] = stats;
         }
         
         if (Object.keys(filteredIndexData).length > 0) {
@@ -150,6 +147,10 @@ export async function GET(request: NextRequest) {
     
     const endTime = Date.now();
     
+    // Extract unique categories from indices metadata
+    const categories = fullData.indices_metadata ? 
+      [...new Set(Object.values(fullData.indices_metadata).map(meta => meta.category))].sort() : [];
+
     // Build response
     const response: AcousticDistributionsData = {
       metadata: {
@@ -162,6 +163,13 @@ export async function GET(request: NextRequest) {
           bandwidth: bandwidth || null,
           category: category || null,
         },
+      },
+      summary: {
+        indices_count: Object.keys(filteredDistributions).length,
+        stations: fullData.filters?.stations || [],
+        bandwidths: fullData.filters?.bandwidths || [],
+        year: fullData.filters?.years?.[0] || 2021,
+        categories: categories,
       },
       distributions: filteredDistributions,
       indices_metadata: fullData.indices_metadata,

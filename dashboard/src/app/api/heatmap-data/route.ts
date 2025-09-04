@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
     
     if (species) {
-      filteredData = filteredData.filter(item => item.species === species);
+      filteredData = filteredData.filter(item => item.detection_type === species);
     }
     
     // Apply pagination
@@ -96,13 +96,32 @@ export async function GET(request: NextRequest) {
     
     const endTime = Date.now();
     
-    // Build response with metadata
+    // Extract unique values from the full dataset for dropdown options
+    const uniqueStations = [...new Set(fullData.data?.map(item => item.station).filter(Boolean))].sort();
+    const uniqueYears = [...new Set(fullData.data?.map(item => item.year).filter(Boolean))].sort((a, b) => a - b);
+    const uniqueDetectionTypes = [...new Set(fullData.data?.map(item => item.detection_type).filter(Boolean))].sort();
+    
+    // Build detection types array with long_name and short_name format expected by component
+    const detectionTypes = uniqueDetectionTypes
+      .filter(detectionType => detectionType && typeof detectionType === 'string')
+      .map(detectionType => ({
+        long_name: detectionType,
+        short_name: detectionType.toLowerCase(),
+        type: detectionType.toLowerCase().includes('anth') ? 'anthropogenic' : 'biological'
+      }));
+    
+    // Build response with enhanced metadata
     const response = {
       metadata: {
         ...fullData.metadata,
         filtered_records: filteredData.length,
         total_records: fullData.data?.length || 0,
         processing_time_ms: endTime - startTime,
+        stations: uniqueStations,
+        years: uniqueYears,
+        detection_types: detectionTypes,
+        value_ranges: {}, // Can be populated later if needed
+        hours: Array.from({length: 24}, (_, i) => i), // 0-23 hours
         filters_applied: {
           station: station || null,
           year: year || null,  

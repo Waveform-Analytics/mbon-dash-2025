@@ -35,16 +35,19 @@ export function useViewData<T>(viewName: string): UseViewDataResult<T> {
         if (cdnUrl) {
           // Try CDN first
           try {
-            const cdnResponse = await fetch(`${cdnUrl}/views/${viewName}`);
+            const fullCdnUrl = `${cdnUrl}/views/${viewName}`;
+            console.log(`useViewData: Attempting CDN request to: ${fullCdnUrl}`);
+            const cdnResponse = await fetch(fullCdnUrl);
+            console.log(`useViewData: CDN response status: ${cdnResponse.status} for ${viewName}`);
             if (cdnResponse.ok) {
               response = cdnResponse;
               dataSource = 'cdn';
-              console.log(`useViewData: Loading from CDN: ${cdnUrl}/views/${viewName}`);
+              console.log(`useViewData: Successfully loading from CDN: ${fullCdnUrl}`);
             } else {
-              throw new Error(`CDN returned ${cdnResponse.status}`);
+              throw new Error(`CDN returned ${cdnResponse.status}: ${cdnResponse.statusText}`);
             }
           } catch (cdnError) {
-            console.warn(`CDN failed, falling back to local API:`, cdnError);
+            console.warn(`useViewData: CDN failed for ${viewName}, falling back to local API:`, cdnError);
             response = await fetch(apiUrl);
             dataSource = 'local';
           }

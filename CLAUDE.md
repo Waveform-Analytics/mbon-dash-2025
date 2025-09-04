@@ -1,5 +1,7 @@
 Additional project plans and information can be found in the notes folder (located at the project root level)
 
+Locally stored raw data is in a folder called "data" at the root of the project. 
+
 # MBON Marine Biodiversity Dashboard - Complete Rebuild Plan
 
 ## Project Vision
@@ -44,131 +46,7 @@ Interactive web dashboard exploring whether acoustic indices can predict marine 
 - **Environment**: Docker optional, uv-based Python environment
 - **Environment Variables**: Stored in `.env.local` at the project root level (not in dashboard/), making them accessible to both Python scripts and Next.js application through dotenv configuration
 
-## Project Structure
 
-```
-mbon-biodiversity-dashboard/
-├── README.md                          # Quick start and overview
-├── REBUILD_PLAN.md                    # This document
-├── 
-├── python/                            # Python processing layer
-│   ├── pyproject.toml                 # Python dependencies
-│   ├── mbon_analysis/                 # Core analysis package
-│   │   ├── __init__.py
-│   │   ├── data/                      # Data loading and validation
-│   │   │   ├── __init__.py
-│   │   │   ├── loaders.py             # Excel/CSV loading utilities
-│   │   │   ├── validators.py          # Data quality checks
-│   │   │   └── models.py              # Data structure definitions
-│   │   ├── analysis/                  # Scientific analysis modules
-│   │   │   ├── __init__.py
-│   │   │   ├── acoustic.py            # Acoustic indices analysis
-│   │   │   ├── biodiversity.py        # Species detection patterns
-│   │   │   ├── environmental.py       # Temperature/depth effects
-│   │   │   └── spatial.py             # Station comparisons
-│   │   ├── views/                     # View generation (dashboard data)
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py                # Base view generator class
-│   │   │   ├── acoustic_summary.py    # Acoustic indices dashboard view
-│   │   │   ├── species_timeline.py    # Species detection timeline
-│   │   │   ├── station_profiles.py    # Station comparison view
-│   │   │   ├── environmental_trends.py # Environmental patterns view
-│   │   │   └── biodiversity_metrics.py # Biodiversity analysis view
-│   │   └── utils/                     # Shared utilities
-│   │       ├── __init__.py
-│   │       ├── stats.py               # Statistical helpers
-│   │       └── viz_prep.py            # Visualization data prep
-│   ├── scripts/                       # Data processing pipeline
-│   │   ├── 01_process_raw_data.py     # Excel → Core JSON
-│   │   ├── 02_generate_views.py       # Core JSON → View files
-│   │   ├── 03_upload_cdn.py           # Upload to Cloudflare R2
-│   │   └── dev_tools/                 # Development utilities
-│   │       ├── validate_data.py       # Data quality checks
-│   │       ├── generate_test_data.py  # Sample data for development
-│   │       └── benchmark_views.py     # Performance testing
-│   ├── tests/                         # Test suite
-│   │   ├── __init__.py
-│   │   ├── conftest.py                # Pytest configuration
-│   │   ├── test_data/                 # Sample data for testing
-│   │   ├── test_loaders.py            # Data loading tests
-│   │   ├── test_views.py              # View generation tests
-│   │   └── test_analysis.py           # Analysis module tests
-│   └── data/                          # Data storage
-│       ├── raw/                       # Original Excel/CSV files
-│       │   ├── 2018/                  # First study year
-│       │   ├── 2021/                  # Second study year
-│       │   └── indices/               # Acoustic indices CSVs
-│       ├── processed/                 # Intermediate JSON files
-│       └── views/                     # Optimized dashboard views
-│
-├── dashboard/                         # Next.js web application
-│   ├── package.json                   # Node.js dependencies
-│   ├── next.config.js                 # Next.js configuration
-│   ├── tailwind.config.js             # Tailwind CSS config
-│   ├── tsconfig.json                  # TypeScript configuration
-│   ├── src/
-│   │   ├── app/                       # App Router pages
-│   │   │   ├── layout.tsx             # Root layout with navigation
-│   │   │   ├── page.tsx               # Landing page (project overview, map, dataset summary)
-│   │   │   ├── page.content.tsx       # Landing page content
-│   │   │   ├── explore/               # Data exploration page
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── page.content.tsx
-│   │   │   └── indices/               # Acoustic indices reference
-│   │   │       ├── page.tsx
-│   │   │       └── page.content.tsx
-│   │   ├── components/
-│   │   │   ├── maps/                  # Mapbox components
-│   │   │   │   └── StationMap.tsx     # Interactive station map
-│   │   │   ├── data/                  # Data summary components
-│   │   │   │   ├── DatasetSummary.tsx # Dataset overview cards
-│   │   │   │   └── IndicesTable.tsx   # Filterable indices reference
-│   │   │   ├── ui/                    # Reusable UI components
-│   │   │   │   ├── LoadingSpinner.tsx
-│   │   │   │   ├── ErrorBoundary.tsx
-│   │   │   │   ├── DataTable.tsx
-│   │   │   │   └── ExportButton.tsx
-│   │   │   └── layout/                # Layout components
-│   │   │       ├── Navigation.tsx
-│   │   │       ├── Footer.tsx
-│   │   │       └── PageHeader.tsx
-│   │   ├── lib/
-│   │   │   ├── data/                  # Data loading hooks
-│   │   │   │   ├── useStations.ts     # Station data and metadata
-│   │   │   │   ├── useIndices.ts      # Acoustic indices reference data
-│   │   │   │   └── useDatasets.ts     # Dataset summary information
-│   │   │   ├── utils/                 # Utility functions
-│   │   │   │   ├── formatting.ts      # Data formatting helpers
-│   │   │   │   ├── colors.ts          # Color schemes for charts
-│   │   │   │   └── export.ts          # Data export utilities
-│   │   │   └── constants.ts           # App constants
-│   │   ├── styles/
-│   │   │   ├── globals.css            # Global styles and Tailwind
-│   │   │   └── charts.css             # Chart-specific styles
-│   │   └── types/
-│   │       ├── data.ts                # Data type definitions
-│   │       ├── views.ts               # View data interfaces
-│   │       └── charts.ts              # Chart configuration types
-│   ├── public/
-│   │   ├── icons/                     # App icons and favicons
-│   │   └── images/                    # Static images
-│   └── docs/                          # Development documentation
-│       ├── components.md              # Component documentation
-│       ├── data-flow.md               # Data loading documentation
-│       └── deployment.md              # Deployment guide
-│
-├── docs/                              # Project documentation
-│   ├── ARCHITECTURE.md                # Architecture decisions
-│   ├── DATA_PROCESSING.md             # Data pipeline documentation
-│   ├── API_REFERENCE.md               # Python API documentation
-│   └── RESEARCH_CONTEXT.md            # Scientific background
-│
-└── deployment/                        # Deployment configuration
-    ├── docker-compose.yml             # Local development stack
-    ├── Dockerfile.python              # Python processing container
-    ├── vercel.json                    # Vercel deployment config
-    └── cdn_config.md                  # Cloudflare R2 setup guide
-```
 
 ## Data Pipeline Architecture
 
