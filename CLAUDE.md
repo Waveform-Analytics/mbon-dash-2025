@@ -2,6 +2,8 @@ Additional project plans and information can be found in the notes folder (locat
 
 Locally stored raw data is in a folder called "data" at the root of the project. 
 
+Any time a new view is added, create and run a data integrity test for that view. 
+
 # MBON Marine Biodiversity Dashboard - Complete Rebuild Plan
 
 ## Project Vision

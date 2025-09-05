@@ -53,6 +53,11 @@ const navItems = [
         href: '/analysis/reducing-complexity',
         label: 'Reducing Complexity',
         description: 'Dimensionality reduction and feature selection'
+      },
+      {
+        href: '/analysis/models',
+        label: 'Predictive Models',
+        description: 'Temporal stratification and machine learning models'
       }
     ]
   },
