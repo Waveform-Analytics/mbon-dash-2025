@@ -1,5 +1,7 @@
 Additional project plans and information can be found in the notes folder (located at the project root level)
 
+**Design System & Styling**: All UI development should follow the design guidelines in `/notes/DESIGN_SYSTEM.md`. This includes consistent color usage, typography, spacing, animation patterns, and component structure. Always refer to this guide when creating new pages or components to maintain visual consistency across the dashboard.
+
 Locally stored raw data is in a folder called "data" at the root of the project. 
 
 Any time a new view is added, create and run a data integrity test for that view. 

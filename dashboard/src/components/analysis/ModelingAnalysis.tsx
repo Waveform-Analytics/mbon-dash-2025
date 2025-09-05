@@ -183,7 +183,7 @@ export default function ModelingAnalysis() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Best F1 Score</p>
+              <p className="text-sm font-medium text-gray-600">Model Accuracy</p>
               <p className="text-2xl font-bold text-green-600">
                 {data.model_performance.model_insights.best_f1_score.toFixed(3)}
               </p>
@@ -230,14 +230,14 @@ export default function ModelingAnalysis() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  The Challenge: Non-Stationary Marine Soundscapes
+                  The Challenge: Fish Don't Follow Computer Rules
                 </h3>
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
                   <p className="text-blue-800">
-                    Marine acoustic environments exhibit strong temporal patterns with fish calling activity 
-                    peaking during spawning seasons and different species active at different times of year. 
-                    Traditional machine learning assumes stationary data distributions, but marine ecosystems 
-                    are inherently temporal.
+                    Fish are seasonal creatures - they're much more active during spawning seasons and 
+                    quieter at other times of year. Most machine learning expects data to be consistent 
+                    over time, but ocean life changes dramatically with the seasons. We need to account 
+                    for this natural rhythm when building our prediction models.
                   </p>
                 </div>
                 
@@ -248,8 +248,8 @@ export default function ModelingAnalysis() {
                       <li>• <strong>{data.dataset_summary.total_records.toLocaleString()}</strong> total records</li>
                       <li>• <strong>{data.dataset_summary.stations.join(', ')}</strong> stations</li>
                       <li>• <strong>{data.dataset_summary.temporal_coverage}</strong></li>
-                      <li>• <strong>5 PCA components</strong> as features</li>
-                      <li>• <strong>Fish presence</strong> as primary target</li>
+                      <li>• <strong>5 sound pattern features</strong> (simplified from 56+ acoustic measurements)</li>
+                      <li>• <strong>Fish present or not</strong> as what we're trying to predict</li>
                     </ul>
                   </div>
                   
@@ -258,7 +258,7 @@ export default function ModelingAnalysis() {
                     <ul className="space-y-2 text-sm text-gray-600">
                       <li>• Peak activity: <strong className="text-green-600">{data.temporal_patterns.seasonal_insights.peak_activity_month}</strong></li>
                       <li>• Lowest activity: <strong className="text-red-600">{data.temporal_patterns.seasonal_insights.lowest_activity_month}</strong></li>
-                      <li>• Seasonal variation: <strong>{(data.temporal_patterns.seasonal_insights.seasonal_variation_coefficient * 100).toFixed(0)}%</strong> CV</li>
+                      <li>• Seasonal variation: <strong>{(data.temporal_patterns.seasonal_insights.seasonal_variation_coefficient * 100).toFixed(0)}%</strong> change between seasons</li>
                       <li>• Annual activity rate: <strong>{(data.temporal_patterns.seasonal_insights.total_year_activity_rate * 100).toFixed(1)}%</strong></li>
                     </ul>
                   </div>
@@ -273,73 +273,70 @@ export default function ModelingAnalysis() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Temporal Stratification Strategy
+                  Smart Data Splitting: Why Season Matters
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  To address non-stationarity, we implement <strong>temporal stratified sampling</strong> rather 
-                  than random train/test splits. This preserves seasonal patterns in both training and testing 
-                  datasets, enabling realistic performance estimates for year-round monitoring deployment.
+                  Instead of randomly splitting our data for training and testing (which would mix up the seasons), 
+                  we carefully sampled from each month proportionally. This way, both our training and test datasets 
+                  include winter quiet periods and spring/summer active periods. Why? Because we want to know if our 
+                  model will actually work when deployed year-round, not just during the seasons it was trained on.
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h4 className="font-semibold text-gray-900 mb-4">❌ Traditional Approach</h4>
+                    <h4 className="font-semibold text-gray-900 mb-4">❌ Random Split (What Most People Do)</h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Random 70/30 split</span>
+                        <span>Randomly pick 70% for training, 30% for testing</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Ignores seasonal patterns</span>
+                        <span>Mixes up seasonal patterns</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Overly optimistic performance</span>
+                        <span>Makes the model look better than it really is</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Poor generalization</span>
+                        <span>Fails when deployed in real world</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-green-50 rounded-lg p-6">
-                    <h4 className="font-semibold text-gray-900 mb-4">✅ Temporal Stratification</h4>
+                    <h4 className="font-semibold text-gray-900 mb-4">✅ Season-Aware Split (Our Approach)</h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Proportional monthly sampling</span>
+                        <span>Sample the same percentage from each month</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Preserves seasonal patterns</span>
+                        <span>Keeps seasonal patterns intact</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Realistic performance estimates</span>
+                        <span>Gives honest performance estimates</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Better generalization</span>
+                        <span>Works better in real deployment</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-8">
-                  <h4 className="font-semibold text-gray-900 mb-4">Implementation Details</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">How We Did It</h4>
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <pre className="text-sm text-gray-700 font-mono whitespace-pre-wrap">
-{`# Instead of random splitting, preserve temporal patterns
-for month in available_months:
-    month_data = dataset[dataset.month == month]
-    train_sample = month_data.sample(70%)  # Proportional per month
-    test_sample = month_data.sample(30%)   # Ensures representation
-
-# Result: Both train and test sets contain data from all 12 months
-# Seasonal patterns preserved in model training and evaluation`}
-                    </pre>
+                    <div className="text-sm text-gray-700 space-y-2">
+                      <p><strong>Step 1:</strong> Take all the January data → randomly pick 70% for training, 30% for testing</p>
+                      <p><strong>Step 2:</strong> Take all the February data → randomly pick 70% for training, 30% for testing</p>
+                      <p><strong>Step 3:</strong> Repeat for all 12 months</p>
+                      <p><strong>Result:</strong> Both training and testing datasets have data from every season, so we can see how well the model handles the full yearly cycle.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -352,12 +349,13 @@ for month in available_months:
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Model Performance Comparison
+                  Which Algorithm Works Better?
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  We tested two interpretable machine learning algorithms on the temporally stratified dataset. 
-                  Random Forest slightly outperformed Logistic Regression, achieving an F1 score of 0.618 for 
-                  fish presence detection.
+                  We tested two different types of machine learning models. Random Forest (which combines many 
+                  decision trees) performed slightly better than Logistic Regression (a simpler, more traditional approach). 
+                  The Random Forest got about 62% accuracy at detecting when fish were present - not perfect, but definitely 
+                  better than guessing.
                 </p>
               </div>
 
@@ -370,31 +368,31 @@ for month in available_months:
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-green-800">Random Forest</span>
                       <span className="text-2xl font-bold text-green-600">
-                        F1 = {data.model_performance.model_insights.best_f1_score.toFixed(3)}
+                        Score = {data.model_performance.model_insights.best_f1_score.toFixed(3)}
                       </span>
                     </div>
                     <p className="text-sm text-green-700">
-                      Balanced performance with good precision-recall trade-off for fish presence detection.
+                      Good balance between catching fish when they're there (recall) and not crying wolf when they're not (precision).
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">Key Performance Metrics</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">What Do These Numbers Mean?</h4>
                   {data.model_performance.performance_comparison
                     .filter(m => m.target === 'fish_presence' && m.model_type === 'random_forest')
                     .map((model, idx) => (
-                      <div key={idx} className="space-y-2 text-sm">
+                      <div key={idx} className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span>Precision:</span>
-                          <span className="font-medium">{model.precision.toFixed(3)}</span>
+                          <span>Precision (when it says "fish", how often is it right?):</span>
+                          <span className="font-medium">{(model.precision * 100).toFixed(0)}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Recall:</span>
-                          <span className="font-medium">{model.recall.toFixed(3)}</span>
+                          <span>Recall (when fish are there, how often does it catch them?):</span>
+                          <span className="font-medium">{(model.recall * 100).toFixed(0)}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>ROC-AUC:</span>
+                          <span>Overall discrimination ability:</span>
                           <span className="font-medium">{model.roc_auc.toFixed(3)}</span>
                         </div>
                       </div>
@@ -413,17 +411,18 @@ for month in available_months:
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Scientific Interpretation
+                  What Does This All Mean?
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  The results provide valuable insights into marine soundscape patterns and the viability 
-                  of acoustic monitoring for biodiversity assessment.
+                  Our results show that acoustic monitoring has real potential for tracking marine life, 
+                  but it's not magic - there are clear strengths and limitations we need to understand 
+                  before deploying this in the real world.
                 </p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">🧬 Ecological Insights</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">🧬 What We Learned About Marine Life</h4>
                   <div className="space-y-3">
                     {data.scientific_interpretation.ecological_insights.map((insight, idx) => (
                       <div key={idx} className="bg-blue-50 border-l-4 border-blue-400 p-3">
@@ -434,7 +433,7 @@ for month in available_months:
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">📊 Monitoring Implications</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">📊 Can We Use This for Real Monitoring?</h4>
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div className={`w-3 h-3 rounded-full mt-1 ${
@@ -445,8 +444,8 @@ for month in available_months:
                         <p className="font-medium text-gray-900">Year-round Deployment</p>
                         <p className="text-sm text-gray-600">
                           {data.scientific_interpretation.monitoring_implications.year_round_deployment_viable 
-                            ? 'Viable with current performance levels' 
-                            : 'Not recommended with current performance levels'}
+                            ? 'Yes - the system works reasonably well across all seasons' 
+                            : 'Not yet - performance too inconsistent across seasons'}
                         </p>
                       </div>
                     </div>
@@ -460,14 +459,14 @@ for month in available_months:
                         <p className="font-medium text-gray-900">Seasonal Calibration</p>
                         <p className="text-sm text-gray-600">
                           {data.scientific_interpretation.monitoring_implications.seasonal_calibration_needed 
-                            ? 'Recommended due to seasonal variation' 
-                            : 'Not required'}
+                            ? 'Yes - we need to adjust for seasonal differences to get best results' 
+                            : 'No - the system works consistently year-round'}
                         </p>
                       </div>
                     </div>
 
                     <div>
-                      <p className="font-medium text-gray-900 mb-2">Key Acoustic Indicators</p>
+                      <p className="font-medium text-gray-900 mb-2">Most Important Sound Features</p>
                       <div className="flex flex-wrap gap-2">
                         {data.scientific_interpretation.monitoring_implications.key_acoustic_indicators.map((indicator, idx) => (
                           <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
@@ -478,7 +477,7 @@ for month in available_months:
                     </div>
 
                     <div>
-                      <p className="font-medium text-gray-900">Expected Accuracy</p>
+                      <p className="font-medium text-gray-900">How Accurate Can We Expect It To Be?</p>
                       <p className="text-sm text-gray-600">
                         {data.scientific_interpretation.monitoring_implications.expected_accuracy_range}
                       </p>
@@ -488,7 +487,7 @@ for month in available_months:
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">🔬 Methodological Contributions</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">🔬 What We Contributed to Science</h4>
                 <div className="grid md:grid-cols-2 gap-4">
                   {data.scientific_interpretation.methodological_contributions.map((contribution, idx) => (
                     <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">

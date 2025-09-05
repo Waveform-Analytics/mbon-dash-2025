@@ -27,19 +27,6 @@ export default function AcousticAnalysisPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-3">
-          <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Link href="/data" className="hover:text-foreground transition-colors">
-              Data Overview
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">Acoustic Analysis</span>
-          </nav>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div 
