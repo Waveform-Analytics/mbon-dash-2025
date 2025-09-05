@@ -32,6 +32,46 @@ This dashboard makes marine biodiversity research accessible by transforming com
 
 ---
 
+## 📐 Methods & Analytical Approach
+
+### Temporal Stratification for Non-Stationary Marine Soundscapes
+
+Marine acoustic environments are highly **non-stationary**, exhibiting strong temporal patterns that must be carefully considered in predictive modeling:
+
+#### Temporal Challenges
+- **Seasonal Fish Activity**: Fish calling activity peaks during spawning seasons (primarily spring), with different species active at different times of year
+- **Species-Specific Temporal Niches**: Each marine species has distinct temporal activity patterns throughout the annual cycle
+- **Variable Human Activity**: Vessel traffic and anthropogenic sounds vary seasonally and diurnally
+- **Environmental Confounders**: Temperature, tidal cycles, and weather patterns influence both acoustic indices and species behavior
+
+#### Temporal Stratification Strategy
+To address non-stationarity, we implement **temporal stratified sampling** rather than random train/test splits:
+
+```python
+# Instead of random splitting, preserve temporal patterns
+for month in available_months:
+    month_data = dataset[dataset.month == month]
+    train_sample = month_data.sample(70%)  # Proportional sampling per month
+    test_sample = month_data.sample(30%)   # Ensures temporal representation
+```
+
+**Benefits of this approach:**
+1. **Preserves seasonal patterns** in both training and testing datasets
+2. **Enables generalization** across different time periods
+3. **Provides realistic performance estimates** for year-round monitoring deployment
+4. **Accounts for species-specific temporal activity** patterns
+
+#### Model Validation Philosophy
+Traditional machine learning assumes **stationary data distributions**, but marine ecosystems are inherently temporal. Our validation strategy:
+
+- **Temporal Stratification**: Ensures models see representative temporal variation during training
+- **Month-Based Sampling**: Maintains proportional representation across all available months
+- **Seasonal Balance**: Prevents overfitting to specific seasonal patterns (e.g., spring spawning activity)
+
+This methodological choice is critical for developing acoustic monitoring tools that work reliably across the full annual cycle of marine ecosystem dynamics.
+
+---
+
 ## 🏗️ Architecture Overview
 
 ### Three-Layer System

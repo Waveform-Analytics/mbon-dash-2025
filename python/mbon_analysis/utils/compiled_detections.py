@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 
 from ..data.loaders import create_loader
+from .species_filter import SpeciesFilter
 
 
 def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any]:
@@ -25,6 +26,10 @@ def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any
     # Create loader
     loader = create_loader(data_root)
     
+    # Initialize species filter
+    species_filter = SpeciesFilter()
+    logger.info(f"Species filtering enabled: {species_filter.is_enabled()}")
+    
     # Get available stations
     stations = loader.get_available_stations()
     logger.info(f"Found stations: {stations}")
@@ -33,6 +38,13 @@ def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any
     try:
         column_mappings = loader.load_species_mapping()
         logger.info(f"Loaded column mappings with {len(column_mappings)} species")
+        
+        # Apply species filtering to column mappings
+        if species_filter.is_enabled():
+            original_count = len(column_mappings)
+            column_mappings = species_filter.get_filtered_species_mapping(column_mappings)
+            logger.info(f"Filtered species mappings: {original_count} -> {len(column_mappings)}")
+            
     except Exception as e:
         logger.warning(f"Could not load column mappings: {e}")
         column_mappings = pd.DataFrame()
@@ -44,7 +56,12 @@ def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any
             "version": "1.0.0",
             "total_files_processed": 0,
             "total_records": 0,
-            "column_mappings": column_mappings.to_dict('records') if not column_mappings.empty else []
+            "column_mappings": column_mappings.to_dict('records') if not column_mappings.empty else [],
+            "species_filtering": {
+                "enabled": species_filter.is_enabled(),
+                "config_path": str(species_filter.config_path),
+                "keep_species": list(species_filter.get_keep_species()) if species_filter.is_enabled() else []
+            }
         },
         "stations": {},
         "summary": {
@@ -113,6 +130,13 @@ def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any
                 # Load the Excel file from the 'Data' sheet
                 df = pd.read_excel(detection_file, sheet_name='Data')
                 
+                # Apply species filtering
+                if species_filter.is_enabled():
+                    logger.info(f"      Applying species filtering to {station} {year} data")
+                    original_columns = len(df.columns)
+                    df = species_filter.filter_species_columns(df, column_mappings)
+                    logger.info(f"      Columns after filtering: {original_columns} -> {len(df.columns)}")
+                
                 # Convert DataFrame to records (list of dictionaries)
                 records = df.to_dict('records')
                 
@@ -134,6 +158,12 @@ def compile_detections_data(data_root: Path, output_path: Path) -> Dict[str, Any
                         
                         if len(detections) > 0:
                             compiled_data["summary"]["stations"][station]["years"][year]["species_detected"].add(col)
+                
+                # Apply species filtering to species counts if enabled
+                if species_filter.is_enabled():
+                    original_species_count = len(species_counts)
+                    species_counts = species_filter.filter_species_counts(species_counts, column_mappings)
+                    logger.info(f"      Species counts after filtering: {original_species_count} -> {len(species_counts)}")
                 
                 # Store the data
                 compiled_data["stations"][station][year] = {
