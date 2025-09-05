@@ -19,10 +19,9 @@ export default function ModelsPage() {
             Predictive Models
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl">
-            Can underwater sound patterns tell us about fish activity? We're testing machine learning 
-            models to see if acoustic recordings can predict when fish are present. Since marine life 
-            follows seasonal patterns (think spawning seasons), we had to be smart about how we train 
-            and test our models to get realistic results.
+            We're testing whether acoustic recordings can reliably predict fish presence. Using machine 
+            learning models trained on our acoustic data, we want to determine if underwater sound patterns 
+            contain enough information to serve as a biodiversity monitoring tool.
           </p>
         </motion.div>
 

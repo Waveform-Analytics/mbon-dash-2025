@@ -96,7 +96,7 @@ interface ModelingAnalysisData {
 }
 
 export default function ModelingAnalysis() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'methodology' | 'results' | 'interpretation'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'results' | 'interpretation'>('overview')
   const { data, loading, error } = useViewData<ModelingAnalysisData>('modeling_analysis.json')
 
   if (loading) {
@@ -147,7 +147,7 @@ export default function ModelingAnalysis() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'methodology', label: 'Methodology', icon: '🔬' },
+    { id: 'models', label: 'Models', icon: '🤖' },
     { id: 'results', label: 'Results', icon: '📈' },
     { id: 'interpretation', label: 'Interpretation', icon: '🧬' }
   ]
@@ -211,7 +211,7 @@ export default function ModelingAnalysis() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'overview' | 'methodology' | 'results' | 'interpretation')}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'models' | 'results' | 'interpretation')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -230,36 +230,41 @@ export default function ModelingAnalysis() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  The Challenge: Fish Don't Follow Computer Rules
+                  The Question
                 </h3>
+                <p className="text-gray-700 mb-6">
+                  Marine biodiversity monitoring typically requires extensive manual effort to identify 
+                  species from recordings. We're investigating whether machine learning models can 
+                  automatically detect fish presence using acoustic features extracted from underwater recordings.
+                </p>
+                
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
                   <p className="text-blue-800">
-                    Fish are seasonal creatures - they're much more active during spawning seasons and 
-                    quieter at other times of year. Most machine learning expects data to be consistent 
-                    over time, but ocean life changes dramatically with the seasons. We need to account 
-                    for this natural rhythm when building our prediction models.
+                    <strong>Core hypothesis:</strong> Acoustic indices derived from underwater sound recordings 
+                    contain sufficient information to predict fish presence with reasonable accuracy.
                   </p>
                 </div>
                 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Dataset Overview</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">Our Dataset</h4>
                     <ul className="space-y-2 text-sm text-gray-600">
-                      <li>• <strong>{data.dataset_summary.total_records.toLocaleString()}</strong> total records</li>
-                      <li>• <strong>{data.dataset_summary.stations.join(', ')}</strong> stations</li>
+                      <li>• <strong>{data.dataset_summary.total_records.toLocaleString()}</strong> hourly recordings</li>
+                      <li>• <strong>{data.dataset_summary.stations.join(', ')}</strong> monitoring stations</li>
                       <li>• <strong>{data.dataset_summary.temporal_coverage}</strong></li>
-                      <li>• <strong>5 sound pattern features</strong> (simplified from 56+ acoustic measurements)</li>
-                      <li>• <strong>Fish present or not</strong> as what we're trying to predict</li>
+                      <li>• <strong>5 acoustic features</strong> (PCA-reduced from 56 original indices)</li>
+                      <li>• <strong>Binary target:</strong> Fish present or absent</li>
                     </ul>
                   </div>
                   
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Seasonal Patterns</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">Key Challenge</h4>
                     <ul className="space-y-2 text-sm text-gray-600">
+                      <li>• Fish activity varies seasonally (spawning cycles, migration)</li>
                       <li>• Peak activity: <strong className="text-green-600">{data.temporal_patterns.seasonal_insights.peak_activity_month}</strong></li>
                       <li>• Lowest activity: <strong className="text-red-600">{data.temporal_patterns.seasonal_insights.lowest_activity_month}</strong></li>
-                      <li>• Seasonal variation: <strong>{(data.temporal_patterns.seasonal_insights.seasonal_variation_coefficient * 100).toFixed(0)}%</strong> change between seasons</li>
-                      <li>• Annual activity rate: <strong>{(data.temporal_patterns.seasonal_insights.total_year_activity_rate * 100).toFixed(1)}%</strong></li>
+                      <li>• <strong>{(data.temporal_patterns.seasonal_insights.seasonal_variation_coefficient * 100).toFixed(0)}%</strong> seasonal variation in activity</li>
+                      <li>• Models must account for this temporal structure</li>
                     </ul>
                   </div>
                 </div>
@@ -269,74 +274,85 @@ export default function ModelingAnalysis() {
             </div>
           )}
 
-          {activeTab === 'methodology' && (
+          {activeTab === 'models' && (
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Smart Data Splitting: Why Season Matters
+                  Two Approaches to Fish Detection
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  Instead of randomly splitting our data for training and testing (which would mix up the seasons), 
-                  we carefully sampled from each month proportionally. This way, both our training and test datasets 
-                  include winter quiet periods and spring/summer active periods. Why? Because we want to know if our 
-                  model will actually work when deployed year-round, not just during the seasons it was trained on.
+                  We tested two different machine learning algorithms to predict fish presence from our 
+                  5 acoustic features. Each algorithm has different strengths and works in a different way.
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <h4 className="font-semibold text-gray-900 mb-4">❌ Random Split (What Most People Do)</h4>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Randomly pick 70% for training, 30% for testing</span>
+                  <div className="bg-blue-50 rounded-lg p-6">
+                    <h4 className="font-semibold text-gray-900 mb-4">🌳 Random Forest</h4>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Think of this as asking a panel of experts (decision trees) and taking a vote. 
+                      Each expert looks at different combinations of our acoustic features and makes a prediction.
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <span><strong>Strengths:</strong> Good at finding complex patterns, handles interactions between features well</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Mixes up seasonal patterns</span>
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <span><strong>Weaknesses:</strong> Harder to interpret exactly why it made a decision</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Makes the model look better than it really is</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span>Fails when deployed in real world</span>
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <span><strong>How it works:</strong> Creates many decision trees, each trained on different parts of the data, then averages their predictions</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-green-50 rounded-lg p-6">
-                    <h4 className="font-semibold text-gray-900 mb-4">✅ Season-Aware Split (Our Approach)</h4>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Sample the same percentage from each month</span>
+                    <h4 className="font-semibold text-gray-900 mb-4">📊 Logistic Regression</h4>
+                    <p className="text-sm text-gray-700 mb-4">
+                      Creates a mathematical scoring system where each acoustic feature gets a weight, 
+                      and you add them up to get a final prediction.
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <span><strong>Strengths:</strong> Simple, interpretable, fast to train and predict</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Keeps seasonal patterns intact</span>
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <span><strong>Weaknesses:</strong> Assumes linear relationships, might miss complex patterns</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Gives honest performance estimates</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Works better in real deployment</span>
+                      <div className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <span><strong>How it works:</strong> Learns optimal weights for each feature to maximize prediction accuracy</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-8">
-                  <h4 className="font-semibold text-gray-900 mb-4">How We Did It</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">Why These Two Models?</h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700">
+                      We wanted to compare a complex method (Random Forest) with a simpler, more traditional approach 
+                      (Logistic Regression). This helps us understand whether the complexity is worth it for our task, 
+                      and both methods can tell us which acoustic features are most important for detecting fish.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h4 className="font-semibold text-gray-900 mb-4">Training Strategy</h4>
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="text-sm text-gray-700 space-y-2">
-                      <p><strong>Step 1:</strong> Take all the January data → randomly pick 70% for training, 30% for testing</p>
-                      <p><strong>Step 2:</strong> Take all the February data → randomly pick 70% for training, 30% for testing</p>
-                      <p><strong>Step 3:</strong> Repeat for all 12 months</p>
-                      <p><strong>Result:</strong> Both training and testing datasets have data from every season, so we can see how well the model handles the full yearly cycle.</p>
-                    </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      <strong>Key consideration:</strong> Fish activity varies dramatically by season, so we can't just randomly 
+                      split our data for training and testing.
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      Instead, we sampled proportionally from each month to ensure both training and testing datasets 
+                      contain the full seasonal cycle. This gives us realistic performance estimates for year-round deployment.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -349,51 +365,68 @@ export default function ModelingAnalysis() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Which Algorithm Works Better?
+                  What We Found: Performance Results
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  We tested two different types of machine learning models. Random Forest (which combines many 
-                  decision trees) performed slightly better than Logistic Regression (a simpler, more traditional approach). 
-                  The Random Forest got about 62% accuracy at detecting when fish were present - not perfect, but definitely 
-                  better than guessing.
+                  Random Forest slightly outperformed Logistic Regression, achieving about 62% accuracy at detecting 
+                  fish presence. While not perfect, this is significantly better than random guessing (50%) and shows 
+                  that acoustic features do contain predictive information about fish activity.
                 </p>
+                
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-2">What Does 62% Accuracy Mean?</h4>
+                  <p className="text-sm text-gray-700">
+                    Out of 100 time periods, our model correctly identifies about 62 as either "fish present" or "fish absent." 
+                    In practical terms: <strong>better than guessing, but you'd still want to verify important detections.</strong>
+                  </p>
+                </div>
               </div>
 
               <ModelPerformanceChart data={data.model_performance.performance_comparison} />
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">Best Performing Model</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">Winner: Random Forest</h4>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-green-800">Random Forest</span>
+                      <span className="font-medium text-green-800">Best Overall Performance</span>
                       <span className="text-2xl font-bold text-green-600">
-                        Score = {data.model_performance.model_insights.best_f1_score.toFixed(3)}
+                        {(data.model_performance.model_insights.best_f1_score * 100).toFixed(0)}%
                       </span>
                     </div>
                     <p className="text-sm text-green-700">
-                      Good balance between catching fish when they're there (recall) and not crying wolf when they're not (precision).
+                      Random Forest achieved the best balance between correctly identifying fish when present 
+                      and avoiding false alarms when they're absent.
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">What Do These Numbers Mean?</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">Breaking Down the Performance</h4>
                   {data.model_performance.performance_comparison
                     .filter(m => m.target === 'fish_presence' && m.model_type === 'random_forest')
                     .map((model, idx) => (
-                      <div key={idx} className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                          <span>Precision (when it says "fish", how often is it right?):</span>
-                          <span className="font-medium">{(model.precision * 100).toFixed(0)}%</span>
+                      <div key={idx} className="space-y-3 text-sm bg-white border rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <span>When it says "fish are here"</span>
+                          <div className="text-right">
+                            <div className="font-medium">{(model.precision * 100).toFixed(0)}% correct</div>
+                            <div className="text-xs text-gray-500">precision</div>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Recall (when fish are there, how often does it catch them?):</span>
-                          <span className="font-medium">{(model.recall * 100).toFixed(0)}%</span>
+                        <div className="flex justify-between items-center">
+                          <span>When fish are actually present</span>
+                          <div className="text-right">
+                            <div className="font-medium">{(model.recall * 100).toFixed(0)}% detected</div>
+                            <div className="text-xs text-gray-500">recall</div>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Overall discrimination ability:</span>
-                          <span className="font-medium">{model.roc_auc.toFixed(3)}</span>
+                        <div className="flex justify-between items-center pt-2 border-t">
+                          <span>Overall ability to distinguish</span>
+                          <div className="text-right">
+                            <div className="font-medium">{(model.roc_auc * 100).toFixed(0)}% better than random</div>
+                            <div className="text-xs text-gray-500">ROC-AUC</div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -411,12 +444,12 @@ export default function ModelingAnalysis() {
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  What Does This All Mean?
+                  Practical Implications
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  Our results show that acoustic monitoring has real potential for tracking marine life, 
-                  but it's not magic - there are clear strengths and limitations we need to understand 
-                  before deploying this in the real world.
+                  Our results demonstrate that acoustic monitoring shows promise for marine biodiversity tracking, 
+                  achieving meaningful predictive accuracy. However, real-world deployment requires understanding 
+                  both the capabilities and limitations of this approach.
                 </p>
               </div>
 
