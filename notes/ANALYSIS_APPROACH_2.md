@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-We're pivoting from trying to replicate manual species detection (62% accuracy) to building an early warning system that flags unusual acoustic events for further investigation. This approach better aligns with real-world monitoring needs and leverages the strengths of acoustic indices.
+We're pivoting from trying to replicate manual species detection (62% accuracy) to building an early warning system that flags unusual acoustic events for further investigation. This approach better aligns with real-world monitoring needs and leverages the strengths of acoustic indices. (Run this by Liz to start - does this still align with the goals of the project? I think this is an interesting and doable direction but does Neil agree?)
 
 ## The Problem We're Actually Solving
 
@@ -18,6 +18,8 @@ We're pivoting from trying to replicate manual species detection (62% accuracy) 
 - Work alongside (not replace) emerging AI species detection
 
 ## Why Our Current Approach Falls Short
+
+I mean, it's not that dramatic - we only worked on the current predictive model for about 2 days. But it's still a significant gap.
 
 Our current models ignore critical dependencies:
 - **Temporal**: Hour-to-hour correlation, diel patterns, lunar cycles, seasonal patterns
