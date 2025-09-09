@@ -30,7 +30,7 @@ from sklearn.metrics import (
 
 def load_modeling_data() -> pd.DataFrame:
     """Load the prepared modeling dataset."""
-    data_file = Path(__file__).parent.parent / "data" / "processed" / "modeling_dataset.json"
+    data_file = Path(__file__).parent.parent.parent / "data" / "processed" / "modeling_dataset.json"
     
     if not data_file.exists():
         raise FileNotFoundError(f"Modeling dataset not found. Run 10_prepare_modeling_data.py first.")
@@ -342,7 +342,7 @@ def main():
     results = evaluate_model_variations(df)
     
     # Save results
-    output_dir = Path(__file__).parent.parent / "data" / "processed"
+    output_dir = Path(__file__).parent.parent.parent / "data" / "processed"
     output_dir.mkdir(exist_ok=True)
     
     results_file = output_dir / "simple_models_results.json"

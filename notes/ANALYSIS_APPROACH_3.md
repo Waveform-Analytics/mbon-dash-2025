@@ -37,22 +37,11 @@ fish_presence = {
 ```
 
 **Step 1.2: Reduce Acoustic Indices**
-Three approaches to choose from:
 
-**Option A: Correlation-Based Reduction**
+**Correlation-Based Reduction**
 - Group indices with correlation > 0.85
 - Select most representative from each group
 - Expected output: 10-15 indices from 60
-
-**Option B: Category-Based Selection**
-- Pick 2-3 best performing indices from each category
-- Categories: Complexity (ACI, ADI), Diversity (H, EAS), Bioacoustic (BI, BGNt), etc.
-- Expected output: 12-18 indices
-
-**Option C: PCA with Temporal Features**
-- Combine acoustic indices with temporal markers (hour, month)
-- Apply PCA to preserve some temporal context
-- Use top 10 components
 
 ### Phase 2: Automated Screening
 

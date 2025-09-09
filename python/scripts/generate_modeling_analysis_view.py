@@ -23,7 +23,7 @@ from typing import Dict, List, Tuple, Any
 
 def load_modeling_dataset() -> pd.DataFrame:
     """Load the full modeling dataset."""
-    data_file = Path(__file__).parent.parent / "data" / "processed" / "modeling_dataset.json"
+    data_file = Path(__file__).parent.parent.parent / "data" / "processed" / "modeling_dataset.json"
     
     with open(data_file, 'r') as f:
         data = json.load(f)
@@ -33,7 +33,7 @@ def load_modeling_dataset() -> pd.DataFrame:
 
 def load_model_results() -> Dict[str, Any]:
     """Load model results from training."""
-    results_file = Path(__file__).parent.parent / "data" / "processed" / "simple_models_results.json"
+    results_file = Path(__file__).parent.parent.parent / "data" / "processed" / "simple_models_results.json"
     
     with open(results_file, 'r') as f:
         results = json.load(f)
@@ -296,7 +296,7 @@ def generate_dashboard_view():
     }
     
     # Save view
-    output_dir = Path(__file__).parent.parent / "data" / "views"
+    output_dir = Path(__file__).parent.parent.parent / "data" / "views"
     output_dir.mkdir(exist_ok=True)
     
     output_file = output_dir / "modeling_analysis.json"

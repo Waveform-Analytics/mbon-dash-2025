@@ -127,3 +127,4 @@ data/processed/
 data/views/
 python/data/processed/
 python/data/views/
+*.png

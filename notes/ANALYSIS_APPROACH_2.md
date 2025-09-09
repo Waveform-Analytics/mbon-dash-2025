@@ -19,7 +19,7 @@ We're pivoting from trying to replicate manual species detection (62% accuracy) 
 
 ## Why Our Current Approach Falls Short
 
-I mean, it's not that dramatic - we only worked on the current predictive model for about 2 days. But it's still a significant gap.
+I mean, it's not that dramatic - we only worked on the current predictive model for about 2 days. But it's still a gap.
 
 Our current models ignore critical dependencies:
 - **Temporal**: Hour-to-hour correlation, diel patterns, lunar cycles, seasonal patterns

@@ -308,7 +308,7 @@ class TestCreateLoader:
         loader = create_loader()
         
         assert isinstance(loader, DataLoader)
-        # Should default to python/data directory relative to the loaders.py file
+        # Should default to data directory at repo root
         assert loader.data_root.name == "data"
 
 

@@ -90,11 +90,11 @@ Raw Excel/CSV → Core JSON → View Files → CDN → Dashboard
 
 ## Raw Data Structure
 
-All raw data files are stored in `python/data/raw/` following the current project structure:
+All raw data files are stored in `data/raw/` following the current project structure:
 
 ### Data File Organization
 ```
-python/data/raw/
+data/raw/
 ├── metadata/                          # Reference and classification files
 │   ├── det_column_names.csv           # Species/sound type classifications
 │   ├── Updated_Index_Categories_v2.csv # Acoustic indices categories

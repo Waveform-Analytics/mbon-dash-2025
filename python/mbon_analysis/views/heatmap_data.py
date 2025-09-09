@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 from .base import BaseViewGenerator
 from ..data.loaders import create_loader
+from ..utils.species_filter import SpeciesFilter
 
 
 class HeatmapDataGenerator(BaseViewGenerator):
@@ -35,14 +36,28 @@ class HeatmapDataGenerator(BaseViewGenerator):
             }
         
         # Extract detection types from metadata
+        # Apply species filtering if enabled
+        species_filter = SpeciesFilter()
+        keep_species = species_filter.get_keep_species() if species_filter.is_enabled() else set()
+        
         detection_types = []
         for col in detections_data['metadata']['column_mappings']:
             if col['type'] in ['bio', 'anthro']:
-                detection_types.append({
-                    'long_name': col['long_name'],
-                    'short_name': col['short_name'],
-                    'type': col['type']
-                })
+                # If filtering is enabled, only include species in the keep list
+                if species_filter.is_enabled():
+                    if col['short_name'] in keep_species:
+                        detection_types.append({
+                            'long_name': col['long_name'],
+                            'short_name': col['short_name'],
+                            'type': col['type']
+                        })
+                else:
+                    # No filtering - include all bio and anthro types
+                    detection_types.append({
+                        'long_name': col['long_name'],
+                        'short_name': col['short_name'],
+                        'type': col['type']
+                    })
         
         print(f"Found {len(detection_types)} detection types")
         

@@ -12,7 +12,7 @@ class DataLoader:
         """Initialize with path to data root directory.
         
         Args:
-            data_root: Path to the python/data directory
+            data_root: Path to the data directory
         """
         self.data_root = Path(data_root)
         self.raw_data_path = self.data_root / "raw"
@@ -80,7 +80,10 @@ class DataLoader:
         if not detection_file.exists():
             raise FileNotFoundError(f"Detection file not found: {detection_file}")
             
-        df = pd.read_excel(detection_file)
+        df = pd.read_excel(detection_file, sheet_name="Data")
+        # Add station name and year columns
+        df['station'] = station
+        df['year'] = year
         return df
     
     def load_environmental_data(self, station: str, year: int, data_type: str) -> pd.DataFrame:
@@ -188,8 +191,9 @@ def create_loader(data_root: Optional[Union[str, Path]] = None) -> DataLoader:
         Configured DataLoader instance
     """
     if data_root is None:
-        # Default to python/data directory relative to this file
+        # Default to data directory at repo root
         current_file = Path(__file__)
-        data_root = current_file.parent.parent.parent / "data"
+        # Go up from python/mbon_analysis/data to repo root then to data
+        data_root = current_file.parent.parent.parent.parent / "data"
     
     return DataLoader(data_root)

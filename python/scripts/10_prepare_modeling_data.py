@@ -59,10 +59,8 @@ def load_detections_data() -> Dict[str, Any]:
 
 def load_indices_data() -> Dict[str, Any]:
     """Load compiled acoustic indices data (even hours, 2-hour resolution)."""
-    # Look in project root data directory first, then python/data
+    # Look in project root data directory
     indices_file = Path(__file__).parent.parent.parent / "data" / "processed" / "compiled_indices_even_hours.json"
-    if not indices_file.exists():
-        indices_file = Path(__file__).parent.parent / "data" / "processed" / "compiled_indices_even_hours.json"
     
     if not indices_file.exists():
         raise FileNotFoundError(f"Indices data not found at {indices_file}")
@@ -414,7 +412,7 @@ def main():
     summary = generate_data_summary(modeling_df)
     
     # Save the modeling dataset
-    output_dir = Path(__file__).parent.parent / "data" / "processed"
+    output_dir = Path(__file__).parent.parent.parent / "data" / "processed"
     output_dir.mkdir(exist_ok=True)
     
     modeling_file = output_dir / "modeling_dataset.json"

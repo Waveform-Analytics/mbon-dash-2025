@@ -70,7 +70,7 @@ def main():
     """Run filtered PCA analysis."""
     
     # Paths
-    data_root = Path(__file__).parent.parent / "data"
+    data_root = Path(__file__).parent.parent.parent / "data"
     data_file = data_root / "processed" / "compiled_indices_even_hours.json"
     
     if not data_file.exists():
