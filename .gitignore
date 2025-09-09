@@ -1,20 +1,45 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Prevent duplicate lockfiles - we use single root lockfile
-dashboard/package-lock.json
-dashboard/yarn.lock
-dashboard/pnpm-lock.yaml
-
-# Next.js
-.next/
-out/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
-
-# Production
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
 
 # Environment variables
 .env
@@ -23,53 +48,54 @@ dist/
 .env.test.local
 .env.production.local
 
-# Logs
+# Node.js / Next.js
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-ENV/
-env.bak/
-venv.bak/
+# Next.js
+.next/
+out/
 
-# Python package build artifacts
-*.egg-info/
-dist/
-build/
-.tox/
+# Production build
+/build
 
-# Python development tool caches
-.ruff_cache/
-.mypy_cache/
+# Vercel
+.vercel
 
-# Jupyter notebooks
-.ipynb_checkpoints/
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Python package manager files
-pip-log.txt
-pip-delete-this-directory.txt
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
 
-# IDE
+# nyc test coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -78,53 +104,5 @@ pip-delete-this-directory.txt
 ehthumbs.db
 Thumbs.db
 
-# Temporary files
-*.tmp
-*.temp
-combined_df_export.csv
-
-# Data files - CDN-first approach
-# All data stored on CDN, reproduced locally via scripts
-
-# Ignore specific data folders - everything is CDN-based
+# Data
 /data/
-/python/data/
-python/data/
-public/data/
-
-# IMPORTANT: Allow dashboard/src/lib/data/ for React hooks
-!dashboard/src/lib/data/
-
-# MkDocs generated site
-site/
-/.junie
-
-# Generated plots from exploratory scripts
-scripts/**/*.png
-
-# Test coverage files
-.coverage
-coverage.json
-htmlcov/
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Backup files
-*.backup
-*.bak
-
-# Log files
-*.log
-*.txt
-
-# Temporary test utilities
-test_runner.py
-/python/data_backup_*
-
-# Specific data processing output directories
-data/processed/
-data/views/
-python/data/processed/
-python/data/views/
-*.png
