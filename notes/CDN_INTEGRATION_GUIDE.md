@@ -1,3 +1,5 @@
+-- this is an older notes file. I will return to CDN things but setting aside for the time being. 
+
 # CDN Integration Guide for MBON Dashboard
 
 This guide covers the complete setup and implementation of Cloudflare R2 CDN integration for the MBON Marine Biodiversity Dashboard.

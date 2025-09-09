@@ -1,8 +1,0 @@
-species,n_events,n_chorus_events,mean_duration_hours,max_duration_hours,mean_peak_intensity,pct_chorus,most_common_diel,peak_month,stations
-Silver perch,253,150,8.181818181818182,46,2.5928853754940713,59.28853754940712,night,3.0,"['14M', '37M', '9M']"
-Oyster toadfish boat whistle,705,99,17.367375886524822,422,2.1404255319148935,14.042553191489363,night,5.0,"['14M', '37M', '9M']"
-Oyster toadfish grunt,203,0,10.088669950738916,190,2.0,0.0,night,6.0,"['14M', '9M']"
-Black drum,4,0,4.5,6,2.0,0.0,night,0.0,['37M']
-Spotted seatrout,1076,855,7.262081784386617,18,2.7946096654275094,79.46096654275094,night,5.0,"['14M', '37M', '9M']"
-Red drum,423,44,5.484633569739953,18,2.104018912529551,10.401891252955082,day,8.0,"['37M', '9M']"
-Atlantic croaker,362,5,6.928176795580111,18,2.0138121546961325,1.3812154696132597,night,5.0,"['14M', '37M', '9M']"
