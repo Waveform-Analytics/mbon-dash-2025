@@ -12,6 +12,8 @@ notes/RAW-DATA-DESCRIPTION.md -- this describes all the raw data that we have ac
 
 
 # Special marimo notebook rules
+
+## Variable Conflict Rules
 - **Marimo Variable Conflict Rules**: Marimo notebooks are reactive - ALL variables are globally scoped across the entire notebook. Never define the same variable name in multiple cells or there will be conflicts.
 
   **Common Conflict Patterns to Avoid:**
@@ -32,3 +34,21 @@ notes/RAW-DATA-DESCRIPTION.md -- this describes all the raw data that we have ac
   - No variables: `return` (empty return)
 
   **Before writing any marimo notebook, scan for these common conflicts and use unique names from the start.**
+
+## Markdown Documentation Style for Notebooks
+- **Target audience**: Intelligent readers (stats people, biologists) who haven't been immersed in this specific data process
+- **Tone**: Direct, plainspoken, respectful - avoid jargon but don't talk down to people  
+- **Goal**: Enable quick understanding when returning to notebooks months/years later
+
+  **Section Structure:**
+  - **Introduction**: Provide context about data sources, collection methods, and why different streams are combined
+  - **Before each major section**: 2-3 sentences explaining what the data represents and why it matters
+  - **Before analyses**: Brief explanation of what the analysis accomplishes and why it's useful
+  - **After key results**: Practical interpretation guidance (what patterns to look for, what results mean)
+
+  **Writing Guidelines:**
+  - Focus on "why" not just "what" - explain the purpose behind each step
+  - Define technical terms in context (e.g., "SPL (Sound Pressure Level) measurements quantify...")
+  - Use bullet points and clear formatting for readability
+  - Add result interpretation with → arrows for key takeaways
+  - Keep explanations concise but complete - assume intelligence, provide necessary context
