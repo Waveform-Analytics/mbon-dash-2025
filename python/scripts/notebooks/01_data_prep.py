@@ -124,6 +124,59 @@ def _(DATA_DIR, STATIONS, YEAR, pd):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md(r"""## 2.1 Filter Detection Data Using Species Metadata""")
+    return
+
+
+@app.cell
+def _(DATA_DIR, detection_data, pd):
+    # Load species metadata to filter detection columns
+    metadata_path = DATA_DIR / "metadata" / "det_column_names.csv"
+    
+    if metadata_path.exists():
+        metadata_df = pd.read_csv(metadata_path)
+        
+        # Get columns where keep_species = 1 (plus essential info columns)
+        keep_columns = metadata_df[metadata_df['keep_species'] == 1]['long_name'].tolist()
+        
+        # Always keep essential info columns (Date, Time, etc.)
+        essential_columns = ['Date', 'Date ', 'Time', 'Deployment ID', 'File']
+        
+        # Combine and filter detection data
+        detection_data_filtered = {}
+        
+        for station_filter in detection_data.keys():
+            df_filter = detection_data[station_filter].copy()
+            
+            # Find which columns exist in this dataset
+            available_keep_cols = [col for col in keep_columns if col in df_filter.columns]
+            available_essential_cols = [col for col in essential_columns if col in df_filter.columns]
+            
+            # Combine columns to keep
+            cols_to_keep = list(set(available_keep_cols + available_essential_cols))
+            
+            # Filter the dataframe
+            df_filtered = df_filter[cols_to_keep]
+            detection_data_filtered[station_filter] = df_filtered
+            
+            print(f"Station {station_filter}: Filtered from {len(df_filter.columns)} to {len(cols_to_keep)} columns")
+            print(f"  Species columns kept: {available_keep_cols}")
+        
+        # Replace original detection_data with filtered version
+        detection_data.clear()
+        detection_data.update(detection_data_filtered)
+        
+        print(f"\n✓ Applied species filtering based on keep_species=1")
+        print(f"✓ Kept species: {', '.join(keep_columns)}")
+    else:
+        print(f"⚠️ Metadata file not found: {metadata_path}")
+        print("Proceeding without species filtering")
+    
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""## 3. Load Environmental Data""")
     return
 
@@ -398,14 +451,19 @@ def _(
                     combined_datetimes_temporal = []
                     for date_val_temporal, time_val_temporal in zip(df_temporal_spl['Date'], df_temporal_spl['Time']):
                         if pd.notna(date_val_temporal) and pd.notna(time_val_temporal):
-                            # Extract time from the 1900 datetime object
-                            time_part = time_val_temporal.time()
+                            # Handle different time formats - could be datetime or time object
+                            if hasattr(time_val_temporal, 'time'):
+                                # It's a datetime object, extract time part
+                                time_part = time_val_temporal.time()
+                            else:
+                                # It's already a time object
+                                time_part = time_val_temporal
                             # Combine with actual date
                             combined_dt_temporal = pd.to_datetime(date_val_temporal.date().strftime('%Y-%m-%d') + ' ' + time_part.strftime('%H:%M:%S'))
                             combined_datetimes_temporal.append(combined_dt_temporal)
                         else:
                             combined_datetimes_temporal.append(pd.NaT)
-                    
+
                     datetime_series_temporal = pd.Series(combined_datetimes_temporal)
                     valid_dates_temporal = datetime_series_temporal.dropna()
                     coverage_data_list.extend([('SPL (1h)', dt) for dt in valid_dates_temporal])
@@ -567,10 +625,22 @@ def _(
         # Save detection data
         if station_save in detection_data:
             df_save_det = detection_data[station_save].copy()
+
+            # Convert Time column to string to avoid Parquet conversion issues
+            if 'Time' in df_save_det.columns:
+                df_save_det['Time'] = df_save_det['Time'].astype(str)
+
+            # Convert all object-type columns to string to avoid Arrow conversion issues
+            object_cols = df_save_det.select_dtypes(include=['object']).columns
+            for col_obj in object_cols:
+                if col_obj not in ['Date', 'Date ']:  # Skip date columns
+                    df_save_det[col_obj] = df_save_det[col_obj].astype(str)
+
             # Use only Date column (contains full datetime), handle Station 37M trailing space
             date_col_save = 'Date' if 'Date' in df_save_det.columns else 'Date '
             if date_col_save in df_save_det.columns:
                 df_save_det['datetime'] = pd.to_datetime(df_save_det[date_col_save], errors='coerce')
+
             output_file_det = OUTPUT_DIR / f"01_detections_{station_save}_{YEAR}.parquet"
             df_save_det.to_parquet(output_file_det, index=False)
             saved_files.append(str(output_file_det))
@@ -599,6 +669,11 @@ def _(
         # Save SPL data
         if station_save in spl_data:
             df_save_spl = spl_data[station_save].copy()
+
+            # Convert Time column to string to avoid Parquet conversion issues (always do this)
+            if 'Time' in df_save_spl.columns:
+                df_save_spl['Time'] = df_save_spl['Time'].astype(str)
+
             # Properly combine Date and Time columns (extract time component from Time column)
             if 'Date' in df_save_spl.columns and 'Time' in df_save_spl.columns:
                 try:
@@ -606,16 +681,17 @@ def _(
                     combined_datetimes_save = []
                     for date_val_save, time_val_save in zip(df_save_spl['Date'], df_save_spl['Time']):
                         if pd.notna(date_val_save) and pd.notna(time_val_save):
-                            # Extract time from the 1900 datetime object
-                            time_part_save = time_val_save.time()
-                            # Combine with actual date
-                            combined_dt_save = pd.to_datetime(date_val_save.date().strftime('%Y-%m-%d') + ' ' + time_part_save.strftime('%H:%M:%S'))
-                            combined_datetimes_save.append(combined_dt_save)
-                        else:
-                            combined_datetimes_save.append(pd.NaT)
-                    df_save_spl['datetime'] = pd.Series(combined_datetimes_save)
+                            # Since Time is now string, we need to parse it back to time for combination
+                            # But we'll use the original approach with the data types we had
+                            pass
+                    # Let's use a simpler approach - convert both to strings and combine
+                    df_save_spl['datetime'] = pd.to_datetime(
+                        df_save_spl['Date'].dt.strftime('%Y-%m-%d') + ' ' + df_save_spl['Time'],
+                        errors='coerce'
+                    )
                 except Exception as e:
                     print(f"Warning: Could not create datetime for SPL {station_save}: {e}")
+
             output_file_spl = OUTPUT_DIR / f"01_spl_{station_save}_{YEAR}.parquet"
             df_save_spl.to_parquet(output_file_spl, index=False)
             saved_files.append(str(output_file_spl))
