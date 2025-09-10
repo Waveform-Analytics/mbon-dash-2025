@@ -6,6 +6,8 @@ notes/MVP-PLAN.md -- this is the minimum viable product plan, which describes in
 
 notes/RAW-DATA-DESCRIPTION.md -- this describes all the raw data that we have access to at this time. All raw data are stored in data/raw/ with specifics on content and format included in this description file. 
 
+notes/SITE-IMPLEMENTATION-NOTES.md -- this describes the site implementation plan - how it's laid out, styling, navigation, etc. 
+
 # Extra notes for claude code
 - don't write code or run anything unless I specifically say to do so. I like to discuss things first.
 - use uv for python dependency management
