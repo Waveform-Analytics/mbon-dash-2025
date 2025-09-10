@@ -12,6 +12,9 @@ notes/SITE-IMPLEMENTATION-NOTES.md -- this describes the site implementation pla
 - don't write code or run anything unless I specifically say to do so. I like to discuss things first.
 - use uv for python dependency management
 
+# setup / layout
+- the heavy lifting in terms of analysis and data prep is all done in python - and is contained within the python folder. 
+- the site is build using nextjs and is contained with the dashboard folder.
 
 # Special marimo notebook rules
 
