@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.15.2"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
@@ -934,36 +934,36 @@ def _(mo):
 
 
 @app.cell
-def _(OUTPUT_DIR, STATIONS, YEAR, enhanced_data, pd):
+def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
     # Save the aligned and enhanced datasets
     saved_files_final = []
 
-    # Save individual station files
-    for station_save_final in STATIONS:
-        if station_save_final in enhanced_data:
-            df_save_final = enhanced_data[station_save_final].copy()
+    # # Save individual station files
+    # for station_save_final in STATIONS:
+    #     if station_save_final in enhanced_data:
+    #         df_save_final = enhanced_data[station_save_final].copy()
 
-            # Fix data types for Parquet compatibility
-            for col_fix in df_save_final.columns:
-                # Convert detection columns (likely to be numeric) that are object type
-                if df_save_final[col_fix].dtype == 'object':
-                    # Try to convert to numeric, but skip datetime and categorical columns
-                    if col_fix not in ['datetime', 'season', 'time_period', 'station']:
-                        try:
-                            # Convert to numeric, replacing any non-numeric values with NaN
-                            df_save_final[col_fix] = pd.to_numeric(df_save_final[col_fix], errors='coerce')
-                        except:
-                            # If conversion fails, keep as string
-                            pass
+    #         # Fix data types for Parquet compatibility
+    #         for col_fix in df_save_final.columns:
+    #             # Convert detection columns (likely to be numeric) that are object type
+    #             if df_save_final[col_fix].dtype == 'object':
+    #                 # Try to convert to numeric, but skip datetime and categorical columns
+    #                 if col_fix not in ['datetime', 'season', 'time_period', 'station']:
+    #                     try:
+    #                         # Convert to numeric, replacing any non-numeric values with NaN
+    #                         df_save_final[col_fix] = pd.to_numeric(df_save_final[col_fix], errors='coerce')
+    #                     except:
+    #                         # If conversion fails, keep as string
+    #                         pass
 
-            # Save as parquet
-            output_path_final = OUTPUT_DIR / f"02_aligned_{station_save_final}_{YEAR}.parquet"
-            df_save_final.to_parquet(output_path_final, index=False)
-            saved_files_final.append(str(output_path_final))
+    #         # Save as parquet
+    #         output_path_final = OUTPUT_DIR / f"02_aligned_{station_save_final}_{YEAR}.parquet"
+    #         df_save_final.to_parquet(output_path_final, index=False)
+    #         saved_files_final.append(str(output_path_final))
 
-            print(f"✓ Saved {station_save_final}: {output_path_final}")
-            print(f"  Shape: {df_save_final.shape}")
-            print(f"  File size: {output_path_final.stat().st_size / (1024*1024):.2f} MB")
+    #         print(f"✓ Saved {station_save_final}: {output_path_final}")
+    #         print(f"  Shape: {df_save_final.shape}")
+    #         print(f"  File size: {output_path_final.stat().st_size / (1024*1024):.2f} MB")
 
     # Also create and save a combined dataset with all stations
     if enhanced_data:
@@ -978,16 +978,112 @@ def _(OUTPUT_DIR, STATIONS, YEAR, enhanced_data, pd):
                     except:
                         pass
 
-        combined_path = OUTPUT_DIR / f"02_aligned_all_stations_{YEAR}.parquet"
-        all_stations_df.to_parquet(combined_path, index=False)
-        saved_files_final.append(str(combined_path))
+        # combined_path = OUTPUT_DIR / f"02_aligned_all_stations_{YEAR}.parquet"
+        # all_stations_df.to_parquet(combined_path, index=False)
+        # saved_files_final.append(str(combined_path))
 
-        print(f"\n✓ Saved combined dataset: {combined_path}")
-        print(f"  Total rows: {len(all_stations_df)}")
-        print(f"  Total columns: {len(all_stations_df.columns)}")
-        print(f"  File size: {combined_path.stat().st_size / (1024*1024):.2f} MB")
+        # print(f"\n✓ Saved combined dataset: {combined_path}")
+        # print(f"  Total rows: {len(all_stations_df)}")
+        # print(f"  Total columns: {len(all_stations_df.columns)}")
+        # print(f"  File size: {combined_path.stat().st_size / (1024*1024):.2f} MB")
+
+
+    # EXPERIMENTAL: Also save separate data type files
+    # (This is in addition to the existing files above)
+    if enhanced_data:
+
+        # Add year column to combined dataset
+        all_stations_df['year'] = YEAR
+
+        # Define core identifiers 
+        core_ids = ['datetime', 'station', 'year']
+
+        # Test: Save just acoustic indices first
+        acoustic_indices = [
+            'ZCR', 'MEANt', 'VARt', 'SKEWt', 'KURTt', 'LEQt', 'BGNt', 'SNRt', 'MED', 'Ht',
+            'ACTtFraction', 'ACTtCount', 'ACTtMean', 'EVNtFraction', 'EVNtMean', 'EVNtCount',
+            'MEANf', 'VARf', 'SKEWf', 'KURTf', 'NBPEAKS', 'LEQf', 'ENRf', 'BGNf', 'SNRf', 'Hf',
+            'EAS', 'ECU', 'ECV', 'EPS', 'EPS_KURT', 'EPS_SKEW', 'ACI', 'FrequencyResolution',
+            'NDSI', 'rBA', 'AnthroEnergy', 'BioEnergy', 'BI', 'ROU', 'ADI', 'AEI',
+            'LFC', 'MFC', 'HFC', 'ACTspFract', 'ACTspCount', 'ACTspMean',
+            'EVNspFract', 'EVNspMean', 'EVNspCount', 'TFSD', 'H_Havrda', 'H_Renyi',
+            'H_pairedShannon', 'H_gamma', 'H_GiniSimpson', 'RAOQ', 'AGI', 'nROI', 'aROI'
+        ]
+
+        # Find available acoustic indices
+        available_acoustic = [col for col in acoustic_indices if col in all_stations_df.columns]
+
+        if available_acoustic:
+            try:
+                acoustic_df = all_stations_df[core_ids + available_acoustic].copy()
+                acoustic_path = OUTPUT_DIR / f"02_acoustic_indices_aligned_{YEAR}.parquet"
+                acoustic_df.to_parquet(acoustic_path, index=False)
+                saved_files_final.append(str(acoustic_path))
+                print(f"✓ Saved acoustic indices: {acoustic_path}")
+                print(f"  Shape: {acoustic_df.shape} ({len(available_acoustic)} indices)")
+            except Exception as e:
+                print(f"✗ Error saving acoustic indices: {e}")
+
+        # Test: Save detection data
+        keep_species = [
+            'Silver perch', 'Oyster toadfish boat whistle', 'Oyster toadfish grunt',
+            'Black drum', 'Spotted seatrout', 'Red drum', 'Atlantic croaker',
+            'Bottlenose dolphin echolocation', 'Bottlenose dolphin burst pulses', 
+            'Bottlenose dolphin whistles', 'Vessel'
+        ]
+        available_detection = [col for col in keep_species if col in all_stations_df.columns]
+
+        if available_detection:
+            try:
+                detection_df = all_stations_df[core_ids + available_detection].copy()
+                detection_path_aligned = OUTPUT_DIR / f"02_detections_aligned_{YEAR}.parquet"
+                detection_df.to_parquet(detection_path_aligned, index=False)
+                saved_files_final.append(str(detection_path_aligned))
+                print(f"✓ Saved detections: {detection_path_aligned}")
+                print(f"  Shape: {detection_df.shape} ({len(available_detection)} species/types)")
+            except Exception as e:
+                print(f"✗ Error saving detections: {e}")
+
+        # Test: Save environmental data
+        env_cols = ['Water temp (°C)', 'Water depth (m)', 
+                   'Broadband (1-40000 Hz)', 'Low (50-1200 Hz)', 'High (7000-40000 Hz)']
+        env_lag_cols = [col for col in all_stations_df.columns if any(
+            pattern in col for pattern in ['temp_lag', 'temp_change', 'temp_mean',
+                                          'depth_lag', 'depth_change', 'depth_mean',
+                                          'spl_broadband_lag', 'spl_broadband_mean'])]
+        env_cols.extend(env_lag_cols)
+        available_env = [col for col in env_cols if col in all_stations_df.columns]
+
+        if available_env:
+            try:
+                env_df = all_stations_df[core_ids + available_env].copy()
+                env_path = OUTPUT_DIR / f"02_environmental_aligned_{YEAR}.parquet"
+                env_df.to_parquet(env_path, index=False)
+                saved_files_final.append(str(env_path))
+                print(f"✓ Saved environmental data: {env_path}")
+                print(f"  Shape: {env_df.shape} ({len(available_env)} variables)")
+            except Exception as e:
+                print(f"✗ Error saving environmental data: {e}")
+
+        # Test: Save temporal features
+        temporal_cols_aligned = ['hour', 'day_of_year', 'month', 'weekday', 'week_of_year', 
+                        'season', 'time_period', 'hour_sin', 'hour_cos', 'day_sin', 'day_cos']
+        available_temporal = [col for col in temporal_cols_aligned if col in all_stations_df.columns]
+
+        if available_temporal:
+            try:
+                temporal_df = all_stations_df[core_ids + available_temporal].copy()
+                temporal_path = OUTPUT_DIR / f"02_temporal_features_{YEAR}.parquet"
+                temporal_df.to_parquet(temporal_path, index=False)
+                saved_files_final.append(str(temporal_path))
+                print(f"✓ Saved temporal features: {temporal_path}")
+                print(f"  Shape: {temporal_df.shape} ({len(available_temporal)} features)")
+            except Exception as e:
+                print(f"✗ Error saving temporal features: {e}")
+
 
     print(f"\n✅ Successfully saved {len(saved_files_final)} files")
+
     return
 
 
@@ -1018,11 +1114,13 @@ def _(mo):
     - Selected acoustic index rolling means
 
     ✅ **Output Generated:**
-    - Individual aligned datasets for each station
-    - Combined dataset with all stations
-    - All data temporally aligned and ready for modeling
+    - **02_acoustic_indices_aligned_2021.parquet**: All acoustic indices with datetime, station, year
+    - **02_detections_aligned_2021.parquet**: Manual detection data for selected species
+    - **02_environmental_aligned_2021.parquet**: Temperature, depth, SPL data with lag/rolling features
+    - **02_temporal_features_2021.parquet**: Hour, season, cyclic encodings, and time period features
+    - All data temporally aligned to 2-hour resolution and ready for type-specific modeling
 
-    **Next Steps:** Proceed to Notebook 3 for acoustic index characterization and reduction.
+    **Next Steps:** Proceed to Notebook 3 for acoustic index characterization and reduction using the acoustic indices file.
     """
     )
     return

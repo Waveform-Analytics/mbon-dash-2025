@@ -8,6 +8,16 @@ This MVP focuses on developing acoustic index-based models to predict fish calli
 **Data**: 2021 acoustic indices, manual detections, environmental variables, SPL data
 **Timeline**: 8 focused marimo notebooks progressing from data preparation to model validation
 
+
+---
+
+We will use marimo notebooks. The first markdown cell in each notebook should contain:
+- the main title, like "Notebook 1: Data Loading and Initial Exploration"
+- the purpose (e.g., "Load all data streams and perform initial quality assessment")
+- the key outputs (e.g., "Clean datasets saved as parquet files with standardized column names and timestamps")
+
+This specific format is important because it will be used to identify the embedded notebooks in the dashboard site. 
+
 ---
 
 ## Notebook 1: Data Loading and Initial Exploration
@@ -96,7 +106,7 @@ This MVP focuses on developing acoustic index-based models to predict fish calli
 - Seasonal patterns for key retained indices
 - Station-wise index behavior comparison
 
-**Output**: Reduced acoustic index dataset with selection justification document
+**Output**: Reduced acoustic index dataset 
 
 ---
 

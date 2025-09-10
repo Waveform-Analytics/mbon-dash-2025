@@ -1,0 +1,24 @@
+[
+  {
+    "slug": "01_data_prep",
+    "title": "Data Prep",
+    "purpose": "Load all data streams and perform initial quality assessment",
+    "keyOutputs": "Raw data summaries, temporal coverage plots, missing data visualization",
+    "description": "Load all data streams and perform initial quality assessment",
+    "filename": "01_data_prep.html",
+    "order": 1,
+    "lastModified": "2025-09-10T17:21:26.001Z",
+    "fullMarkdown": "# Notebook 1: Data Loading and Initial Exploration\n\n    **Purpose**: Load all data streams and perform initial quality assessment  \n    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization\n\n    This notebook processes data from three moored hydrophone stations (9M, 14M, 37M) deployed near May River in 2021. (Note that we do plan to also process 2018 data but are starting here.) We're combining multiple data streams to understand marine biodiversity patterns:\n\n    - **Acoustic indices**: Computed soundscape metrics that capture ecosystem acoustic activity \n    - **Manual fish detections**: Human-annotated intensity level of fish species every 2 hours (where intensity level is a 0-3 integer scale with 0 being no calls, 1 being one, 2 being multiple, and 3 being a chorus where calls cannot be distinguished from each other.)\n    - **Environmental data**: Temperature (20-min intervals) and depth (1-hour intervals) measurements. Depth data can be used as a proxy for tide.\n    - **SPL data**: Sound pressure levels across frequency bands (broadband, low 50-1200Hz, high 7000-40000Hz)\n    - **Vessel detections**: Ship noise events (included in manual detection files)\n\n    Each data type was collected at different temporal resolutions, requiring careful alignment for integrated analysis."
+  },
+  {
+    "slug": "02_temporal_aggregation",
+    "title": "Temporal Aggregation",
+    "purpose": "Align all data to consistent 2-hour temporal resolution matching manual detections",
+    "keyOutputs": "Temporally aligned dataset ready for analysis",
+    "description": "Align all data to consistent 2-hour temporal resolution matching manual detections",
+    "filename": "02_temporal_aggregation.html",
+    "order": 2,
+    "lastModified": "2025-09-10T17:10:51.042Z",
+    "fullMarkdown": "# Notebook 2: Temporal Alignment and Aggregation\n\n    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections  \n    **Key Outputs**: Temporally aligned dataset ready for analysis\n\n    This notebook will:\n    1. Load all processed data from Notebook 1\n    2. Aggregate all data streams to 2-hour intervals\n    3. Create temporal features (hour, day of year, month, season)\n    4. Engineer lag variables and running means\n    5. Generate time period categories (dawn, day, dusk, night)"
+  }
+]
