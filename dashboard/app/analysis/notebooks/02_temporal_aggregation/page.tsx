@@ -48,7 +48,7 @@ export default function NotebookPage() {
                   <FlaskConical className="h-5 w-5 text-chart-2 mr-2" />
                   <span className="font-semibold text-sm">KEY OUTPUTS</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Temporally aligned dataset ready for analysis</p>
+                <p className="text-sm text-muted-foreground">Four separate, analysis-ready datasets organized by data type</p>
               </motion.div>
             </div>
           </div>
