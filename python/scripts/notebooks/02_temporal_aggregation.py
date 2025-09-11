@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", auto_download=["html"])
 
 
 @app.cell
@@ -17,20 +17,44 @@ def _(mo):
     # Notebook 2: Temporal Alignment and Aggregation
 
     **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections  
-    **Key Outputs**: Temporally aligned dataset ready for analysis
+    **Key Outputs**: Four separate, analysis-ready datasets organized by data type
 
-    This notebook will:
-    1. Load all processed data from Notebook 1
-    2. Aggregate all data streams to 2-hour intervals
-    3. Create temporal features (hour, day of year, month, season)
-    4. Engineer lag variables and running means
-    5. Generate time period categories (dawn, day, dusk, night)
+    ## Overview
+
+    This notebook addresses the critical challenge of temporal misalignment across our diverse data streams. The raw data comes at different temporal resolutions:
+
+    - **Manual fish detections**: Already at 2-hour intervals (our target resolution)
+    - **Acoustic indices**: Calculated hourly from continuous recordings  
+    - **Temperature data**: Logged every 20 minutes by autonomous sensors
+    - **Depth/pressure data**: Recorded hourly for tidal analysis
+    - **SPL (Sound Pressure Level)**: Calculated hourly from acoustic recordings
+
+    The 2-hour target resolution matches the manual detection protocol, where trained analysts reviewed 2-minute segments recorded every 2-hours and scored fish calling activity on a 0-3 intensity scale for each species. This temporal framework becomes our analytical backbone.
+
+    ## Process Overview
+
+    **Data Alignment Steps:**
+
+    1. **Load processed data** from Notebook 1 (all stations, all data types)
+    2. **Examine temporal patterns** to understand each data stream's characteristics  
+    3. **Create 2-hour time grids** using detection timestamps as the reference
+    4. **Aggregate higher-resolution data** (temperature, indices) to 2-hour means
+    5. **Align lower-resolution data** (depth, SPL) to 2-hour windows
+    6. **Engineer temporal features** for biological pattern recognition
+    7. **Create lag variables** to capture delayed ecological responses
+    8. **Generate organized outputs** by data type for downstream analysis
+
+    **Why This Matters:**
+    - Enables integration of acoustic, environmental, and biological data
+    - Preserves temporal patterns critical for understanding marine soundscape ecology  
+    - Creates features that capture both immediate and delayed responses to environmental changes
+    - Establishes consistent temporal framework for species-specific calling pattern analysis
     """
     )
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import pandas as pd
     import numpy as np
@@ -61,7 +85,22 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 1. Load Processed Data from Notebook 1""")
+    mo.md(
+        r"""
+    ## 1. Load Processed Data from Notebook 1
+
+    Loading the cleaned and standardized data streams from each station. Notebook 1 performed quality control, 
+    standardized column names, and converted timestamps to consistent formats. Here we systematically load:
+
+    - **Acoustic indices** (50-60 indices per station): Hourly summaries of soundscape characteristics
+    - **Detection data** (2-hour intervals): Manual annotations of fish calling activity by species  
+    - **Temperature data** (20-min intervals): Water temperature from autonomous sensors
+    - **Depth data** (hourly): Water depth measurements for tidal pattern analysis
+    - **SPL data** (hourly): Sound pressure levels in multiple frequency bands
+
+    **Expected Outcome**: Five data dictionaries organized by data type and station, ready for temporal alignment.
+    """
+    )
     return
 
 
@@ -240,7 +279,22 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 4. Aggregate Acoustic Indices to 2-Hour Resolution""")
+    mo.md(
+        r"""
+    ## 4. Aggregate Acoustic Indices to 2-Hour Resolution
+
+    Now we begin the core temporal alignment process. The acoustic indices were calculated hourly, but our manual detection data exists at 2-hour intervals. To enable meaningful comparisons and modeling, we need to aggregate the acoustic data to match the detection temporal resolution.
+
+    **Aggregation strategy:** We take the mean of each acoustic index within each 2-hour window. The mean is more robust than other statistics for acoustic indices, which can have occasional extreme values due to transient sounds.
+
+    For each station, we:
+
+    1. **Group hourly data** into 2-hour windows (e.g., 00:00-02:00, 02:00-04:00)
+    2. **Calculate means** for all numeric acoustic indices within each window
+    3. **Align to detection grid** to ensure exactly matching timestamps
+    4. **Fill gaps** where acoustic data is missing but detections exist (marked as NaN)
+    """
+    )
     return
 
 
@@ -288,7 +342,19 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 5. Aggregate Environmental Data to 2-Hour Resolution""")
+    mo.md(
+        r"""
+    ## 5. Aggregate Environmental Data to 2-Hour Resolution
+
+    Environmental variables often drive fish calling behavior, but they're collected at different temporal resolutions than our biological data. Temperature sensors record every 20 minutes, while depth sensors record hourly. We need to aggregate both to our standard 2-hour intervals.
+
+    **Temperature aggregation (20-min → 2-hour):** Temperature changes relatively slowly in marine environments, so averaging 20-minute readings over 2-hour windows captures the meaningful thermal environment fish experience while filtering out sensor noise and very short-term fluctuations.
+
+    **Depth aggregation (1-hour → 2-hour):** Water depth varies with tides and is already measured hourly. The 2-hour mean provides a stable measure of the average depth conditions during each analysis window.
+
+    **Gap filling strategy:** For small data gaps (≤6 hours), we use forward-fill interpolation since environmental conditions change gradually. This helps maintain continuity while avoiding unrealistic interpolation across long gaps that might span weather events or equipment failures.
+    """
+    )
     return
 
 
@@ -362,6 +428,20 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     return (depth_aggregated,)
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ### Sound Pressure Level (SPL) Aggregation
+
+    **SPL measurements** quantify the actual loudness of the underwater environment across different frequency ranges. We have three SPL bands: broadband (full spectrum), low frequency (50-1,200 Hz, often anthropogenic), and high frequency (7,000-40,000 Hz, often biological). 
+
+    Like other environmental variables, SPL provides important context for interpreting fish calling patterns and acoustic indices.
+    """
+    )
+    return
+
+
 @app.cell
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate SPL data (1-hour to 2-hour)
@@ -411,7 +491,23 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 6. Create Temporal Features""")
+    mo.md(
+        r"""
+    ## 6. Create Temporal Features
+
+    Fish calling behavior follows strong temporal patterns - daily, weekly, seasonal, and even annual cycles. To capture these patterns in our models, we need to convert raw timestamps into meaningful temporal features that machine learning algorithms can work with.
+
+    **Why cyclic encoding?** Simple linear features (hour = 0, 1, 2, ..., 23) create artificial discontinuities - hour 23 appears far from hour 0, when they're actually consecutive. Cyclic encoding using sine and cosine transforms preserves the circular nature of time, ensuring that 11 PM and 1 AM are represented as close in feature space.
+
+    **Feature categories we create:**
+    - **Hourly patterns**: Hour of day as both linear and cyclic features (for diel activity patterns)
+    - **Daily patterns**: Day of year and day of week (for seasonal and weekly patterns)  
+    - **Seasonal patterns**: Month as both linear and cyclic features
+    - **Periodic cycles**: Week of year for longer-term patterns
+
+    These features will help our models recognize that a fish species might call more at dawn, during certain seasons, or on particular days of the week.
+    """
+    )
     return
 
 
@@ -547,7 +643,36 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 8. Engineer Lag Variables and Running Means""")
+    mo.md(
+        r"""
+    ## 8. Engineer Lag Variables and Running Means
+
+    **Why lag variables?** Marine animals often respond to environmental changes with delays. Fish might not immediately start calling when temperature changes - they may respond to conditions from 2-6 hours earlier. Lag variables capture these delayed ecological responses.
+
+    **Why rolling means?** Short-term environmental fluctuations (sensor noise, brief weather events) may be less important than longer-term trends. Rolling means smooth out noise and capture the environmental context that fish actually experience over several hours.
+
+    **Feature engineering strategy:**
+
+    **Temperature features:**
+    - **Lag variables** (1-3 intervals = 2-6 hours ago): Capture delayed thermal responses
+    - **Change rates** (2h, 4h): Detect rapid warming/cooling events that might trigger behavior
+    - **Rolling means** (6h, 12h): Capture longer-term thermal trends
+
+    **Depth features:**
+    - **Lag variables**: Capture tidal cycle effects on calling behavior
+    - **Change rates**: Detect rising vs falling tides (fish may respond differently)
+    - **Rolling means**: Smooth out tidal fluctuations to reveal underlying patterns
+
+    **SPL features:**
+    - **Lag variables**: Account for delayed responses to noise events
+    - **Rolling means** (6h, 12h, 24h): Capture ambient noise climate rather than momentary sounds
+
+    **Selected acoustic indices:**
+    - **Rolling means only** (to avoid too many features): Capture recent acoustic environment trends
+
+    → These engineered features help models understand not just current conditions, but recent environmental history that influences animal behavior.
+    """
+    )
     return
 
 
@@ -623,7 +748,27 @@ def _(STATIONS, combined_data):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 9. Visualize Temporal Alignment""")
+    mo.md(
+        r"""
+    ## 9. Visualize Temporal Alignment
+
+    After all this data processing, it's essential to visualize the results to ensure our temporal alignment worked correctly and to understand the patterns in our aligned dataset.
+
+    **What to look for in these visualizations:**
+
+    **Data availability heatmaps:** Show which variables have data at which time points. Ideally, we should see:
+    - Consistent coverage across detection periods (manual annotations were done every 2 hours)
+    - Reasonable coverage for environmental variables (some gaps are expected due to equipment maintenance)
+    - Clear patterns where all data types align temporally
+
+    **Time series examples:** Sample traces of key variables help us verify:
+    - Realistic environmental patterns (temperature cycles, tidal patterns)
+    - Sensible acoustic index values (no extreme outliers after aggregation)
+    - Proper alignment between fish detection timing and environmental conditions
+
+    → These plots serve as quality control for our temporal alignment process and provide intuition about the data patterns we'll be modeling.
+    """
+    )
     return
 
 
@@ -929,7 +1074,39 @@ def _(STATIONS, data_loaded, enhanced_data, pd, plt):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## 12. Save Aligned and Enhanced Dataset""")
+    mo.md(
+        r"""
+    ## 12. Save Aligned and Enhanced Dataset
+
+    After all the temporal alignment and feature engineering, we save our processed data in organized files for downstream analysis. Rather than creating one massive combined file, we save separate datasets by data type for clarity and modularity.
+
+    **File organization strategy:**
+
+    **`02_acoustic_indices_aligned_2021.parquet`** - All acoustic indices aggregated to 2-hour resolution
+    - Contains: ~50-60 acoustic indices per station and time point
+    - Use for: Index analysis, correlation studies, dimensionality reduction
+
+    **`02_detections_aligned_2021.parquet`** - Fish detection data with temporal features  
+    - Contains: Species calling intensities (0-3 scale) + temporal features (hour_sin, day_cos, etc.)
+    - Use for: Response variable analysis, temporal pattern exploration
+
+    **`02_environmental_aligned_2021.parquet`** - Environmental variables with lag/rolling features
+    - Contains: Temperature, depth, SPL + lag variables + rolling means
+    - Use for: Environmental driver analysis, feature selection
+
+    **`02_temporal_features_2021.parquet`** - Pure temporal features
+    - Contains: Hour, day, month, season, cyclic encodings
+    - Use for: Temporal pattern analysis, seasonality studies
+
+    **Why separate files?** This organization:
+    - **Clarifies data provenance** - easy to see what came from where
+    - **Enables modular analysis** - load only what you need for specific tasks  
+    - **Facilitates debugging** - easier to isolate issues to specific data types
+    - **Supports collaboration** - different team members can work with different data aspects
+
+    → Each file includes consistent identifiers (datetime, station, year) enabling clean joins when needed.
+    """
+    )
     return
 
 
@@ -1093,34 +1270,35 @@ def _(mo):
         r"""
     ## Summary
 
-    **Notebook 2 Complete!**
+    **What we accomplished:** This notebook solved the fundamental challenge of temporal misalignment across multiple data streams with different collection frequencies. By aggregating everything to a common 2-hour resolution and engineering relevant features, we've created analysis-ready datasets that preserve ecological information while enabling modeling.
 
     ✅ **Successfully Aligned All Data to 2-Hour Resolution:**
-    - Acoustic indices: Aggregated from ~hourly to 2-hour means
-    - Temperature: Aggregated from 20-min to 2-hour means
-    - Depth: Aggregated from 1-hour to 2-hour means
-    - SPL: Aggregated from 1-hour to 2-hour means
-    - Detection data: Already at 2-hour resolution (used as reference)
+    - **Acoustic indices**: Aggregated from ~hourly to 2-hour means (preserves acoustic patterns while reducing noise)
+    - **Temperature**: Aggregated from 20-min to 2-hour means (captures thermal environment without sensor noise)
+    - **Depth**: Aggregated from 1-hour to 2-hour means (smooths tidal fluctuations to environmental context)
+    - **SPL**: Aggregated from 1-hour to 2-hour means (provides ambient noise context)
+    - **Detection data**: Already at 2-hour resolution (used as temporal reference framework)
 
-    ✅ **Created Temporal Features:**
-    - Basic: hour, day_of_year, month, weekday, week_of_year
-    - Categorical: season, time_period (Night/Morning/Afternoon/Evening)
-    - Cyclic encodings: hour_sin/cos, day_sin/cos
+    ✅ **Created Temporal Features for Ecological Modeling:**
+    - **Basic temporal**: hour, day_of_year, month, weekday, week_of_year (linear time representations)
+    - **Categorical time periods**: season, time_period (Night/Morning/Afternoon/Evening) (ecologically meaningful groupings)
+    - **Cyclic encodings**: hour_sin/cos, day_sin/cos (preserve circular nature of time for machine learning)
 
-    ✅ **Engineered Advanced Features:**
-    - Lag variables for temperature, depth, and SPL (t-1, t-2, t-3)
-    - Change rates (2h and 4h differences)
-    - Rolling means (6h, 12h, 24h windows)
-    - Selected acoustic index rolling means
+    ✅ **Engineered Advanced Features for Delayed Ecological Responses:**
+    - **Lag variables**: temperature, depth, and SPL at t-1, t-2, t-3 (capture delayed animal responses to environmental change)
+    - **Change rates**: 2h and 4h differences (detect rapid environmental transitions that trigger behavior)
+    - **Rolling means**: 6h, 12h, 24h windows (capture environmental context and trends beyond momentary conditions)
+    - **Selected acoustic index rolling means**: recent acoustic environment trends (context for current conditions)
 
-    ✅ **Output Generated:**
-    - **02_acoustic_indices_aligned_2021.parquet**: All acoustic indices with datetime, station, year
-    - **02_detections_aligned_2021.parquet**: Manual detection data for selected species
-    - **02_environmental_aligned_2021.parquet**: Temperature, depth, SPL data with lag/rolling features
-    - **02_temporal_features_2021.parquet**: Hour, season, cyclic encodings, and time period features
-    - All data temporally aligned to 2-hour resolution and ready for type-specific modeling
+    ✅ **Output Files - Organized by Data Type:**
+    - **`02_acoustic_indices_aligned_2021.parquet`**: ~50-60 acoustic indices ready for correlation analysis and dimensionality reduction
+    - **`02_detections_aligned_2021.parquet`**: Fish calling intensities with temporal features for response pattern analysis
+    - **`02_environmental_aligned_2021.parquet`**: Environmental drivers with lag/rolling features for predictor analysis
+    - **`02_temporal_features_2021.parquet`**: Pure temporal features for seasonality and diel pattern analysis
 
-    **Next Steps:** Proceed to Notebook 3 for acoustic index characterization and reduction using the acoustic indices file.
+    **Data quality achieved:** All files share consistent temporal identifiers (datetime, station, year) enabling clean joins while maintaining clear data provenance and supporting modular analysis approaches.
+
+    **Next Steps:** Proceed to Notebook 3 for acoustic index characterization and dimensionality reduction using the acoustic indices file. The organized data structure will facilitate focused analysis of acoustic patterns without environmental data complexity.
     """
     )
     return
