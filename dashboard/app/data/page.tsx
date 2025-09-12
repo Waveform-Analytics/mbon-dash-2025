@@ -115,20 +115,8 @@ export default function DataPage() {
           </div>
           
           <div className="bg-card rounded-lg shadow-lg border p-6">
-            <div className="flex gap-2 mb-4">
-              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium">
-                Study Area
-              </button>
-              <button className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm font-medium hover:bg-muted/80">
-                All Stations
-              </button>
-            </div>
-            <div className="h-[400px] bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Map className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Interactive Mapbox GL map will be displayed here</p>
-                <p className="text-sm text-muted-foreground mt-2">Station metadata from raw data folder</p>
-              </div>
+            <div className="h-[400px] bg-muted rounded-lg">
+              {/* Map container - blank for now */}
             </div>
           </div>
         </motion.section>

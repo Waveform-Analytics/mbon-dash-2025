@@ -59,14 +59,14 @@ export default function Navigation() {
             >
               <Waves className="h-6 w-6 text-primary" />
             </motion.div>
-            <div className="hidden sm:block">
+            <div className="hidden md:block">
               <h1 className="font-medium text-lg">MBON Dashboard</h1>
               <p className="text-xs text-muted-foreground -mt-1">Marine Biodiversity Observation Network</p>
             </div>
           </Link>
 
           {/* Navigation Links */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-0.5">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -78,7 +78,7 @@ export default function Navigation() {
                   className="relative group"
                 >
                   <motion.div
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-2 px-2 md:px-4 py-2 rounded-lg transition-colors ${
                       isActive 
                         ? 'bg-primary/10 text-primary' 
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'

@@ -1019,7 +1019,78 @@ def _(STATIONS, depth_data, detection_data, plt, spl_data, temp_data):
 def _(mo):
     mo.md(
         r"""
-    ## 13. Save Processed Data
+    ## 13. Load and Process Metadata Files
+
+    We have two important metadata files that provide context for our analyses:
+
+    1. **Deployment Metadata**: Excel file containing detailed information about each hydrophone deployment including GPS coordinates, depths, environmental conditions, and instrument specifications
+    2. **Acoustic Index Categories**: CSV file defining the 60 acoustic indices, their categories (Complexity, Temporal, Diversity, Spectral, Amplitude), and detailed descriptions
+
+    These metadata files are essential for understanding the data collection context and interpreting the acoustic indices.
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(DATA_DIR, pd):
+    # Load deployment metadata from Excel file
+    metadata_excel_path = DATA_DIR / "metadata" / "1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
+    metadata_data = {}
+
+    if metadata_excel_path.exists():
+        print("Loading deployment metadata...")
+
+        # Read all sheets to understand structure
+        xlsx_meta = pd.ExcelFile(metadata_excel_path)
+        print(f"Found {len(xlsx_meta.sheet_names)} sheets: {xlsx_meta.sheet_names}")
+
+        # Load the main "Data" sheet with deployment information
+        df_deployments = pd.read_excel(metadata_excel_path, sheet_name="Data")
+        metadata_data['deployments'] = df_deployments
+        print(f"✓ Loaded deployments: {len(df_deployments)} records, {len(df_deployments.columns)} columns")
+
+        # Load the "Key" sheet with column descriptions
+        df_key = pd.read_excel(metadata_excel_path, sheet_name="Key")
+        metadata_data['deployments_key'] = df_key
+        print(f"✓ Loaded data dictionary: {len(df_key)} column descriptions")
+
+        # Note: Skipping "Sheet1" as it appears to be a pivot table summary
+
+        # Display key deployment info for 2021 (our focus year)
+        df_2021 = df_deployments[df_deployments['Year'] == 2021]
+        print(f"\n2021 Deployments: {len(df_2021)} records")
+        if len(df_2021) > 0:
+            print(f"Stations: {df_2021['Station'].unique()}")
+            print(f"Date range: {df_2021['Start date'].min()} to {df_2021['End date'].max()}")
+    else:
+        print(f"✗ Deployment metadata not found: {metadata_excel_path}")
+
+    # Load acoustic index categories from CSV
+    index_csv_path = DATA_DIR / "metadata" / "Updated_Index_Categories_v2.csv"
+
+    if index_csv_path.exists():
+        print("\nLoading acoustic index categories...")
+        df_index_categories = pd.read_csv(index_csv_path)
+        metadata_data['index_categories'] = df_index_categories
+        print(f"✓ Loaded index categories: {len(df_index_categories)} indices")
+
+        # Show category distribution
+        category_counts = df_index_categories['Category'].value_counts()
+        print("\nIndex categories:")
+        for cat, count in category_counts.items():
+            print(f"  - {cat}: {count} indices")
+    else:
+        print(f"✗ Index categories not found: {index_csv_path}")
+
+    return (metadata_data,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 14. Save Processed Data
 
     Clean, standardized datasets are saved in efficient Parquet format with consistent datetime columns and naming conventions. This preprocessing step ensures all subsequent notebooks can reliably load and combine data across different types and stations. The standardized timestamps enable temporal alignment in the next processing stage.
     """
@@ -1027,7 +1098,7 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(
     OUTPUT_DIR,
     STATIONS,
@@ -1035,12 +1106,17 @@ def _(
     depth_data,
     detection_data,
     indices_data,
+    metadata_data,
     pd,
     spl_data,
     temp_data,
 ):
     # Save cleaned datasets as parquet files with standardized column names and timestamps
     saved_files = []
+
+    # Create metadata subdirectory
+    metadata_dir = OUTPUT_DIR / "metadata"
+    metadata_dir.mkdir(parents=True, exist_ok=True)
 
     for station_save in STATIONS:
         # Save acoustic indices
@@ -1140,6 +1216,70 @@ def _(
             saved_files.append(str(output_file_spl))
             print(f"✓ Saved SPL: {output_file_spl}")
 
+    # Save metadata files
+    if metadata_data:
+        print("\nSaving metadata files...")
+
+        # Save deployment data
+        if 'deployments' in metadata_data:
+            df_deployments_save = metadata_data['deployments'].copy()
+
+            # Handle columns that should be numeric but contain mixed types
+            # These columns contain things like 'No data', '.', or other strings mixed with numbers
+            numeric_cols_to_fix = [
+                'Number of deployed files collected',
+                'Recorder No.',
+                'Hydrophone Serial No.',
+                'HOBO Water Temp logger No.',
+                'HOBO Water level logger No.'
+            ]
+
+            for col_problem in numeric_cols_to_fix:
+                if col_problem in df_deployments_save.columns:
+                    # Convert to string first to handle mixed types, then to numeric
+                    df_deployments_save[col_problem] = df_deployments_save[col_problem].astype(str)
+                    # Replace common non-numeric values with NaN
+                    df_deployments_save[col_problem] = df_deployments_save[col_problem].replace(
+                        ['No data', '.', '', 'nan', 'None', 'NA'], pd.NA
+                    )
+                    # Convert to numeric, coercing errors to NaN
+                    df_deployments_save[col_problem] = pd.to_numeric(df_deployments_save[col_problem], errors='coerce')
+
+            # Convert date columns to datetime if they're stored as strings
+            date_cols = ['Start date', 'End date', 'Public release date']
+            for col_date in date_cols:
+                if col_date in df_deployments_save.columns:
+                    df_deployments_save[col_date] = pd.to_datetime(df_deployments_save[col_date], errors='coerce')
+
+            # For remaining object columns that might have issues, convert to string
+            # This ensures they can be saved to parquet without type conflicts
+            for col_deps in df_deployments_save.columns:
+                if df_deployments_save[col_deps].dtype == 'object':
+                    # Skip datetime columns we already converted
+                    if col_deps not in date_cols:
+                        df_deployments_save[col_deps] = df_deployments_save[col_deps].astype(str)
+                        # Replace 'nan' strings with actual NaN for cleaner data
+                        df_deployments_save[col_deps] = df_deployments_save[col_deps].replace('nan', pd.NA)
+
+            output_file_deployments = metadata_dir / "deployments.parquet"
+            df_deployments_save.to_parquet(output_file_deployments, index=False)
+            saved_files.append(str(output_file_deployments))
+            print(f"✓ Saved deployments: {output_file_deployments}")
+
+        # Save deployment data dictionary
+        if 'deployments_key' in metadata_data:
+            output_file_deploy_key = metadata_dir / "deployments_dictionary.parquet"
+            metadata_data['deployments_key'].to_parquet(output_file_deploy_key, index=False)
+            saved_files.append(str(output_file_deploy_key))
+            print(f"✓ Saved deployment dictionary: {output_file_deploy_key}")
+
+        # Save acoustic index categories
+        if 'index_categories' in metadata_data:
+            output_file_indices_cat = metadata_dir / "acoustic_indices.parquet"
+            metadata_data['index_categories'].to_parquet(output_file_indices_cat, index=False)
+            saved_files.append(str(output_file_indices_cat))
+            print(f"✓ Saved acoustic index categories: {output_file_indices_cat}")
+
     print(f"\nTotal files saved: {len(saved_files)}")
     return
 
@@ -1158,6 +1298,8 @@ def _(mo):
     - Environmental data (temperature 20-min, depth 1-hour, 3 stations)
     - SPL data (broadband/low/high frequency bands, 1-hour, 3 stations)
     - Vessel detection data (included in manual detections)
+    - Deployment metadata (183 deployments 2017-2022, instrument specs, GPS locations)
+    - Acoustic index categories (60 indices with descriptions)
 
     ✅ **Quality Assessment Completed:**
     - Temporal coverage analysis across all data types
@@ -1167,6 +1309,7 @@ def _(mo):
 
     ✅ **Output Generated:**  
     - Clean datasets saved as parquet files with standardized timestamps
+    - Metadata saved in `processed/metadata/` folder as parquet files
     - Ready for Notebook 2 (temporal alignment and aggregation)
 
     **Next Steps:** Proceed to Notebook 2 for temporal alignment to 2-hour resolution.

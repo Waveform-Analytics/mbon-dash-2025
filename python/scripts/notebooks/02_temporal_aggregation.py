@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell
@@ -1165,8 +1165,6 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
         # print(f"  File size: {combined_path.stat().st_size / (1024*1024):.2f} MB")
 
 
-    # EXPERIMENTAL: Also save separate data type files
-    # (This is in addition to the existing files above)
     if enhanced_data:
 
         # Add year column to combined dataset

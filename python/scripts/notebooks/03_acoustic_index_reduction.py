@@ -25,6 +25,12 @@ def _():
         4. **Quality Assessment**: Validate the reduction approach and document ecological justification
 
         The goal is to reduce from ~50-60 indices down to ~15-20 indices that capture the majority of acoustic variance while maintaining ecological interpretability and robustness to vessel noise.
+
+        ## Why This Analysis Matters
+
+        Acoustic indices are mathematical representations of soundscape properties, but many measure similar underlying phenomena. With 50-60 indices, we face the "curse of dimensionality" - too many correlated variables that make modeling difficult and results hard to interpret. This reduction process identifies the core acoustic "dimensions" that capture the most important soundscape variation while removing redundancy.
+
+        The vessel impact analysis is particularly crucial for marine soundscapes, as vessel noise is a major anthropogenic stressor that can mask biological sounds and alter acoustic indices in ways that don't reflect natural ecological processes.
         """
     )
     return (mo,)
@@ -75,7 +81,7 @@ def _():
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -83,11 +89,18 @@ def _(mo):
 
     Loading the temporally aligned dataset from Notebook 2, which contains:
 
-    - Acoustic indices aggregated to 2-hour resolution 
-    - Environmental variables (temperature, depth/pressure)
-    - SPL data aligned to 2-hour intervals
-    - Vessel detection data
-    - Temporal variables (hour, day of year, season, etc.)
+    - **Acoustic indices** aggregated to 2-hour resolution (originally calculated hourly)
+    - **Environmental variables** (temperature, depth/pressure) aligned to the same temporal grid
+    - **SPL data** aligned to 2-hour intervals for comparison with index-based approaches
+    - **Vessel detection data** to assess anthropogenic noise impacts
+    - **Temporal variables** (hour, day of year, season, etc.) for downstream modeling
+
+    This 2-hour resolution matches the manual fish detection intervals, creating a consistent analytical framework. The dataset should contain ~13,000 observations (3 stations × 365 days × 12 two-hour periods per day) with 50-60 acoustic index columns plus supporting variables.
+
+    **Expected Data Quality Issues:**
+    - Some missing data due to instrument failures or maintenance
+    - Potential outliers during extreme weather events
+    - Varying data availability across stations and time periods
     """
     )
     return
@@ -111,6 +124,10 @@ def _(data_dir, pd):
         # Create a placeholder for development
         df_acoustic_indices = pd.DataFrame()
 
+
+    # Load the metadata generated in Notebook 1
+    # ...
+
     return (df_acoustic_indices,)
 
 
@@ -120,8 +137,22 @@ def _(mo):
         r"""
     ## Acoustic Index Identification
 
-    Identifying the acoustic index columns from the dataset. These should be the numerical columns
-    that represent the ~50-60 acoustic indices calculated from the soundscape data.
+    Identifying the acoustic index columns from the dataset. These should be the numerical columns that represent the ~50-60 acoustic indices calculated from the soundscape data.
+
+    **What Are Acoustic Indices?**
+    Acoustic indices are mathematical transformations of sound recordings that quantify different aspects of the soundscape:
+    - **Temporal indices** (e.g., ZCR, MEANt) describe patterns over time
+    - **Spectral indices** (e.g., H, ACI) describe frequency content and distribution
+    - **Complexity indices** (e.g., NDSI, ADI) measure acoustic diversity and structure
+    - **Intensity indices** (e.g., LEQ, SPL-derived) quantify loudness and energy
+
+    **Expected Index Categories:**
+    - ~15-20 indices measuring acoustic complexity and diversity
+    - ~10-15 indices describing temporal patterns
+    - ~10-15 indices capturing spectral characteristics  
+    - ~10-15 indices related to acoustic activity and intensity
+
+    We'll exclude core identifiers (datetime, station, year) to focus purely on the acoustic measurements.
     """
     )
     return
@@ -132,7 +163,7 @@ def _(df_acoustic_indices, pd):
     if not df_acoustic_indices.empty:
         # Identify acoustic index columns - exclude core identifiers
         core_identifiers = ['datetime', 'station', 'year']
-        
+
         # Get all acoustic index columns (everything except identifiers)
         acoustic_index_cols = [col for col in df_acoustic_indices.columns if col not in core_identifiers]
 
@@ -217,28 +248,84 @@ def _(df_indices, pd):
     return corr_matrix, correlation_threshold
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-    ## Hierarchical Clustering of Indices
+    ## Correlation Analysis Results Interpretation
 
-    Using hierarchical clustering to identify functional groups of acoustic indices.
-    This helps us understand which indices measure similar acoustic properties.
+    **High Correlation Findings:**
+    The correlation analysis reveals the extent of redundancy in our acoustic index set. Pairs with correlations >0.85 are essentially measuring the same acoustic phenomena with different mathematical approaches.
+
+    **What High Correlations Tell Us:**
+    - **Perfect correlations (r=1.0)**: Indices like NDSI and rBA are mathematically equivalent - we can safely keep only one
+    - **Very high correlations (r>0.99)**: Indices like ACTspFract and ACTspCount measure the same underlying activity with linear scaling differences
+    - **Strong correlations (0.85-0.95)**: Different mathematical approaches to similar acoustic properties (e.g., energy vs amplitude measures)
+
+    **Ecological Implications:**
+    High correlations suggest that many indices capture the same underlying acoustic processes. This redundancy can actually be beneficial for validation (independent methods measuring the same thing) but problematic for modeling (multicollinearity).
+
+    **Expected Patterns:**
+    - Temporal indices correlating with each other (time-domain calculations)
+    - Spectral indices showing strong relationships (frequency-domain measures)
+    - Activity/intensity indices clustering together (energy-based calculations)
+    
+    The mean absolute correlation of ~0.33 suggests moderate overall redundancy - not extreme, but enough to warrant reduction.
     """
     )
     return
 
 
 @app.cell
-def _(corr_matrix, fcluster, linkage, np, pd, squareform):
+def _(mo):
+    mo.md(
+        r"""
+    ## Hierarchical Clustering of Indices
+
+    Using hierarchical clustering to identify functional groups of acoustic indices. This helps us understand which indices measure similar acoustic properties and guides our selection of representative indices from each functional group.
+
+    **Clustering Approach:**
+    We use correlation-based distance (1 - |correlation|) so that highly correlated indices cluster together. Ward linkage minimizes within-cluster variance, creating compact, interpretable groups.
+
+    **Target Outcome:**
+    Aiming for 15-20 clusters to match our target of 15-20 representative indices. Each cluster should represent a distinct acoustic "dimension" or functional group.
+    """
+    )
+    return
+
+
+@app.cell
+def h_clustering(corr_matrix, fcluster, linkage, np, pd, squareform):
     if not corr_matrix.empty:
         # Perform hierarchical clustering on correlation matrix
         # Convert correlation to distance (1 - |correlation|)
         distance_matrix = 1 - corr_matrix.abs()
 
+        # Convert to numpy array and ensure symmetry
+        dist_array = distance_matrix.values
+
+        # Force perfect symmetry by averaging with transpose
+        dist_array = (dist_array + dist_array.T) / 2
+
+        # Set diagonal to exactly 0
+        np.fill_diagonal(dist_array, 0)
+
+        # Check for NaN values and replace with max distance if present
+        if np.any(np.isnan(dist_array)):
+            print(f"Warning: Found {np.sum(np.isnan(dist_array))} NaN values in distance matrix")
+            # Replace NaN with 1 (maximum distance for correlation-based distance)
+            dist_array = np.nan_to_num(dist_array, nan=1.0)
+
+        # Ensure all distances are non-negative (handle floating point errors)
+        dist_array = np.maximum(dist_array, 0)
+
+        # Add small epsilon to avoid zero distances between different items
+        # (except diagonal which should remain 0)
+        epsilon = 1e-10
+        dist_array = dist_array + epsilon * (1 - np.eye(dist_array.shape[0]))
+
         # Convert to condensed distance matrix for linkage
-        condensed_distances = squareform(distance_matrix)
+        condensed_distances = squareform(dist_array, checks=False)
 
         # Perform hierarchical clustering
         linkage_matrix = linkage(condensed_distances, method='ward')
@@ -291,13 +378,14 @@ def _(corr_matrix, fcluster, linkage, np, pd, squareform):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
     ## Index Reduction Strategy
 
     Selecting representative indices from each cluster based on:
+
     1. **Ecological relevance**: Choose indices with known biological significance
     2. **Vessel noise robustness**: Prefer indices less affected by vessel presence
     3. **Cluster centrality**: Select indices most representative of their cluster
@@ -311,13 +399,13 @@ def _(
     acoustic_index_cols,
     cluster_df,
     corr_matrix,
-    df_aligned,
+    df_acoustic_indices,
     df_indices,
     np,
     pd,
     target_clusters,
 ):
-    if not cluster_df.empty and not df_aligned.empty:
+    if not cluster_df.empty and not df_acoustic_indices.empty:
         # For each cluster, select the most representative index
         selected_indices = []
         selection_rationale = {}
@@ -334,9 +422,9 @@ def _(
                 # Calculate mean correlation with other indices in cluster
                 cluster_corr_means = []
 
-                for idx in cluster_indices:
-                    other_indices = [i for i in cluster_indices if i != idx]
-                    mean_corr = corr_matrix.loc[idx, other_indices].abs().mean()
+                for idx_cl in cluster_indices:
+                    other_indices = [i for i in cluster_indices if i != idx_cl]
+                    mean_corr = corr_matrix.loc[idx_cl, other_indices].abs().mean()
                     cluster_corr_means.append(mean_corr)
 
                 # Select index with highest mean correlation (most representative)
@@ -352,13 +440,19 @@ def _(
 
         print(f"Selected {len(selected_indices)} representative indices from {target_clusters} clusters")
         print("\nSelected indices and rationale:")
-        for idx in selected_indices[:10]:  # Show first 10
-            print(f"  {idx}: {selection_rationale[idx]}")
+        for idx_sel in selected_indices[:10]:  # Show first 10
+            print(f"  {idx_sel}: {selection_rationale[idx_sel]}")
         if len(selected_indices) > 10:
             print(f"  ... and {len(selected_indices) - 10} more")
 
         # Create reduced dataset
         df_indices_reduced = df_indices[selected_indices].copy()
+
+        # Create reduced dataset with identifiers for downstream analysis
+        df_indices_reduced_with_ids = pd.concat([
+            df_acoustic_indices[['datetime', 'station', 'year']],
+            df_indices_reduced
+        ], axis=1)
 
         print(f"\nReduced from {len(acoustic_index_cols)} to {len(selected_indices)} indices")
         print(f"Reduction ratio: {len(selected_indices)/len(acoustic_index_cols):.2f}")
@@ -367,9 +461,15 @@ def _(
         selected_indices = []
         selection_rationale = {}
         df_indices_reduced = pd.DataFrame()
+        df_indices_reduced_with_ids = pd.DataFrame()
         print("Cannot perform index reduction - no clustering data available")
 
-    return df_indices_reduced, selected_indices, selection_rationale
+    return (
+        df_indices_reduced,
+        df_indices_reduced_with_ids,
+        selected_indices,
+        selection_rationale,
+    )
 
 
 @app.cell
@@ -440,14 +540,52 @@ def _(PCA, StandardScaler, df_indices, df_indices_reduced, np):
     return cumvar_full, n_80, n_90, pca_components_full, pca_full
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## PCA Results Interpretation
+
+    **Dimensionality Insights:**
+    The PCA results reveal the true dimensionality of the acoustic soundscape. If 7 components explain 80% of variance in 61 indices, the soundscape has approximately 7 major "acoustic dimensions" rather than 61.
+
+    **What This Means:**
+    - **Low intrinsic dimensionality**: Most acoustic variation can be captured with <10 principal components
+    - **High redundancy confirmed**: Many indices measure the same underlying patterns
+    - **Validation of clustering**: If our 18 clusters preserve 90%+ variance at the same PC count, the reduction is successful
+
+    **Ecological Interpretation:**
+    Each principal component likely represents a fundamental acoustic process:
+    - PC1 might capture overall acoustic activity/intensity
+    - PC2 could represent spectral vs temporal patterns  
+    - PC3 might distinguish complexity vs simplicity
+    - Higher PCs capture more subtle acoustic patterns
+
+    **Comparison Implications:**
+    If the reduced set (18 indices) requires similar PC counts to reach 80-90% variance, we've successfully preserved the acoustic information content while dramatically reducing complexity.
+    """
+    )
+    return
+
+
 @app.cell
 def _(mo):
     mo.md(
         r"""
     ## Variance Inflation Factor Analysis
 
-    Calculating VIF to assess multicollinearity in both the full and reduced index sets.
-    High VIF values (>10) indicate problematic multicollinearity.
+    Calculating VIF to assess multicollinearity in both the full and reduced index sets. High VIF values (>10) indicate problematic multicollinearity that can destabilize statistical models.
+
+    **Why VIF Matters:**
+    - **VIF < 5**: Low multicollinearity, variables are relatively independent
+    - **VIF 5-10**: Moderate multicollinearity, manageable but worth monitoring  
+    - **VIF > 10**: High multicollinearity, problematic for regression modeling
+    - **VIF > 100**: Severe multicollinearity, variables are near-redundant
+
+    **Expected Outcomes:**
+    - Full index set likely has many high VIF values due to correlation patterns
+    - Reduced set should show dramatically improved VIF values
+    - Some residual multicollinearity may remain but should be manageable
     """
     )
     return
@@ -534,38 +672,38 @@ def _(mo):
 
 
 @app.cell
-def _(data_dir, df_indices_reduced, np, pd, selected_indices, stats):
+def _(data_dir, df_indices_reduced_with_ids, np, pd, selected_indices, stats):
     # Load detection data for vessel analysis
     detection_file = data_dir / "02_detections_aligned_2021.parquet"
-    
+
     env_corr_matrix = pd.DataFrame()  # Placeholder since we're not doing env analysis here
     vessel_stats = {}
-    
-    if detection_file.exists() and not df_indices_reduced.empty:
+
+    if detection_file.exists() and not df_indices_reduced_with_ids.empty:
         df_detections = pd.read_parquet(detection_file)
         print(f"Loaded detection data for vessel analysis: {df_detections.shape}")
-        
+
         # Vessel impact analysis
         if 'Vessel' in df_detections.columns:
             print(f"\n--- Vessel Impact Analysis ---")
-            
+
             # Merge vessel data with indices data on datetime and station
             vessel_indices_combined = pd.merge(
-                df_indices_reduced.reset_index(),
+                df_indices_reduced_with_ids,
                 df_detections[['datetime', 'station', 'Vessel']],
                 on=['datetime', 'station'],
                 how='left'
-            ).set_index(df_indices_reduced.index)
-            
+            )
+
             # Create binary vessel presence indicator
             vessel_present_binary = (vessel_indices_combined['Vessel'] > 0).astype(int)
             print(f"Vessel presence periods: {vessel_present_binary.sum()} / {len(vessel_present_binary)} ({vessel_present_binary.mean():.1%})")
 
-            for idx in selected_indices:
-                if idx in vessel_indices_combined.columns:
+            for idx_si in selected_indices:
+                if idx_si in vessel_indices_combined.columns:
                     # Compare index values during vessel vs non-vessel periods
-                    vessel_present_vals = vessel_indices_combined[vessel_present_binary == 1][idx].dropna()
-                    vessel_absent_vals = vessel_indices_combined[vessel_present_binary == 0][idx].dropna()
+                    vessel_present_vals = vessel_indices_combined[vessel_present_binary == 1][idx_si].dropna()
+                    vessel_absent_vals = vessel_indices_combined[vessel_present_binary == 0][idx_si].dropna()
 
                     if len(vessel_present_vals) > 10 and len(vessel_absent_vals) > 10:
                         # Calculate effect size (Cohen's d)
@@ -581,7 +719,7 @@ def _(data_dir, df_indices_reduced, np, pd, selected_indices, stats):
                             # Statistical test
                             t_stat, p_val = stats.ttest_ind(vessel_present_vals, vessel_absent_vals)
 
-                            vessel_stats[idx] = {
+                            vessel_stats[idx_si] = {
                                 'mean_vessel': vessel_present_vals.mean(),
                                 'mean_no_vessel': vessel_absent_vals.mean(),
                                 'cohens_d': cohens_d,
@@ -593,9 +731,9 @@ def _(data_dir, df_indices_reduced, np, pd, selected_indices, stats):
             # Summary of vessel impacts
             if vessel_stats:
                 print(f"Vessel impact analysis completed for {len(vessel_stats)} indices:")
-                large_effects = [idx for idx, stats_dict in vessel_stats.items() 
+                large_effects = [idx_si for idx_si, stats_dict in vessel_stats.items() 
                                if abs(stats_dict['cohens_d']) > 0.8]
-                medium_effects = [idx for idx, stats_dict in vessel_stats.items() 
+                medium_effects = [idx_si for idx_si, stats_dict in vessel_stats.items() 
                                 if 0.5 < abs(stats_dict['cohens_d']) <= 0.8]
 
                 print(f"  Large effects (|d| > 0.8): {len(large_effects)}")
@@ -618,23 +756,78 @@ def _(data_dir, df_indices_reduced, np, pd, selected_indices, stats):
     return env_corr_matrix, vessel_stats
 
 
-@app.cell
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Vessel Impact Results Interpretation
+
+    **Cohen's d Effect Size Guide:**
+    - **Small effect (0.2-0.5)**: Detectable but modest difference
+    - **Medium effect (0.5-0.8)**: Moderate, practically significant difference  
+    - **Large effect (>0.8)**: Strong, substantial difference
+
+    **Key Findings Interpretation:**
+    
+    **1. nROI (Large positive effect, d≈0.90):**
+    - Vessel presence **increases** the number of acoustic "regions of interest"
+    - Counterintuitive result - vessels don't simplify soundscape but fragment it
+    - May indicate vessel noise creates spectral/temporal discontinuities detected as distinct regions
+    - Could suggest masking creates apparent complexity by breaking up continuous natural sounds
+
+    **2. SNRt (Medium negative effect, d≈-0.55):**
+    - Vessel presence **reduces** signal-to-noise ratio in temporal domain
+    - Expected result - vessels add noise, reducing clarity of other sounds
+    - Biological sounds become harder to distinguish from background
+
+    **3. ECU (Medium negative effect, d≈-0.54):**
+    - Vessel presence **reduces** acoustic complexity
+    - Expected result - vessel noise dominates, reducing natural acoustic diversity
+    - Suggests vessel noise masks the complex patterns of biological sounds
+
+    **4. ENRf & ACTspFract (Medium positive effects):**
+    - Vessels **increase** energy and activity measures
+    - Expected results - vessels add acoustic energy and activity to the soundscape
+
+    **Ecological Implications:**
+    - **Acoustic masking confirmed**: Vessels reduce SNR and complexity (biological signal degradation)
+    - **Energy addition**: Vessels increase overall acoustic energy but in non-biological frequencies
+    - **Fragmentation effect**: The nROI increase suggests vessels fragment the soundscape rather than simply adding noise uniformly
+    
+    **Model Implications:**
+    These vessel-sensitive indices should be either controlled for in biological models or used as indicators of acoustic habitat quality.
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
     ## Static Plots Generation
 
-    Creating publication-ready plots for the dashboard and documentation:
+    Creating comprehensive visualizations for results communication and dashboard integration:
 
-    1. **Correlation heatmap** with hierarchical clustering dendrogram
-    2. **PCA biplot** with index loadings  
-    3. **VIF comparison** before/after reduction
-    4. **Index response to vessel presence** (box plots)
-    5. **Seasonal patterns** for key retained indices
-    6. **Station-wise index behavior** comparison
+    1. **Correlation heatmap** with hierarchical clustering dendrogram - Shows index relationships and redundancy
+    2. **PCA biplot** with index loadings - Reveals acoustic dimensionality and component interpretation
+    3. **VIF comparison** before/after reduction - Demonstrates multicollinearity improvement
+    4. **Vessel impact analysis** - Cohen's d effects and statistical significance
+    5. **Index clustering dendrograms** - Visual representation of functional groupings
+    
+    These plots will be saved to the dashboard's public directory for integration into the web interface, allowing stakeholders to interactively explore the acoustic index reduction results.
     """
     )
     return
+
+
+@app.cell
+def _(Path):
+    # Create output directory for plots
+    output_dir_plots = Path("../../dashboard/public/views/notebooks")
+    output_dir_plots.mkdir(parents=True, exist_ok=True)
+    print(f"Plot output directory: {output_dir_plots}")
+    return (output_dir_plots,)
 
 
 @app.cell
@@ -650,8 +843,8 @@ def _(
 ):
     # Plot 1: Correlation heatmap with clustering dendrogram
     if not corr_matrix.empty:
-        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle('Acoustic Index Analysis Results', fontsize=16, y=0.95)
+        fig_overview, axes_overview = plt.subplots(2, 2, figsize=(16, 12))
+        fig_overview.suptitle('Acoustic Index Analysis Results', fontsize=16, y=0.95)
 
         # Correlation heatmap (subset for readability)
         n_show = min(20, len(corr_matrix))  # Show max 20x20 for readability
@@ -662,42 +855,42 @@ def _(
                    cmap='RdBu_r', 
                    center=0,
                    square=True,
-                   ax=axes[0,0])
-        axes[0,0].set_title(f'Correlation Matrix (First {n_show} indices)')
-        axes[0,0].tick_params(axis='both', which='major', labelsize=8)
+                   ax=axes_overview[0,0])
+        axes_overview[0,0].set_title(f'Correlation Matrix (First {n_show} indices)')
+        axes_overview[0,0].tick_params(axis='both', which='major', labelsize=8)
 
         # PCA explained variance plot
         if pca_full is not None:
-            axes[0,1].plot(range(1, min(21, len(cumvar_full)+1)), 
+            axes_overview[0,1].plot(range(1, min(21, len(cumvar_full)+1)), 
                           cumvar_full[:min(20, len(cumvar_full))], 
                           'bo-', linewidth=2)
-            axes[0,1].axhline(y=0.8, color='r', linestyle='--', alpha=0.7, label='80% variance')
-            axes[0,1].axhline(y=0.9, color='orange', linestyle='--', alpha=0.7, label='90% variance')
-            axes[0,1].set_xlabel('Principal Component')
-            axes[0,1].set_ylabel('Cumulative Explained Variance')
-            axes[0,1].set_title('PCA Explained Variance')
-            axes[0,1].legend()
-            axes[0,1].grid(True, alpha=0.3)
+            axes_overview[0,1].axhline(y=0.8, color='r', linestyle='--', alpha=0.7, label='80% variance')
+            axes_overview[0,1].axhline(y=0.9, color='orange', linestyle='--', alpha=0.7, label='90% variance')
+            axes_overview[0,1].set_xlabel('Principal Component')
+            axes_overview[0,1].set_ylabel('Cumulative Explained Variance')
+            axes_overview[0,1].set_title('PCA Explained Variance')
+            axes_overview[0,1].legend()
+            axes_overview[0,1].grid(True, alpha=0.3)
 
         # Cluster sizes bar plot
         if not cluster_summary.empty:
-            cluster_summary.head(10).plot(kind='bar', ax=axes[1,0])
-            axes[1,0].set_title('Cluster Sizes (Top 10 clusters)')
-            axes[1,0].set_xlabel('Cluster ID')
-            axes[1,0].set_ylabel('Number of Indices')
-            axes[1,0].tick_params(axis='x', rotation=0)
+            cluster_summary.head(10).plot(kind='bar', ax=axes_overview[1,0])
+            axes_overview[1,0].set_title('Cluster Sizes (Top 10 clusters)')
+            axes_overview[1,0].set_xlabel('Cluster ID')
+            axes_overview[1,0].set_ylabel('Number of Indices')
+            axes_overview[1,0].tick_params(axis='x', rotation=0)
 
         # VIF comparison
         if not vif_reduced.empty:
             vif_data_plot = vif_reduced.head(10)  # Top 10 highest VIF
-            axes[1,1].barh(range(len(vif_data_plot)), vif_data_plot['VIF'])
-            axes[1,1].set_yticks(range(len(vif_data_plot)))
-            axes[1,1].set_yticklabels(vif_data_plot['Variable'], fontsize=8)
-            axes[1,1].set_xlabel('VIF Value')
-            axes[1,1].set_title('VIF Values (Reduced Index Set)')
-            axes[1,1].axvline(x=10, color='r', linestyle='--', alpha=0.7, label='VIF=10')
-            axes[1,1].axvline(x=5, color='orange', linestyle='--', alpha=0.7, label='VIF=5')
-            axes[1,1].legend()
+            axes_overview[1,1].barh(range(len(vif_data_plot)), vif_data_plot['VIF'])
+            axes_overview[1,1].set_yticks(range(len(vif_data_plot)))
+            axes_overview[1,1].set_yticklabels(vif_data_plot['Variable'], fontsize=8)
+            axes_overview[1,1].set_xlabel('VIF Value')
+            axes_overview[1,1].set_title('VIF Values (Reduced Index Set)')
+            axes_overview[1,1].axvline(x=10, color='r', linestyle='--', alpha=0.7, label='VIF=10')
+            axes_overview[1,1].axvline(x=5, color='orange', linestyle='--', alpha=0.7, label='VIF=5')
+            axes_overview[1,1].legend()
 
         plt.tight_layout()
         plt.savefig(output_dir_plots / 'index_analysis_overview.png', 
@@ -770,15 +963,15 @@ def _(df_indices, output_dir_plots, pca_components_full, pca_full, plt):
 
         # Add loading vectors for first few indices
         feature_names = df_indices.columns[:min(20, len(df_indices.columns))]  # Show first 20
-        for i, feature in enumerate(feature_names):
-            if i < len(pca_full.components_[0]):
+        for i_pca, feature in enumerate(feature_names):
+            if i_pca < len(pca_full.components_[0]):
                 plt.arrow(0, 0, 
-                         pca_full.components_[0][i] * 3, 
-                         pca_full.components_[1][i] * 3,
+                         pca_full.components_[0][i_pca] * 3, 
+                         pca_full.components_[1][i_pca] * 3,
                          head_width=0.05, head_length=0.05, 
                          fc='red', ec='red', alpha=0.7)
-                plt.text(pca_full.components_[0][i] * 3.2, 
-                        pca_full.components_[1][i] * 3.2,
+                plt.text(pca_full.components_[0][i_pca] * 3.2, 
+                        pca_full.components_[1][i_pca] * 3.2,
                         feature, fontsize=8, ha='center', va='center')
 
         plt.xlabel(f'PC1 ({pca_full.explained_variance_ratio_[0]:.1%} variance)')
@@ -798,12 +991,19 @@ def _(df_indices, output_dir_plots, pca_components_full, pca_full, plt):
 
 
 @app.cell
-def _(df_aligned, np, output_dir_plots, pd, plt, vessel_stats):
+def _(
+    df_indices_reduced_with_ids,
+    np,
+    output_dir_plots,
+    pd,
+    plt,
+    vessel_stats,
+):
     # Plot 4: Vessel impact analysis
-    if vessel_stats and not df_aligned.empty:
+    if vessel_stats and not df_indices_reduced_with_ids.empty:
         # Create vessel impact visualization
-        fig, axes_vessel = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle('Vessel Impact on Acoustic Indices', fontsize=16)
+        fig_vessel, axes_vessel = plt.subplots(2, 2, figsize=(14, 10))
+        fig_vessel.suptitle('Vessel Impact on Acoustic Indices', fontsize=16)
 
         # Get top vessel-sensitive indices
         vessel_df_plot = pd.DataFrame(vessel_stats).T
@@ -831,7 +1031,11 @@ def _(df_aligned, np, output_dir_plots, pd, plt, vessel_stats):
         axes_vessel[0,0].legend()
 
         # Plot 2: P-values
-        axes_vessel[0,1].scatter(top_indices['cohens_d'], -np.log10(top_indices['p_value']))
+        cohens_d_vals = np.array(top_indices['cohens_d'])
+        p_vals = np.array(top_indices['p_value'])
+        # Use list comprehension to avoid numpy ufunc issues
+        log_p_vals = np.array([-np.log10(float(p)) if p > 0 else 0 for p in p_vals])
+        axes_vessel[0,1].scatter(cohens_d_vals, log_p_vals)
         axes_vessel[0,1].set_xlabel("Cohen's d")
         axes_vessel[0,1].set_ylabel("-log10(p-value)")
         axes_vessel[0,1].set_title('Effect Size vs Statistical Significance')
@@ -842,18 +1046,21 @@ def _(df_aligned, np, output_dir_plots, pd, plt, vessel_stats):
         # Plot 3: Box plot for most vessel-sensitive index
         if len(vessel_df_plot) > 0:
             most_sensitive_idx = vessel_df_plot.index[0]
-            if most_sensitive_idx in df_aligned.columns:
-                vessel_present_data = df_aligned[df_aligned['vessel_present'] == 1][most_sensitive_idx]
-                vessel_absent_data = df_aligned[df_aligned['vessel_present'] == 0][most_sensitive_idx]
+            if most_sensitive_idx in df_indices_reduced_with_ids.columns:
+                # Create vessel presence binary from Vessel column
+                vessel_present_binary_plot = (df_indices_reduced_with_ids['Vessel'] > 0).astype(int) if 'Vessel' in df_indices_reduced_with_ids.columns else pd.Series([])
+                if len(vessel_present_binary_plot) > 0:
+                    vessel_present_data = df_indices_reduced_with_ids[vessel_present_binary_plot == 1][most_sensitive_idx]
+                    vessel_absent_data = df_indices_reduced_with_ids[vessel_present_binary_plot == 0][most_sensitive_idx]
 
-                box_data = [vessel_absent_data.dropna(), vessel_present_data.dropna()]
-                axes_vessel[1,0].boxplot(box_data, labels=['No Vessel', 'Vessel Present'])
-                axes_vessel[1,0].set_ylabel('Index Value')
-                axes_vessel[1,0].set_title(f'Most Vessel-Sensitive Index\n{most_sensitive_idx[:20]}...')
+                    box_data = [vessel_absent_data.dropna(), vessel_present_data.dropna()]
+                    axes_vessel[1,0].boxplot(box_data, labels=['No Vessel', 'Vessel Present'])
+                    axes_vessel[1,0].set_ylabel('Index Value')
+                    axes_vessel[1,0].set_title(f'Most Vessel-Sensitive Index\n{most_sensitive_idx[:20]}...')
 
         # Plot 4: Effect size distribution
-        effect_sizes = [abs(stats_dict['cohens_d']) for stats_dict in vessel_stats.values()]
-        axes_vessel[1,1].hist(effect_sizes, bins=15, alpha=0.7, edgecolor='black')
+        effect_size_dist = [abs(stats_dict['cohens_d']) for stats_dict in vessel_stats.values()]
+        axes_vessel[1,1].hist(effect_size_dist, bins=15, alpha=0.7, edgecolor='black')
         axes_vessel[1,1].axvline(x=0.5, color='orange', linestyle='--', alpha=0.7, label='Medium effect')
         axes_vessel[1,1].axvline(x=0.8, color='red', linestyle='--', alpha=0.7, label='Large effect')
         axes_vessel[1,1].set_xlabel('|Effect Size| (|Cohen\'s d|)')
@@ -1016,7 +1223,7 @@ def _(
             df_acoustic_indices[['datetime', 'station', 'year']],
             df_indices_reduced
         ], axis=1)
-        
+
         reduced_with_ids.to_parquet(output_data_dir / "03_reduced_acoustic_indices.parquet")
         print(f"Saved reduced acoustic indices: {output_data_dir / '03_reduced_acoustic_indices.parquet'}")
         print(f"  Shape: {reduced_with_ids.shape}")
@@ -1045,11 +1252,11 @@ def _(
         f.write("=====================================\n\n")
         f.write(f"Reduced from {len(acoustic_index_cols)} to {len(selected_indices)} indices\n")
         f.write(f"Reduction ratio: {len(selected_indices)/len(acoustic_index_cols):.2f}\n\n")
-        
-        for i, idx in enumerate(selected_indices, 1):
-            f.write(f"{i:2d}. {idx}\n")
-            if idx in selection_rationale:
-                f.write(f"    Rationale: {selection_rationale[idx]}\n\n")
+
+        for i_save, idx_save in enumerate(selected_indices, 1):
+            f.write(f"{i_save:2d}. {idx_save}\n")
+            if idx_save in selection_rationale:
+                f.write(f"    Rationale: {selection_rationale[idx_save]}\n\n")
 
     print(f"Saved selected indices list: {output_data_dir / '03_selected_indices.txt'}")
 
