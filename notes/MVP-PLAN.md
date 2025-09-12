@@ -1,12 +1,14 @@
-# MVP Roadmap: Fish Acoustic Prediction using Acoustic Indices
+# MVP Roadmap: Acoustic Indices as Proxies for Manual Fish Detection
 
 ## Project Overview
 
-This MVP focuses on developing acoustic index-based models to predict fish calling intensity in marine soundscapes, building upon the Transue et al. (2023) Charleston Harbor framework. The analysis is structured as a series of marimo notebooks, each with specific focus areas, to maintain transparency and reproducibility while establishing a foundation for the full study.
+This MVP validates whether acoustic indices can serve as reliable proxies for species presence/absence without requiring extensive manual detection efforts. Using 2021 May River data with manual detections as ground truth, we test if acoustic indices alone can provide actionable biological information for future deployments where manual detection is impractical. The analysis builds upon insights from Transue et al. (2023) Charleston Harbor study, where biological patterns were masked by anthropogenic noise in traditional SPL approaches, by testing acoustic indices in a less urbanized estuary.
 
-**Scope**: Fish-only analysis with vessel detection as supporting feature
-**Data**: 2021 acoustic indices, manual detections, environmental variables, SPL data
-**Timeline**: 8 focused marimo notebooks progressing from data preparation to model validation
+**Core Research Question**: Can acoustic indices provide reliable information about fish populations WITHOUT manual detection efforts?
+
+**Scope**: Fish-only analysis demonstrating acoustic indices as scalable monitoring solution
+**Data**: 2021 acoustic indices with manual detections as validation ground truth, environmental variables, SPL data
+**Timeline**: 8 focused marimo notebooks progressing from data preparation to validation of indices as standalone indicators
 
 
 ---
@@ -79,7 +81,7 @@ This specific format is important because it will be used to identify the embedd
 ## Notebook 3: Acoustic Index Characterization and Reduction
 
 **Purpose**: Understand index behavior and reduce to manageable set while preserving ecological information  
-**Key Outputs**: Reduced index set (~15-20 indices) with ecological justification
+**Key Outputs**: Reduced index set (~15-20 indices) with ecological justification and temporal dependence characterization
 
 ### Index Analysis
 - Correlation matrix and hierarchical clustering of all indices
@@ -87,16 +89,24 @@ This specific format is important because it will be used to identify the embedd
 - Variance Inflation Factor calculation to identify multicollinearity
 - Response to vessel presence by index (vessel impact assessment)
 
+### Temporal Dependence Analysis
+- Autocorrelation analysis of acoustic indices (how long do patterns persist?)
+- Temporal decorrelation distance (at what lag do indices become independent?)
+- Document autocorrelation range to justify 2-week blocked CV approach
+- Assess which indices show strongest temporal persistence (biological signal stability)
+
 ### Reduction Strategy
 - Apply correlation threshold (0.85) to remove redundant indices
 - Hierarchical clustering to identify functional groups
 - Select representatives from each cluster based on ecological relevance and vessel noise robustness
+- Prioritize indices that correlate with manual detection patterns
 - Validate reduction using explained variance and cross-correlation preservation
 
 ### Index-Environment Relationships
 - Correlation with temperature, seasonality, and station
 - Response to known biological patterns (if apparent)
 - Noise robustness assessment (index behavior during vessel events)
+- Direct correlation with manual fish detections (which indices are most predictive?)
 
 ### Static Plots to Generate
 - Correlation heatmap with hierarchical clustering dendrogram
@@ -110,16 +120,22 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 4: Fish Detection Pattern Analysis
+## Notebook 4: Fish Detection Pattern Analysis & Index-Manual Concordance
 
-**Purpose**: Characterize fish calling patterns and their environmental relationships  
-**Key Outputs**: Understanding of species-specific temporal and environmental patterns
+**Purpose**: Characterize fish calling patterns and validate that acoustic indices capture the same biological patterns as manual detections  
+**Key Outputs**: Evidence that indices alone would tell the same ecological story as manual detections
 
 ### Species-Level Analysis
 - Calling frequency and intensity by species across year
 - Temporal patterns (diel, lunar, seasonal) for each species
 - Station-specific calling patterns
 - Environmental correlates of calling activity
+
+### Pattern Concordance Analysis
+- Compare temporal patterns: Do indices show same peaks/troughs as manual detections?
+- Aggregate trend validation: Can indices alone identify spawning seasons?
+- Species discrimination: Which index combinations distinguish between species?
+- "What if we had no manual detections?" retrospective analysis
 
 ### Cross-Species Analysis
 - Species co-occurrence patterns
@@ -178,16 +194,16 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 6: Fish Calling Prediction Model Development
+## Notebook 6: Acoustic Indices as Standalone Predictors
 
-**Purpose**: Develop models to predict fish calling intensity using acoustic indices  
-**Key Outputs**: Species-specific calling prediction models with ecological validation
+**Purpose**: Validate that acoustic indices alone can predict fish presence/patterns without manual detection  
+**Key Outputs**: Quantified ability of indices to serve as proxies for manual detection effort
 
 ### Model Architecture
-- Individual models per species vs multi-output approach decision
+- Test both species-specific and aggregate fish activity models
 - Handle ordinal nature of 0-3 calling intensity scale
 - Address zero-inflation (many periods with no calling)
-- Include vessel predictions as features (from Notebook 5)
+- Compare indices-only vs indices+environmental variables
 
 ### Feature Engineering for Fish Models
 - Use reduced acoustic index set from Notebook 3
@@ -195,11 +211,18 @@ This specific format is important because it will be used to identify the embedd
 - Add vessel probability predictions as feature
 - Create species-specific environmental interactions
 
-### Model Training and Validation
-- Temporal blocked cross-validation with 2-week blocks
-- Species-specific performance metrics (accuracy, weighted kappa)
-- Feature importance analysis by species
-- Model interpretability assessment
+### Temporal Validation Strategy
+- Temporal blocked cross-validation with 2-week blocks (prevents temporal leakage)
+- Document explicitly: 7-day gap between train/test exceeds autocorrelation range
+- Compare: Random CV (overly optimistic) vs Blocked CV (realistic) to show importance
+- Lag analysis: How well do indices at time t predict detections at t+1, t+2?
+- Temporal transfer: Train on spring, predict fall (tests robustness)
+
+### Model Performance Metrics
+- Species-specific accuracy and weighted kappa
+- Aggregate fish activity prediction accuracy
+- Feature importance analysis (which indices matter most?)
+- Temporal persistence of predictions (do patterns hold over time?)
 
 ### Static Plots to Generate
 - Model performance comparison by species
@@ -214,16 +237,16 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 7: Model Validation and Ecological Assessment
+## Notebook 7: Validation of Indices as Standalone Monitoring Tool
 
-**Purpose**: Comprehensive validation of models against known ecological patterns  
-**Key Outputs**: Model validation report and ecological interpretation
+**Purpose**: Comprehensive validation that acoustic indices alone provide reliable biological information  
+**Key Outputs**: Quantified evidence that indices can replace manual detection for broad-scale monitoring
 
-### Ecological Validation
-- Do predicted patterns match known fish biology?
-- Are seasonal patterns realistic?
-- Do environmental relationships make sense?
-- How do predictions perform during extreme conditions?
+### Key Validation Questions
+- Can indices alone identify spawning seasons? (Compare to known biology)
+- Do indices capture diel patterns without manual input?
+- What biological information is preserved vs lost when using indices only?
+- What is the minimum set of indices needed for reliable monitoring?
 
 ### Comparative Analysis
 - Acoustic indices vs SPL-based predictions (if possible)
@@ -249,16 +272,16 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 8: Results Synthesis and Future Directions
+## Notebook 8: Practical Implications and Implementation Roadmap
 
-**Purpose**: Synthesize results and establish framework for full study expansion  
-**Key Outputs**: Publication-ready results and roadmap for full study
+**Purpose**: Synthesize evidence that acoustic indices can serve as proxies for manual detection  
+**Key Outputs**: Clear recommendations for when/how to use indices instead of manual detection
 
-### Results Synthesis
-- Key findings summary from MVP analysis
-- Model performance comparison across approaches
-- Ecological insights gained from acoustic indices
-- Limitations and areas for improvement
+### Core Findings
+- "Can acoustic indices replace manual detection?" - Quantified answer
+- Accuracy levels achievable with indices alone (by species and aggregate)
+- Minimum index set required for reliable monitoring
+- Temporal scales at which indices are most/least reliable
 
 ### Method Comparison
 - Acoustic indices vs traditional SPL approaches
@@ -300,12 +323,20 @@ Log computational time and memory usage for each major operation to inform full-
 
 ## Expected Outcomes
 
-This MVP approach will:
+This MVP will definitively answer: **"Can acoustic indices serve as reliable proxies for manual fish detection?"**
 
-1. **Validate Core Methodology**: Demonstrate that acoustic indices can effectively predict fish calling patterns
-2. **Establish Baseline Performance**: Quantify prediction accuracy and compare with traditional SPL approaches
-3. **Identify Key Indices**: Determine which acoustic indices are most informative for marine soundscape analysis
-4. **Create Reproducible Framework**: Develop modular analysis pipeline for expansion to full study
-5. **Generate Ecological Insights**: Document fish calling patterns and environmental relationships using automated methods
+Specific deliverables:
 
-The modular structure will make it easy to expand to the full study design (including dolphins and more complex vessel analysis) once the core methodology is validated and refined.
+1. **Quantified Proxy Performance**: X% accuracy in detecting fish presence/patterns using indices alone
+2. **Minimum Viable Index Set**: The 10-15 indices that provide maximum biological information
+3. **Temporal Robustness**: Evidence that indices maintain biological signal despite temporal autocorrelation
+4. **Practical Guidelines**: Clear recommendations for when indices can replace manual detection
+5. **Scalability Demonstration**: Framework for automated monitoring without manual effort
+
+Key advantages over manual detection:
+- Continuous monitoring capability (not just 2-hour snapshots)
+- No human effort required after initial setup
+- Noise-robust compared to traditional SPL approaches
+- Cost-effective for long-term deployments
+
+This validation establishes acoustic indices as a practical alternative to manual detection for broad-scale marine monitoring, directly addressing the unsustainable manual effort identified by Transue et al. (2023).
