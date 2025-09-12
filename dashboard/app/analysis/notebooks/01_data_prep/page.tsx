@@ -1,22 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Target, FlaskConical, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft, Target, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 
 export default function NotebookPage() {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.getElementById('notebook-container')?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -73,27 +61,18 @@ export default function NotebookPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
         className="flex-grow container mx-auto px-4 pb-4"
+        style={{ minHeight: '70vh' }}
       >
         <div 
           className="bg-card rounded-lg shadow-lg border overflow-hidden relative h-full"
-          id="notebook-container"
+          style={{ minHeight: '70vh' }}
         >
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm border rounded-lg p-2 hover:bg-background/90 transition-colors"
-            title={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-5 w-5" />
-            ) : (
-              <Maximize2 className="h-5 w-5" />
-            )}
-          </button>
           <iframe
             src="/analysis/notebooks/html/01_data_prep.html"
             className="w-full h-full border-0"
             title="Data Prep"
             sandbox="allow-scripts allow-same-origin allow-forms"
+            style={{ minHeight: '70vh' }}
           />
         </div>
       </motion.div>

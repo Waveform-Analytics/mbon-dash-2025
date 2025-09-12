@@ -65,14 +65,14 @@ export default function HomePage() {
         className="py-16"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <div className="container mx-auto px-4">
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.2 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
           >
             
             {/* Data Section */}
@@ -80,7 +80,7 @@ export default function HomePage() {
               className="bg-card rounded-lg shadow-lg p-8 border"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               <div className="flex items-center mb-4">
@@ -102,7 +102,7 @@ export default function HomePage() {
               className="bg-card rounded-lg shadow-lg p-8 border"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.6 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               <div className="flex items-center mb-4">
@@ -124,7 +124,7 @@ export default function HomePage() {
               className="bg-card rounded-lg shadow-lg p-8 border"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.8 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               <div className="flex items-center mb-4">
@@ -150,13 +150,13 @@ export default function HomePage() {
         className="py-16 bg-accent/10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 2.0 }}
+        transition={{ duration: 0.6, delay: 1.4 }}
       >
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 2.2 }}
+            transition={{ duration: 0.6, delay: 1.6 }}
           >
             <div className="flex items-center mb-8">
               <Map className="h-8 w-8 text-primary mr-3" />

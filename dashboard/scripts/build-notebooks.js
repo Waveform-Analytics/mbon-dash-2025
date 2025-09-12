@@ -93,22 +93,10 @@ function createNotebookPage(notebook) {
   const pageContent = `'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Target, FlaskConical, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft, Target, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 
 export default function NotebookPage() {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.getElementById('notebook-container')?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -165,27 +153,18 @@ export default function NotebookPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
         className="flex-grow container mx-auto px-4 pb-4"
+        style={{ minHeight: '70vh' }}
       >
         <div 
           className="bg-card rounded-lg shadow-lg border overflow-hidden relative h-full"
-          id="notebook-container"
+          style={{ minHeight: '70vh' }}
         >
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm border rounded-lg p-2 hover:bg-background/90 transition-colors"
-            title={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-5 w-5" />
-            ) : (
-              <Maximize2 className="h-5 w-5" />
-            )}
-          </button>
           <iframe
             src="/analysis/notebooks/html/${notebook.filename}"
             className="w-full h-full border-0"
             title="${notebook.title}"
             sandbox="allow-scripts allow-same-origin allow-forms"
+            style={{ minHeight: '70vh' }}
           />
         </div>
       </motion.div>
@@ -218,89 +197,6 @@ function cleanMarimoHtml(htmlContent) {
     /<link[^>]*rel=["']modulepreload["'][^>]*cdn\.jsdelivr\.net[^>]*>/gi,
     ''
   );
-  
-  // Add CSS to customize marimo display
-  const customMarimoStyle = `
-    <style>
-      /* Hide the blue banner/alert at top - be more aggressive */
-      .alert,
-      .alert-info, 
-      .alert.alert-info,
-      [class*="alert"],
-      [class*="banner"],
-      .marimo-banner,
-      .notification,
-      [role="alert"],
-      div[style*="background-color: #d1ecf1"],
-      div[style*="background: #d1ecf1"],
-      div[class*="info"] {
-        display: none !important;
-      }
-      
-      /* Hide any divs containing the banner text */
-      div:has-text("This is a static Python notebook"),
-      div:has-text("Some interactive features may not work"),
-      div:contains("This is a static Python notebook"),
-      div:contains("Some interactive features may not work") {
-        display: none !important;
-      }
-      
-      /* Fix the bottom marimo attribution - hide broken image, keep text */
-      [data-marimo-mode="read"] img[src*="marimo-logo"],
-      [data-marimo-mode="read"] img[src*="logo"],
-      img[src*="marimo"],
-      img[alt*="marimo"] {
-        display: none !important;
-      }
-      
-      /* Ensure marimo content fills container */
-      .marimo-output,
-      .marimo-container,
-      .marimo-app,
-      #root {
-        height: 100% !important;
-        min-height: 100vh !important;
-      }
-      
-      /* Remove padding/margins that might cause issues */
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    </style>
-    <script>
-      // Additional JavaScript to hide banner after page loads
-      document.addEventListener('DOMContentLoaded', function() {
-        // Hide elements containing banner text
-        function hideBannerElements() {
-          const elements = document.querySelectorAll('div, p, span');
-          elements.forEach(el => {
-            const text = el.textContent || el.innerText;
-            if (text && (
-              text.includes('This is a static Python notebook') ||
-              text.includes('Some interactive features may not work') ||
-              text.includes('static Python notebook built using marimo')
-            )) {
-              el.style.display = 'none';
-              // Also hide parent if it only contains this element
-              if (el.parentNode && el.parentNode.children.length === 1) {
-                el.parentNode.style.display = 'none';
-              }
-            }
-          });
-        }
-        
-        // Run immediately and after a delay for dynamic content
-        hideBannerElements();
-        setTimeout(hideBannerElements, 500);
-        setTimeout(hideBannerElements, 1000);
-        setTimeout(hideBannerElements, 2000);
-      });
-    </script>
-  `;
-  
-  // Insert the style just before </head>
-  cleaned = cleaned.replace('</head>', customMarimoStyle + '</head>');
   
   return cleaned;
 }

@@ -56,7 +56,7 @@ export default function AnalysisPage() {
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.4 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-12"
         >
           <div className="flex items-center mb-6">
@@ -92,7 +92,7 @@ export default function AnalysisPage() {
                   key={notebook.slug}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 1.6 + index * 0.1 }}
+                  transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
                 >
                   <Link href={`/analysis/notebooks/${notebook.slug}`}>
                     <motion.div
