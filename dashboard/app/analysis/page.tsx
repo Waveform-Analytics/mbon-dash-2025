@@ -1,7 +1,10 @@
 'use client';
 
+// Force dynamic rendering for this page since it fetches notebook data from CDN/API
+export const dynamic = 'force-dynamic';
+
 import { motion } from 'framer-motion';
-import { FlaskConical, TrendingUp, BarChart3, Target, Activity, Database, ArrowRight, BookOpen } from 'lucide-react';
+import { FlaskConical, Target, Activity, ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 

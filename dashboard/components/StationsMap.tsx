@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useStationLocations } from '../lib/data';
@@ -17,7 +17,7 @@ export default function StationsMap({ className }: StationsMapProps) {
   // Use the working data hook
   const { data: stations, loading, error, source } = useStationLocations();
 
-  const fitMapToStations = (studyAreaOnly: boolean) => {
+  const fitMapToStations = useCallback((studyAreaOnly: boolean) => {
     if (!map.current || !stations || stations.length === 0) return;
 
     const stationsToShow = studyAreaOnly 
@@ -35,7 +35,7 @@ export default function StationsMap({ className }: StationsMapProps) {
       padding: studyAreaOnly ? 100 : 50,
       duration: 1000 
     });
-  };
+  }, [stations]);
 
   const toggleView = () => {
     const newViewState = !showStudyAreaOnly;
@@ -147,7 +147,7 @@ export default function StationsMap({ className }: StationsMapProps) {
         map.current.off('load', addMarkers);
       }
     };
-  }, [stations]);
+  }, [stations, fitMapToStations]);
 
   return (
     <div className={className}>

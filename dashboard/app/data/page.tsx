@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering for this page since it fetches data from CDN/API
+export const dynamic = 'force-dynamic';
+
 import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
 import StationsMap from '../../components/StationsMap';

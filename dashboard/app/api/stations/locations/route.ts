@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Read the stations locations data from the secure location
     const dataPath = path.join(process.cwd(), 'data', 'stations', 'stations_locations.json');

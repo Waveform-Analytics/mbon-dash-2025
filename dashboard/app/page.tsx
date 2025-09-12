@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Map, BarChart3, FlaskConical, Compass, BookOpen } from 'lucide-react';
+import { ArrowRight, Map, BarChart3, FlaskConical, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
