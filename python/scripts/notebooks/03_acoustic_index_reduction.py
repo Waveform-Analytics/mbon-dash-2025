@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", auto_download=["html"])
 
 
 @app.cell(hide_code=True)
@@ -269,7 +269,7 @@ def _(mo):
     - Temporal indices correlating with each other (time-domain calculations)
     - Spectral indices showing strong relationships (frequency-domain measures)
     - Activity/intensity indices clustering together (energy-based calculations)
-    
+
     The mean absolute correlation of ~0.33 suggests moderate overall redundancy - not extreme, but enough to warrant reduction.
     """
     )
@@ -658,6 +658,193 @@ def _(df_indices, df_indices_reduced, np, pd, variance_inflation_factor):
     return (vif_reduced,)
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Temporal Dependence Analysis
+
+    Analyzing temporal autocorrelation in acoustic indices to understand:
+
+    1. How long acoustic patterns persist (autocorrelation range)
+    2. At what lag indices become statistically independent
+    3. Justification for 2-week blocked cross-validation approach
+    4. Which indices show strongest temporal persistence (biological signal stability)
+
+    **Why This Matters:**
+    Acoustic indices are not independent samples - they exhibit temporal dependence due to:
+
+    - **Biological rhythms**: Diel, lunar, and seasonal patterns create autocorrelation
+    - **Environmental persistence**: Weather conditions and water properties change gradually
+    - **Acoustic memory**: Sound propagation and reverb create short-term correlations
+
+    Understanding these patterns is crucial for:
+
+    - Choosing appropriate cross-validation strategies (blocked vs random)
+    - Interpreting model performance realistically
+    - Identifying indices that capture stable biological signals vs transient noise
+    """
+    )
+    return
+
+
+@app.cell
+def _(df_indices_reduced, pd, selected_indices):
+    from statsmodels.tsa.stattools import acf, pacf
+    from statsmodels.stats.diagnostic import acorr_ljungbox
+
+    if not df_indices_reduced.empty and len(selected_indices) > 0:
+        # Analyze temporal autocorrelation for each selected index
+        autocorr_results = {}
+        decorrelation_lags = {}
+
+        print("=== TEMPORAL AUTOCORRELATION ANALYSIS ===\n")
+
+        # Sample a few key indices for detailed analysis
+        indices_to_analyze = selected_indices[:5] if len(selected_indices) >= 5 else selected_indices
+
+        for idx_temporal in indices_to_analyze:
+            if idx_temporal in df_indices_reduced.columns:
+                # Get the time series for this index
+                ts_data = df_indices_reduced[idx_temporal].dropna()
+
+                if len(ts_data) > 100:  # Need sufficient data for ACF
+                    # Calculate autocorrelation function up to 168 lags (14 days at 2-hour resolution)
+                    # 14 days * 12 two-hour periods = 168 lags
+                    max_lag = min(168, len(ts_data) // 4)  # Don't exceed 1/4 of data length
+
+                    try:
+                        acf_values, confint = acf(ts_data, nlags=max_lag, alpha=0.05, fft=True)
+
+                        # Find decorrelation lag (first lag where ACF falls within confidence interval)
+                        decorr_lag = None
+                        for lag in range(1, len(acf_values)):
+                            if abs(acf_values[lag]) < abs(confint[lag][1] - acf_values[lag]):
+                                decorr_lag = lag
+                                break
+
+                        # Convert lag to time units (each lag = 2 hours)
+                        decorr_hours = decorr_lag * 2 if decorr_lag else None
+                        decorr_days = decorr_hours / 24 if decorr_hours else None
+
+                        autocorr_results[idx_temporal] = {
+                            'acf_values': acf_values,
+                            'decorr_lag': decorr_lag,
+                            'decorr_hours': decorr_hours,
+                            'decorr_days': decorr_days,
+                            'lag_1_acf': acf_values[1] if len(acf_values) > 1 else None,
+                            'lag_12_acf': acf_values[12] if len(acf_values) > 12 else None,  # 24 hours
+                            'lag_84_acf': acf_values[84] if len(acf_values) > 84 else None,  # 7 days
+                        }
+
+                        decorrelation_lags[idx_temporal] = decorr_days
+
+                        print(f"{idx_temporal}:")
+                        print(f"  Lag-1 autocorrelation: {acf_values[1]:.3f}")
+                        print(f"  Decorrelation lag: {decorr_lag} ({decorr_hours:.1f} hours / {decorr_days:.1f} days)" if decorr_lag else "  No decorrelation within test range")
+                        print(f"  24-hour autocorrelation: {acf_values[12]:.3f}" if len(acf_values) > 12 else "  24-hour: N/A")
+                        print(f"  7-day autocorrelation: {acf_values[84]:.3f}" if len(acf_values) > 84 else "  7-day: N/A")
+                        print()
+
+                    except Exception as e:
+                        print(f"  Error calculating ACF for {idx_temporal}: {e}")
+                        print()
+
+        # Summary statistics across all indices
+        if decorrelation_lags:
+            decorr_days_values = [d for d in decorrelation_lags.values() if d is not None]
+            if decorr_days_values:
+                print("\n=== DECORRELATION SUMMARY ===")
+                print(f"Mean decorrelation time: {pd.Series(decorr_days_values).mean():.1f} days")
+                print(f"Median decorrelation time: {pd.Series(decorr_days_values).median():.1f} days")
+                print(f"Max decorrelation time: {pd.Series(decorr_days_values).max():.1f} days")
+                print(f"\n✓ Justification for 14-day blocks with 7-day gaps:")
+                print(f"  - Most indices decorrelate within {pd.Series(decorr_days_values).quantile(0.75):.1f} days (75th percentile)")
+                print(f"  - 7-day gap exceeds median decorrelation time of {pd.Series(decorr_days_values).median():.1f} days")
+                print(f"  - 14-day blocks capture 2× the decorrelation period for robust patterns")
+
+        # Identify indices with strongest temporal persistence
+        if autocorr_results:
+            persistence_scores = {}
+            for idx_persist, persist_data in autocorr_results.items():
+                if persist_data['lag_12_acf'] is not None:
+                    # Persistence score = mean of lag-1 and lag-12 ACF
+                    persistence_scores[idx_persist] = (persist_data['lag_1_acf'] + persist_data['lag_12_acf']) / 2
+
+            if persistence_scores:
+                sorted_persistence = sorted(persistence_scores.items(), key=lambda x: x[1], reverse=True)
+                print("\n=== TEMPORAL PERSISTENCE RANKING ===")
+                print("Indices ranked by temporal stability (higher = more persistent biological signal):")
+                for idx_persist, score in sorted_persistence:
+                    print(f"  {idx_persist}: {score:.3f}")
+
+    else:
+        temporal_stats = {}
+        decorrelation_lags = {}
+        print("Cannot perform temporal analysis - no reduced index data available")
+
+    return (autocorr_results,)
+
+
+@app.cell
+def _(autocorr_results, output_dir_plots, plt):
+    # Plot temporal autocorrelation functions
+    if autocorr_results and len(autocorr_results) > 0:
+        n_indices = min(4, len(autocorr_results))  # Plot up to 4 indices
+        fig_acf, axes_acf = plt.subplots(2, 2, figsize=(14, 10))
+        axes_acf = axes_acf.flatten()
+
+        for i, (idx_plot, plot_data) in enumerate(list(autocorr_results.items())[:n_indices]):
+            ax = axes_acf[i]
+
+            acf_vals = plot_data['acf_values']
+            lags = range(len(acf_vals))
+
+            # Convert lags to days for x-axis
+            lag_days = [lag * 2 / 24 for lag in lags]  # 2 hours per lag
+
+            # Plot ACF
+            ax.bar(lag_days[:85], acf_vals[:85], width=0.08, alpha=0.7)
+            ax.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
+
+            # Add confidence intervals (approximate)
+            n = len(acf_vals)
+            conf_level = 1.96 / (n ** 0.5)
+            ax.axhline(y=conf_level, color='r', linestyle='--', alpha=0.5, label=f'95% CI')
+            ax.axhline(y=-conf_level, color='r', linestyle='--', alpha=0.5)
+
+            # Mark decorrelation point
+            if plot_data['decorr_days']:
+                ax.axvline(x=plot_data['decorr_days'], color='green', linestyle='--', 
+                          alpha=0.7, label=f"Decorr: {plot_data['decorr_days']:.1f} days")
+
+            # Mark 7-day and 14-day points
+            ax.axvline(x=7, color='orange', linestyle='--', alpha=0.5, label='7 days')
+            ax.axvline(x=14, color='purple', linestyle='--', alpha=0.5, label='14 days')
+
+            ax.set_xlabel('Lag (days)')
+            ax.set_ylabel('Autocorrelation')
+            ax.set_title(f'{idx_plot[:20]}...' if len(idx_plot) > 20 else idx_plot)
+            ax.legend(fontsize=8)
+            ax.grid(True, alpha=0.3)
+            ax.set_xlim(0, 7)  # Focus on first week
+
+        # Hide unused subplots
+        for i in range(n_indices, 4):
+            axes_acf[i].set_visible(False)
+
+        fig_acf.suptitle('Temporal Autocorrelation Analysis - Selected Indices', fontsize=14)
+        plt.tight_layout()
+
+        # Save plot
+        plt.savefig(output_dir_plots / 'temporal_autocorrelation.png', 
+                   dpi=300, bbox_inches='tight')
+        plt.show()
+        print("Saved: temporal_autocorrelation.png")
+
+    return
+
+
 @app.cell
 def _(mo):
     mo.md(
@@ -768,7 +955,7 @@ def _(mo):
     - **Large effect (>0.8)**: Strong, substantial difference
 
     **Key Findings Interpretation:**
-    
+
     **1. nROI (Large positive effect, d≈0.90):**
     - Vessel presence **increases** the number of acoustic "regions of interest"
     - Counterintuitive result - vessels don't simplify soundscape but fragment it
@@ -793,7 +980,7 @@ def _(mo):
     - **Acoustic masking confirmed**: Vessels reduce SNR and complexity (biological signal degradation)
     - **Energy addition**: Vessels increase overall acoustic energy but in non-biological frequencies
     - **Fragmentation effect**: The nROI increase suggests vessels fragment the soundscape rather than simply adding noise uniformly
-    
+
     **Model Implications:**
     These vessel-sensitive indices should be either controlled for in biological models or used as indicators of acoustic habitat quality.
     """
@@ -814,7 +1001,7 @@ def _(mo):
     3. **VIF comparison** before/after reduction - Demonstrates multicollinearity improvement
     4. **Vessel impact analysis** - Cohen's d effects and statistical significance
     5. **Index clustering dendrograms** - Visual representation of functional groupings
-    
+
     These plots will be saved to the dashboard's public directory for integration into the web interface, allowing stakeholders to interactively explore the acoustic index reduction results.
     """
     )

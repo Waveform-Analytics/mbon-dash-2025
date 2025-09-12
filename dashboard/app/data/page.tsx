@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
+import StationsMap from '../../components/StationsMap';
 
 export default function DataPage() {
   return (
@@ -115,9 +116,7 @@ export default function DataPage() {
           </div>
           
           <div className="bg-card rounded-lg shadow-lg border p-6">
-            <div className="h-[400px] bg-muted rounded-lg">
-              {/* Map container - blank for now */}
-            </div>
+            <StationsMap className="h-[400px]" />
           </div>
         </motion.section>
 
