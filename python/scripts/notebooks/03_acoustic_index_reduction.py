@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -709,12 +709,16 @@ def _(df_indices_reduced, pd, selected_indices):
                 ts_data = df_indices_reduced[idx_temporal].dropna()
 
                 if len(ts_data) > 100:  # Need sufficient data for ACF
+                    # Detrend the time series to remove long-term environmental drift
+                    from scipy import signal
+                    ts_detrended = signal.detrend(ts_data, type='linear')
+
                     # Calculate autocorrelation function up to 168 lags (14 days at 2-hour resolution)
                     # 14 days * 12 two-hour periods = 168 lags
-                    max_lag = min(168, len(ts_data) // 4)  # Don't exceed 1/4 of data length
+                    max_lag = min(168, len(ts_detrended) // 4)  # Don't exceed 1/4 of data length
 
                     try:
-                        acf_values, confint = acf(ts_data, nlags=max_lag, alpha=0.05, fft=True)
+                        acf_values, confint = acf(ts_detrended, nlags=max_lag, alpha=0.05, fft=True)
 
                         # Find decorrelation lag (first lag where ACF falls within confidence interval)
                         decorr_lag = None
@@ -803,8 +807,9 @@ def _(autocorr_results, output_dir_plots, plt):
             # Convert lags to days for x-axis
             lag_days = [lag * 2 / 24 for lag in lags]  # 2 hours per lag
 
-            # Plot ACF
-            ax.bar(lag_days[:85], acf_vals[:85], width=0.08, alpha=0.7)
+            # Plot ACF - extend to 168 lags (14 days)
+            plot_range = min(168, len(acf_vals))
+            ax.bar(lag_days[:plot_range], acf_vals[:plot_range], width=0.08, alpha=0.7)
             ax.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
 
             # Add confidence intervals (approximate)
@@ -827,7 +832,7 @@ def _(autocorr_results, output_dir_plots, plt):
             ax.set_title(f'{idx_plot[:20]}...' if len(idx_plot) > 20 else idx_plot)
             ax.legend(fontsize=8)
             ax.grid(True, alpha=0.3)
-            ax.set_xlim(0, 7)  # Focus on first week
+            ax.set_xlim(0, 14)  # Show full 14-day range
 
         # Hide unused subplots
         for i in range(n_indices, 4):
@@ -1401,7 +1406,7 @@ def _(
     summary_results,
 ):
     # Save the reduced dataset and analysis results
-    output_data_dir = Path("../../data/processed")
+    output_data_dir = Path("../data/processed")
     output_data_dir.mkdir(parents=True, exist_ok=True)
 
     if not df_indices_reduced.empty:
@@ -1469,6 +1474,7 @@ def _(mo):
     Successfully reduced 61 acoustic indices to 18 representative indices (70% reduction) while preserving >90% of acoustic information content.
 
     **📊 Key Quantitative Findings:**
+
     - **Redundancy Level**: 67 index pairs with r>0.85, confirming substantial overlap
     - **Acoustic Dimensionality**: ~7 principal components explain 80% of variance
     - **Multicollinearity**: Dramatically improved VIF values (mean dropped from ∞ to 296)
@@ -1482,13 +1488,16 @@ def _(mo):
     - Clustering revealed functional groups: complexity, activity, spectral, temporal indices
 
     **2. Vessel Impact Patterns:**
+
     - **Confirmed masking**: Vessels reduce SNR and acoustic complexity (expected)
     - **Energy addition**: Vessels increase overall acoustic energy but not biological signal
     - **Fragmentation hypothesis**: Vessels may fragment soundscape (nROI increase) rather than simply adding uniform noise
     - **Differential sensitivity**: 5 indices show medium-large effects, others more robust
 
     **3. Index Functional Groups:**
+
     The 18 clusters likely represent:
+
     - Overall acoustic activity/intensity measures
     - Spectral complexity and diversity indices  
     - Temporal pattern descriptors
@@ -1503,11 +1512,13 @@ def _(mo):
     - Consider vessel effects when interpreting biological patterns
 
     **For Acoustic Ecology:**
+
     - Demonstrates that ~18 indices capture marine soundscape complexity
     - Validates clustering approach for index reduction in marine environments
     - Provides framework for standardizing marine bioacoustic indices
 
     **For Management:**
+
     - Vessel impacts are quantifiable and significant across multiple acoustic dimensions
     - SNR and complexity reduction suggests habitat degradation during vessel presence
     - Index reduction enables real-time acoustic monitoring with fewer computational resources

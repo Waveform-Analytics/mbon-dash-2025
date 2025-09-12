@@ -1,4 +1,4 @@
-Please refer to the following project planning files:
+Please refer to the following project planning files as needed:
 
 notes/PROJECT-PLAN.md -- this is the big picture plan, which describes in detail how we can build upon previous work. 
 
@@ -7,6 +7,8 @@ notes/MVP-PLAN.md -- this is the minimum viable product plan, which describes in
 notes/RAW-DATA-DESCRIPTION.md -- this describes all the raw data that we have access to at this time. All raw data are stored in data/raw/ with specifics on content and format included in this description file. 
 
 notes/SITE-IMPLEMENTATION-NOTES.md -- this describes the site implementation plan - how it's laid out, styling, navigation, etc. 
+
+notes/DATA-FILE-NAMING.md -- this describes the naming conventions for data files, and also provides details on every file that is saved by every python marimo notebook. This is a good reference for finding the data we need for any given task (or determining that we need to generate new data)
 
 # Extra notes for claude code
 - don't write code or run anything unless I specifically say to do so. I like to discuss things first.

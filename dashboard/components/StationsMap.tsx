@@ -2,16 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-
-interface Station {
-  Station: string;
-  'GPS Lat': number;
-  'GPS Long': number;
-  total_deployments: number;
-  avg_depth_m: number;
-  avg_hydrophone_depth_m: number;
-  current_study: boolean;
-}
+import { useStationLocations, StationLocation } from '../lib/data';
 
 interface StationsMapProps {
   className?: string;
@@ -20,11 +11,13 @@ interface StationsMapProps {
 export default function StationsMap({ className }: StationsMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [stations, setStations] = useState<Station[]>([]);
   const [showStudyAreaOnly, setShowStudyAreaOnly] = useState(true);
+  
+  // Use the new data loading hook
+  const { data: stations, loading, error, source } = useStationLocations();
 
   const fitMapToStations = (studyAreaOnly: boolean) => {
-    if (!map.current || stations.length === 0) return;
+    if (!map.current || !stations || stations.length === 0) return;
 
     const stationsToShow = studyAreaOnly 
       ? stations.filter(station => station.current_study)
@@ -49,23 +42,12 @@ export default function StationsMap({ className }: StationsMapProps) {
     fitMapToStations(newViewState);
   };
 
+  // Log data source for debugging
   useEffect(() => {
-    // Load stations data
-    const loadStations = async () => {
-      try {
-        const response = await fetch('/data/views/stations_locations.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setStations(data);
-      } catch (error) {
-        console.error('Error loading stations data:', error);
-      }
-    };
-
-    loadStations();
-  }, []);
+    if (source) {
+      console.log(`[StationsMap] Data loaded from: ${source}`);
+    }
+  }, [source]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -104,7 +86,7 @@ export default function StationsMap({ className }: StationsMapProps) {
   }, []);
 
   useEffect(() => {
-    if (!map.current || stations.length === 0) return;
+    if (!map.current || !stations || stations.length === 0) return;
 
     map.current.on('load', () => {
       if (!map.current) return;
@@ -148,10 +130,48 @@ export default function StationsMap({ className }: StationsMapProps) {
     });
   }, [stations]);
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className={className}>
+        <div className="relative w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading station data...</p>
+            {source && <p className="text-xs text-muted-foreground mt-1">From: {source}</p>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className={className}>
+        <div className="relative w-full h-full bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
+          <div className="text-center p-4">
+            <p className="text-sm text-red-600 mb-2">Failed to load station data</p>
+            <p className="text-xs text-red-500">{error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <div className="relative w-full h-full">
         <div ref={mapContainer} className="w-full h-full rounded-lg" />
+        
+        {/* Data source indicator */}
+        {source && (
+          <div className="absolute top-2 left-2 z-10">
+            <div className="bg-black/75 text-white px-2 py-1 rounded text-xs">
+              Data: {source === 'cdn' ? '🌐 CDN' : '🏠 Local'}
+            </div>
+          </div>
+        )}
         
         {/* Toggle Button */}
         <div className="absolute top-2 right-2 z-10">

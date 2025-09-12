@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", auto_download=["html"])
 
 
 @app.cell
@@ -192,7 +192,9 @@ def _(DATA_DIR, detection_data, pd):
     else:
         print(f"⚠️ Metadata file not found: {metadata_path}")
         print("Proceeding without species filtering")
-    return
+        metadata_df = pd.DataFrame()  # Create empty df if file not found
+
+    return (metadata_df,)
 
 
 @app.cell(hide_code=True)
@@ -1033,10 +1035,15 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, pd):
+def _(DATA_DIR, metadata_df, pd):
     # Load deployment metadata from Excel file
     metadata_excel_path = DATA_DIR / "metadata" / "1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
     metadata_data = {}
+
+    # Add detection column metadata if available
+    if not metadata_df.empty:
+        metadata_data['detection_columns'] = metadata_df
+        print(f"✓ Added detection column metadata: {len(metadata_df)} column descriptions")
 
     if metadata_excel_path.exists():
         print("Loading deployment metadata...")
@@ -1280,6 +1287,13 @@ def _(
             saved_files.append(str(output_file_indices_cat))
             print(f"✓ Saved acoustic index categories: {output_file_indices_cat}")
 
+        # Save detection column metadata
+        if 'detection_columns' in metadata_data:
+            output_file_det_cols = metadata_dir / "01_detection_columns.parquet"
+            metadata_data['detection_columns'].to_parquet(output_file_det_cols, index=False)
+            saved_files.append(str(output_file_det_cols))
+            print(f"✓ Saved detection column metadata: {output_file_det_cols}")
+
     print(f"\nTotal files saved: {len(saved_files)}")
     return
 
@@ -1293,6 +1307,7 @@ def _(mo):
     **Notebook 1 Complete!**
 
     ✅ **Data Successfully Loaded:**
+
     - Acoustic indices (2021, FullBW version, 3 stations)
     - Manual fish detection data (2021, 3 stations, 2-hour resolution) 
     - Environmental data (temperature 20-min, depth 1-hour, 3 stations)
@@ -1302,12 +1317,14 @@ def _(mo):
     - Acoustic index categories (60 indices with descriptions)
 
     ✅ **Quality Assessment Completed:**
+
     - Temporal coverage analysis across all data types
     - Missing data quantification
     - Basic statistical summaries
     - Data structure inspection
 
     ✅ **Output Generated:**  
+
     - Clean datasets saved as parquet files with standardized timestamps
     - Metadata saved in `processed/metadata/` folder as parquet files
     - Ready for Notebook 2 (temporal alignment and aggregation)
@@ -1315,6 +1332,11 @@ def _(mo):
     **Next Steps:** Proceed to Notebook 2 for temporal alignment to 2-hour resolution.
     """
     )
+    return
+
+
+@app.cell
+def _():
     return
 
 
