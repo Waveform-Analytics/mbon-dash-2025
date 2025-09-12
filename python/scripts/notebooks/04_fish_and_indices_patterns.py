@@ -642,9 +642,9 @@ def _(df_combined, fish_cols, np, pd):
         for i_co, species1_co in enumerate(fish_cols):
             for j_co, species2_co in enumerate(fish_cols):
                 if i_co < j_co:  # Only show upper triangle
-                    corr = cooccurrence_df.loc[species1_co, species2_co]
-                    if abs(corr) > 0.1:  # Only show notable correlations
-                        print(f"  {species1_co} ↔ {species2_co}: r = {corr:.3f}")
+                    corr_1 = cooccurrence_df.loc[species1_co, species2_co]
+                    if abs(corr_1) > 0.1:  # Only show notable correlations
+                        print(f"  {species1_co} ↔ {species2_co}: r = {corr_1:.3f}")
 
     else:
         print("No data available for community analysis")
@@ -695,8 +695,8 @@ def _(df_combined, output_dir_plots, plt, selected_indices):
                           alpha=0.5, s=20)
 
                 # Calculate and display correlation
-                corr = df_combined[top_index].corr(df_combined['total_fish_activity'])
-                ax_comm_scatter.set_title(f'Community Activity vs {top_index}\nr = {corr:.3f}')
+                corr_2 = df_combined[top_index].corr_2(df_combined['total_fish_activity'])
+                ax_comm_scatter.set_title(f'Community Activity vs {top_index}\nr = {corr_2:.3f}')
                 ax_comm_scatter.set_xlabel(f'{top_index}')
                 ax_comm_scatter.set_ylabel('Total Fish Activity')
                 ax_comm_scatter.grid(True, alpha=0.3)
@@ -927,7 +927,7 @@ def _(
         most_active_freq = calling_stats[most_active]['calling_frequency_pct']
 
         # Correlation summary
-        mean_abs_corr = correlations_df['abs_correlation'].mean() if not correlations_df.empty else 0
+        mean_abs_corr_summary = correlations_df['abs_correlation'].mean() if not correlations_df.empty else 0
         max_corr = correlations_df['abs_correlation'].max() if not correlations_df.empty else 0
         n_strong_corr = (correlations_df['abs_correlation'] > 0.3).sum() if not correlations_df.empty else 0
 
@@ -941,7 +941,7 @@ def _(
         - **Most active species**: {most_active} ({most_active_freq:.1f}% calling frequency)
 
         **Concordance Results:**
-        - **Mean index-fish correlation**: {mean_abs_corr:.3f}
+        - **Mean index-fish correlation**: {mean_abs_corr_summary:.3f}
         - **Maximum correlation**: {max_corr:.3f}
         - **Strong correlations (|r| > 0.3)**: {n_strong_corr} out of {len(correlations_df)} index-species pairs
 
@@ -963,14 +963,14 @@ def _(
         - Cross-species analysis reveals co-occurrence patterns and community dynamics
 
         **➡️ Implications for MVP:**
-        This analysis provides **{'' if mean_abs_corr > 0.2 else 'limited '}evidence** that acoustic indices can capture biologically relevant patterns present in manual detections. The correlation strength of {mean_abs_corr:.3f} suggests indices **{'' if mean_abs_corr > 0.3 else 'may have limited '}potential as proxies** for manual detection, though predictive modeling (Notebook 6) will provide the definitive test.
+        This analysis provides **{'' if mean_abs_corr_summary > 0.2 else 'limited '}evidence** that acoustic indices can capture biologically relevant patterns present in manual detections. The correlation strength of {mean_abs_corr_summary:.3f} suggests indices **{'' if mean_abs_corr_summary > 0.3 else 'may have limited '}potential as proxies** for manual detection, though predictive modeling (Notebook 6) will provide the definitive test.
         """
 
         print("=== FINAL CONCORDANCE SUMMARY ===\n")
         print(f"Species analyzed: {n_species}")
         print(f"Indices tested: {n_indices}")
         print(f"Mean calling frequency: {mean_calling_freq:.1f}%")
-        print(f"Mean absolute correlation: {mean_abs_corr:.3f}")
+        print(f"Mean absolute correlation: {mean_abs_corr_summary:.3f}")
         print(f"Strong correlations (>0.3): {n_strong_corr}/{len(correlations_df)}")
 
         mo.md(summary_text)
