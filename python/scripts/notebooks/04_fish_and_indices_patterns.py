@@ -338,12 +338,14 @@ def _(mo):
     Now we analyze whether acoustic indices capture the same temporal patterns as manual detections. This is the **critical validation** for using indices as proxies.
 
     **Key Questions:**
+
     1. Do acoustic indices show the same **diel patterns** as fish calling?
     2. Do indices identify the same **seasonal peaks** (spawning periods)?
     3. Can indices distinguish between **high/low activity periods**?
     4. What would we conclude about fish activity using **indices alone**?
 
     **Approach:**
+
     - Calculate temporal patterns for selected acoustic indices
     - Compare index patterns with manual detection patterns
     - Assess pattern concordance using correlation and visual inspection
@@ -421,11 +423,11 @@ def _(df_combined, selected_indices):
         # Calculate hourly patterns for indices
         index_hourly_patterns = {}
 
-        for index in selected_indices:
-            if index in df_combined.columns:
-                hourly_activity = df_combined.groupby('hour')[index].agg(['mean', 'std']).reset_index()
-                hourly_activity['index'] = index
-                index_hourly_patterns[index] = hourly_activity
+        for index_sel in selected_indices:
+            if index_sel in df_combined.columns:
+                hourly_activity = df_combined.groupby('hour')[index_sel].agg(['mean', 'std']).reset_index()
+                hourly_activity['index'] = index_sel
+                index_hourly_patterns[index_sel] = hourly_activity
 
                 # Basic stats
                 peak_hour = hourly_activity.loc[hourly_activity['mean'].idxmax(), 'hour']
@@ -433,7 +435,7 @@ def _(df_combined, selected_indices):
                 min_hour = hourly_activity.loc[hourly_activity['mean'].idxmin(), 'hour']
                 min_value = hourly_activity['mean'].min()
 
-                print(f"{index}:")
+                print(f"{index_sel}:")
                 print(f"  Peak at hour {peak_hour} (value: {peak_value:.3f})")
                 print(f"  Minimum at hour {min_hour} (value: {min_value:.3f})")
                 print(f"  Diel range: {(peak_value - min_value):.3f}")
@@ -458,16 +460,16 @@ def _(df_combined, fish_cols, index_hourly_patterns, output_dir_plots, plt):
         fig_concordance, axes_conc = plt.subplots(2, 4, figsize=(20, 10))
 
         # Plot indices (top row)
-        for i_idx, index in enumerate(top_indices):
+        for i_idx, index_top in enumerate(top_indices):
             ax_conc_idx = axes_conc[0, i_idx]
-            data_idx = index_hourly_patterns[index]
+            data_idx = index_hourly_patterns[index_top]
 
             ax_conc_idx.plot(data_idx['hour'], data_idx['mean'], 'o-', linewidth=2, 
                    color='steelblue', markersize=4)
             ax_conc_idx.fill_between(data_idx['hour'], data_idx['mean'] - data_idx['std'], 
                            data_idx['mean'] + data_idx['std'], alpha=0.2, color='steelblue')
 
-            ax_conc_idx.set_title(f'{index}\n(Acoustic Index)')
+            ax_conc_idx.set_title(f'{index_top}\n(Acoustic Index)')
             ax_conc_idx.set_ylabel('Index Value')
             ax_conc_idx.set_xlim(0, 23)
             ax_conc_idx.set_xticks([0, 6, 12, 18, 23])
