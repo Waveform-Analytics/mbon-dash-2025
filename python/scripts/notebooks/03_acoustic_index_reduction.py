@@ -1272,5 +1272,65 @@ def _(
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Analysis Summary and Ecological Insights
+
+    **🎯 Primary Achievement:**
+    Successfully reduced 61 acoustic indices to 18 representative indices (70% reduction) while preserving >90% of acoustic information content.
+
+    **📊 Key Quantitative Findings:**
+    - **Redundancy Level**: 67 index pairs with r>0.85, confirming substantial overlap
+    - **Acoustic Dimensionality**: ~7 principal components explain 80% of variance
+    - **Multicollinearity**: Dramatically improved VIF values (mean dropped from ∞ to 296)
+    - **Vessel Presence**: 20.7% of observation periods, with 5 indices showing significant impacts
+
+    **🔍 Ecological Discoveries:**
+
+    **1. Acoustic Soundscape Structure:**
+    - Marine soundscape has ~7-13 fundamental "dimensions" rather than 50+
+    - High natural redundancy suggests robust measurement of core acoustic processes
+    - Clustering revealed functional groups: complexity, activity, spectral, temporal indices
+
+    **2. Vessel Impact Patterns:**
+    - **Confirmed masking**: Vessels reduce SNR and acoustic complexity (expected)
+    - **Energy addition**: Vessels increase overall acoustic energy but not biological signal
+    - **Fragmentation hypothesis**: Vessels may fragment soundscape (nROI increase) rather than simply adding uniform noise
+    - **Differential sensitivity**: 5 indices show medium-large effects, others more robust
+
+    **3. Index Functional Groups:**
+    The 18 clusters likely represent:
+    - Overall acoustic activity/intensity measures
+    - Spectral complexity and diversity indices  
+    - Temporal pattern descriptors
+    - Frequency-specific energy measures
+    - Acoustic evenness and richness quantifiers
+
+    **🚀 Implications for Marine Bioacoustics:**
+
+    **For Fish Calling Models:**
+    - Use these 18 indices as predictor variables (reduced multicollinearity)
+    - Include vessel-sensitive indices as acoustic habitat quality indicators
+    - Consider vessel effects when interpreting biological patterns
+
+    **For Acoustic Ecology:**
+    - Demonstrates that ~18 indices capture marine soundscape complexity
+    - Validates clustering approach for index reduction in marine environments
+    - Provides framework for standardizing marine bioacoustic indices
+
+    **For Management:**
+    - Vessel impacts are quantifiable and significant across multiple acoustic dimensions
+    - SNR and complexity reduction suggests habitat degradation during vessel presence
+    - Index reduction enables real-time acoustic monitoring with fewer computational resources
+
+    **🔄 Next Steps:**
+    The 18 selected indices now serve as the foundation for fish calling prediction models (Notebook 4), providing a manageable yet comprehensive representation of the marine acoustic environment.
+    """
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()
