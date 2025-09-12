@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useStationLocations } from '../lib/data';
+import { useStationLocations } from '@/lib/data';
 
 interface StationsMapProps {
   className?: string;
