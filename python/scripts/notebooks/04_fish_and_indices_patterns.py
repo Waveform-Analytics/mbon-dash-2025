@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", auto_download=["html"])
 
 
 @app.cell(hide_code=True)
@@ -695,7 +695,7 @@ def _(df_combined, output_dir_plots, plt, selected_indices):
                           alpha=0.5, s=20)
 
                 # Calculate and display correlation
-                corr_2 = df_combined[top_index].corr_2(df_combined['total_fish_activity'])
+                corr_2 = df_combined[top_index].corr(df_combined['total_fish_activity'])
                 ax_comm_scatter.set_title(f'Community Activity vs {top_index}\nr = {corr_2:.3f}')
                 ax_comm_scatter.set_xlabel(f'{top_index}')
                 ax_comm_scatter.set_ylabel('Total Fish Activity')
@@ -747,18 +747,18 @@ def _(df_combined, df_env, pd):
         # Merge environmental data
         df_combined_env = pd.merge(
             df_combined,
-            df_env[['datetime', 'station', 'temperature', 'depth_pressure']],
+            df_env[['datetime', 'station', 'Water temp (°C)', 'Water depth (m)']],
             on=['datetime', 'station'],
             how='left'
         )
 
         print(f"Environmental data merged:")
         print(f"  Combined dataset with env: {df_combined_env.shape}")
-        print(f"  Temperature range: {df_combined_env['temperature'].min():.1f}°C - {df_combined_env['temperature'].max():.1f}°C")
-        print(f"  Temperature data coverage: {df_combined_env['temperature'].notna().sum() / len(df_combined_env) * 100:.1f}%")
+        print(f"  Temperature range: {df_combined_env['Water temp (°C)'].min():.1f}°C - {df_combined_env['Water temp (°C)'].max():.1f}°C")
+        print(f"  Temperature data coverage: {df_combined_env['Water temp (°C)'].notna().sum() / len(df_combined_env) * 100:.1f}%")
 
-        if 'depth_pressure' in df_combined_env.columns:
-            print(f"  Depth range: {df_combined_env['depth_pressure'].min():.1f} - {df_combined_env['depth_pressure'].max():.1f}")
+        if 'Water depth (m)' in df_combined_env.columns:
+            print(f"  Depth range: {df_combined_env['Water depth (m)'].min():.1f} - {df_combined_env['Water depth (m)'].max():.1f}")
 
     else:
         df_combined_env = df_combined.copy()
@@ -770,10 +770,10 @@ def _(df_combined, df_env, pd):
 @app.cell
 def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
     # Temperature-fish calling relationships
-    if not df_combined_env.empty and 'temperature' in df_combined_env.columns:
+    if not df_combined_env.empty and 'Water temp (°C)' in df_combined_env.columns:
 
         # Create temperature bins for analysis
-        df_combined_env['temp_bin'] = pd.cut(df_combined_env['temperature'], 
+        df_combined_env['temp_bin'] = pd.cut(df_combined_env['Water temp (°C)'], 
                                            bins=10, precision=1)
 
         # Temperature vs fish calling
@@ -792,8 +792,13 @@ def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
                     # Get temperature bin centers for plotting
                     temp_centers = [interval.mid for interval in temp_calling['temp_bin']]
 
-                    ax_temp.errorbar(temp_centers, temp_calling[('mean', '')], 
-                               yerr=temp_calling[('std', '')] / np.sqrt(temp_calling[('count', '')]),
+                    # Access the aggregated columns correctly
+                    means = temp_calling['mean']
+                    stds = temp_calling['std']
+                    counts = temp_calling['count']
+
+                    ax_temp.errorbar(temp_centers, means, 
+                               yerr=stds / np.sqrt(counts),
                                fmt='o-', linewidth=2, markersize=6, capsize=5)
                     ax_temp.set_title(f'{species_temp} vs Temperature')
                     ax_temp.set_xlabel('Temperature (°C)')
@@ -801,7 +806,7 @@ def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
                     ax_temp.grid(True, alpha=0.3)
 
                     # Calculate correlation
-                    temp_corr = df_combined_env[species_temp].corr(df_combined_env['temperature'])
+                    temp_corr = df_combined_env[species_temp].corr(df_combined_env['Water temp (°C)'])
                     ax_temp.text(0.05, 0.95, f'r = {temp_corr:.3f}', 
                            transform=ax_temp.transAxes, fontsize=10,
                            bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
@@ -871,8 +876,8 @@ def _(df_combined_env, fish_cols, output_dir_plots, plt):
 
         # 4. Temperature differences by station
         ax_station_temp = axes_station[1, 1]
-        if 'temperature' in df_combined_env.columns:
-            df_combined_env.boxplot(column='temperature', by='station', ax=ax_station_temp)
+        if 'Water temp (°C)' in df_combined_env.columns:
+            df_combined_env.boxplot(column='Water temp (°C)', by='station', ax=ax_station_temp)
             ax_station_temp.set_title('Temperature Distribution by Station')
             ax_station_temp.set_xlabel('Station')
             ax_station_temp.set_ylabel('Temperature (°C)')
@@ -904,7 +909,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     calling_stats,
     correlation_matrix,
@@ -972,6 +977,9 @@ def _(
         print(f"Mean calling frequency: {mean_calling_freq:.1f}%")
         print(f"Mean absolute correlation: {mean_abs_corr_summary:.3f}")
         print(f"Strong correlations (>0.3): {n_strong_corr}/{len(correlations_df)}")
+
+        # Also print the markdown content to console
+        print("\n" + summary_text)
 
         mo.md(summary_text)
 

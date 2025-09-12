@@ -35,7 +35,7 @@ export default function NotebookPage() {
             Back to Analysis
           </Link>
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-primary mb-2">Data Prep</h1>
+            <h1 className="text-3xl font-bold text-primary mb-2">Fish And Indices Patterns</h1>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <motion.div
@@ -48,7 +48,7 @@ export default function NotebookPage() {
                   <Target className="h-4 w-4 text-chart-1 mr-2" />
                   <span className="font-semibold text-xs">PURPOSE</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Load all data streams and perform initial quality assessment</p>
+                <p className="text-xs text-muted-foreground">Interactive marimo notebook: Fish And Indices Patterns</p>
               </motion.div>
 
               <motion.div
@@ -61,7 +61,7 @@ export default function NotebookPage() {
                   <FlaskConical className="h-4 w-4 text-chart-2 mr-2" />
                   <span className="font-semibold text-xs">KEY OUTPUTS</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Raw data summaries, temporal coverage plots, missing data visualization</p>
+                <p className="text-xs text-muted-foreground">Analysis results and visualizations</p>
               </motion.div>
             </div>
           </div>
@@ -90,9 +90,9 @@ export default function NotebookPage() {
             )}
           </button>
           <iframe
-            src="/analysis/notebooks/html/01_data_prep.html"
+            src="/analysis/notebooks/html/04_fish_and_indices_patterns.html"
             className="w-full h-full border-0"
-            title="Data Prep"
+            title="Fish And Indices Patterns"
             sandbox="allow-scripts allow-same-origin allow-forms"
           />
         </div>

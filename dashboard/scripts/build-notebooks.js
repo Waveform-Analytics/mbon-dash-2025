@@ -93,74 +93,102 @@ function createNotebookPage(notebook) {
   const pageContent = `'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Target, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Target, FlaskConical, Maximize2, Minimize2 } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function NotebookPage() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.getElementById('notebook-container')?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="container mx-auto px-4 py-4 flex-shrink-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-6"
+          className="mb-4"
         >
           <Link 
             href="/analysis" 
-            className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-4"
+            className="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Analysis
           </Link>
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold text-primary mb-4">${notebook.title}</h1>
+          <div className="mb-4">
+            <h1 className="text-3xl font-bold text-primary mb-2">${notebook.title}</h1>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <motion.div
-                className="bg-card rounded-lg border p-4"
+                className="bg-card rounded-lg border p-3"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
-                <div className="flex items-center mb-2">
-                  <Target className="h-5 w-5 text-chart-1 mr-2" />
-                  <span className="font-semibold text-sm">PURPOSE</span>
+                <div className="flex items-center mb-1">
+                  <Target className="h-4 w-4 text-chart-1 mr-2" />
+                  <span className="font-semibold text-xs">PURPOSE</span>
                 </div>
-                <p className="text-sm text-muted-foreground">${notebook.purpose}</p>
+                <p className="text-xs text-muted-foreground">${notebook.purpose}</p>
               </motion.div>
 
               <motion.div
-                className="bg-card rounded-lg border p-4"
+                className="bg-card rounded-lg border p-3"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="flex items-center mb-2">
-                  <FlaskConical className="h-5 w-5 text-chart-2 mr-2" />
-                  <span className="font-semibold text-sm">KEY OUTPUTS</span>
+                <div className="flex items-center mb-1">
+                  <FlaskConical className="h-4 w-4 text-chart-2 mr-2" />
+                  <span className="font-semibold text-xs">KEY OUTPUTS</span>
                 </div>
-                <p className="text-sm text-muted-foreground">${notebook.keyOutputs}</p>
+                <p className="text-xs text-muted-foreground">${notebook.keyOutputs}</p>
               </motion.div>
             </div>
           </div>
-          <div className="h-1 w-20 bg-primary rounded"></div>
         </motion.div>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-card rounded-lg shadow-lg border overflow-hidden"
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="flex-grow container mx-auto px-4 pb-4"
+      >
+        <div 
+          className="bg-card rounded-lg shadow-lg border overflow-hidden relative h-full"
+          id="notebook-container"
         >
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm border rounded-lg p-2 hover:bg-background/90 transition-colors"
+            title={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-5 w-5" />
+            ) : (
+              <Maximize2 className="h-5 w-5" />
+            )}
+          </button>
           <iframe
             src="/analysis/notebooks/html/${notebook.filename}"
-            className="w-full h-[calc(100vh-280px)] border-0"
+            className="w-full h-full border-0"
             title="${notebook.title}"
             sandbox="allow-scripts allow-same-origin allow-forms"
           />
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -173,6 +201,61 @@ export default function NotebookPage() {
   
   fs.writeFileSync(path.join(notebookDir, 'page.tsx'), pageContent);
   console.log(`Created page for: ${notebook.title}`);
+}
+
+function cleanMarimoHtml(htmlContent) {
+  // Remove problematic preload links that cause console errors
+  let cleaned = htmlContent;
+  
+  // Remove preload links for CDN resources
+  cleaned = cleaned.replace(
+    /<link[^>]*rel=["']preload["'][^>]*cdn\.jsdelivr\.net[^>]*>/gi,
+    ''
+  );
+  
+  // Remove modulepreload links that might cause issues
+  cleaned = cleaned.replace(
+    /<link[^>]*rel=["']modulepreload["'][^>]*cdn\.jsdelivr\.net[^>]*>/gi,
+    ''
+  );
+  
+  // Add CSS to customize marimo display
+  const customMarimoStyle = `
+    <style>
+      /* Hide the blue banner at top */
+      .marimo-banner,
+      [class*="banner"],
+      .alert-info,
+      .alert.alert-info {
+        display: none !important;
+      }
+      
+      /* Fix the bottom marimo attribution - hide broken image, keep text */
+      [data-marimo-mode="read"] img[src*="marimo-logo"],
+      [data-marimo-mode="read"] img[src*="logo"] {
+        display: none !important;
+      }
+      
+      /* Ensure marimo content fills container */
+      .marimo-output,
+      .marimo-container,
+      .marimo-app {
+        height: 100% !important;
+        min-height: 100vh !important;
+      }
+      
+      /* Remove padding/margins that might cause issues */
+      body.marimo-body {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    </style>
+  `;
+  
+  // Insert the style just before </head>
+  cleaned = cleaned.replace('</head>', customMarimoStyle + '</head>');
+  
+  return cleaned;
 }
 
 function copyHtmlFiles(notebooks) {
@@ -189,8 +272,13 @@ function copyHtmlFiles(notebooks) {
   notebooks.forEach(notebook => {
     const srcPath = path.join(MARIMO_DIR, notebook.filename);
     const destPath = path.join(PUBLIC_HTML_DIR, notebook.filename);
-    fs.copyFileSync(srcPath, destPath);
-    console.log(`Copied HTML file: ${notebook.filename}`);
+    
+    // Read, clean, and write the HTML
+    const htmlContent = fs.readFileSync(srcPath, 'utf-8');
+    const cleanedHtml = cleanMarimoHtml(htmlContent);
+    fs.writeFileSync(destPath, cleanedHtml);
+    
+    console.log(`Copied and cleaned HTML file: ${notebook.filename}`);
   });
 }
 

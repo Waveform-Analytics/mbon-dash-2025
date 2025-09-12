@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { useStationLocations, StationLocation } from '../lib/data';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { useStationLocations } from '../lib/data';
 
 interface StationsMapProps {
   className?: string;
@@ -13,7 +14,7 @@ export default function StationsMap({ className }: StationsMapProps) {
   const map = useRef<mapboxgl.Map | null>(null);
   const [showStudyAreaOnly, setShowStudyAreaOnly] = useState(true);
   
-  // Use the new data loading hook
+  // Use the working data hook
   const { data: stations, loading, error, source } = useStationLocations();
 
   const fitMapToStations = (studyAreaOnly: boolean) => {
@@ -42,19 +43,13 @@ export default function StationsMap({ className }: StationsMapProps) {
     fitMapToStations(newViewState);
   };
 
-  // Log data source for debugging
-  useEffect(() => {
-    if (source) {
-      console.log(`[StationsMap] Data loaded from: ${source}`);
-    }
-  }, [source]);
-
+  // Map initialization
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
     if (!mapboxToken) {
-      console.error('Mapbox token not found');
+      console.error('[StationsMap] Mapbox token not found');
       return;
     }
 
@@ -69,12 +64,16 @@ export default function StationsMap({ className }: StationsMapProps) {
         zoom: 8
       });
 
+      map.current.on('load', () => {
+        console.log('[StationsMap] Map loaded successfully');
+      });
+
       map.current.on('error', (e) => {
-        console.error('Map error:', e);
+        console.error('[StationsMap] Map error:', e);
       });
 
     } catch (error) {
-      console.error('Error initializing map:', error);
+      console.error('[StationsMap] Error initializing map:', error);
     }
 
     return () => {
@@ -85,11 +84,16 @@ export default function StationsMap({ className }: StationsMapProps) {
     };
   }, []);
 
+  // Add markers when stations data is available and map is ready
   useEffect(() => {
     if (!map.current || !stations || stations.length === 0) return;
 
-    map.current.on('load', () => {
+    const addMarkers = () => {
       if (!map.current) return;
+
+      // Clear existing markers (if any)
+      const existingMarkers = document.querySelectorAll('.station-marker');
+      existingMarkers.forEach(marker => marker.remove());
 
       // Add markers for each station
       stations.forEach((station) => {
@@ -127,45 +131,56 @@ export default function StationsMap({ className }: StationsMapProps) {
 
       // Fit map to initial view (study area only by default)
       fitMapToStations(true);
-    });
+    };
+
+    // Check if map is already loaded
+    if (map.current.isStyleLoaded()) {
+      addMarkers();
+    } else {
+      // Wait for map to load, then add markers
+      map.current.on('load', addMarkers);
+    }
+
+    // Cleanup function to remove the event listener
+    return () => {
+      if (map.current) {
+        map.current.off('load', addMarkers);
+      }
+    };
   }, [stations]);
-
-  // Show loading state
-  if (loading) {
-    return (
-      <div className={className}>
-        <div className="relative w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-            <p className="text-sm text-muted-foreground">Loading station data...</p>
-            {source && <p className="text-xs text-muted-foreground mt-1">From: {source}</p>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className={className}>
-        <div className="relative w-full h-full bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
-          <div className="text-center p-4">
-            <p className="text-sm text-red-600 mb-2">Failed to load station data</p>
-            <p className="text-xs text-red-500">{error.message}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={className}>
       <div className="relative w-full h-full">
-        <div ref={mapContainer} className="w-full h-full rounded-lg" />
+        <div 
+          ref={mapContainer} 
+          className="w-full h-full rounded-lg" 
+          style={{ minHeight: '400px' }}
+        />
+        
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-sm text-muted-foreground">Loading station data...</p>
+              {source && <p className="text-xs text-muted-foreground mt-1">From: {source}</p>}
+            </div>
+          </div>
+        )}
+        
+        {/* Error overlay */}
+        {error && (
+          <div className="absolute inset-0 bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
+            <div className="text-center p-4">
+              <p className="text-sm text-red-600 mb-2">Failed to load station data</p>
+              <p className="text-xs text-red-500">{error.message}</p>
+            </div>
+          </div>
+        )}
         
         {/* Data source indicator */}
-        {source && (
+        {source && !loading && !error && (
           <div className="absolute top-2 left-2 z-10">
             <div className="bg-black/75 text-white px-2 py-1 rounded text-xs">
               Data: {source === 'cdn' ? '🌐 CDN' : '🏠 Local'}
@@ -174,14 +189,16 @@ export default function StationsMap({ className }: StationsMapProps) {
         )}
         
         {/* Toggle Button */}
-        <div className="absolute top-2 right-2 z-10">
-          <button
-            onClick={toggleView}
-            className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            {showStudyAreaOnly ? 'Show All Stations' : 'Show Study Area'}
-          </button>
-        </div>
+        {stations && stations.length > 0 && (
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              onClick={toggleView}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              {showStudyAreaOnly ? 'Show All Stations' : 'Show Study Area'}
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
