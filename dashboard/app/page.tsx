@@ -88,7 +88,7 @@ export default function HomePage() {
                 <h2 className="text-2xl font-bold text-card-foreground">Data</h2>
               </div>
               <p className="text-muted-foreground mb-6">
-                Explore acoustic data, manual detections, and environmental measurements from multiple monitoring stations.
+                Explore manual detections, environmental measurements, and acoustic indices from the MBON / ESONS project.
               </p>
               <div className="bg-accent p-4 rounded-md">
                 <p className="text-sm text-accent-foreground">
@@ -136,7 +136,7 @@ export default function HomePage() {
               </p>
               <div className="bg-secondary p-4 rounded-md">
                 <p className="text-sm text-secondary-foreground">
-                  Advanced exploration interfaces and custom analysis tools
+                  Interactive visualizations and custom analysis tools
                 </p>
               </div>
             </motion.div>
