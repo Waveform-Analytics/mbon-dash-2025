@@ -4,10 +4,10 @@ import path from 'path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { viewName: string } }
+  { params }: { params: Promise<{ viewName: string }> }
 ) {
   try {
-    const { viewName } = params;
+    const { viewName } = await params;
     
     // Sanitize the view name to prevent directory traversal
     const sanitizedViewName = viewName.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -45,7 +45,7 @@ export async function GET(
     });
     
   } catch (error) {
-    console.error(`[API] Error serving view ${params?.viewName}:`, error);
+    console.error(`[API] Error serving view:`, error);
     
     return NextResponse.json(
       { 
