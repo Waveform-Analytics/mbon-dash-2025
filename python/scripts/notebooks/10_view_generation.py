@@ -19,7 +19,7 @@ def _(mo):
     **Purpose**: Generate data "views" for online plots and interactive figures.  
     **Key Outputs**: Data views in json format
 
-    To avoid doing extensive processing, filtering and loading of large files on the client/browser side, we will generate specific data files for each figure. Each view will contain ONLY the data needed for that particular plot, already formatted in the way it's needed. 
+    To avoid doing extensive processing, filtering and loading of large files on the client/browser side, we will generate specific data files for each figure. Each view will contain ONLY the data needed for that particular plot, already formatted in the way it's needed.
     """
     )
     return
@@ -40,7 +40,7 @@ def _(mo):
         r"""
     ## Station map
 
-    The site has a Mapbox station map and requires the station coordinates. These can be extracted from a parquet formatted metadata file located in the data/processed/metadata folder. 
+    The site has a Mapbox station map and requires the station coordinates. These can be extracted from a parquet formatted metadata file located in the data/processed/metadata folder.
     """
     )
     return
@@ -80,8 +80,35 @@ def _(VIEWS_FOLDER, pd):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Heatmaps
+
+    These views will include acoustic indices, manual detections, RMS SPL, and environmental data. 
+    """
+    )
+    return
+
+
 @app.cell
-def _():
+def _(VIEWS_FOLDER, pd):
+    ## Detections
+
+    # Import manual detections data
+
+
+
+    ## Acoustic indices
+
+    # Import acoustic index data
+    indices_aligned_df = pd.read_parquet("../data/processed/03_reduced_acoustic_indices.parquet")
+
+    # Save to JSON
+    indices_aligned_df.to_json(f"{VIEWS_FOLDER}03_reduced_acoustic_indices.json", orient="records")
+
+
     return
 
 

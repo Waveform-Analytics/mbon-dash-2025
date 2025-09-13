@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell
@@ -1164,7 +1164,6 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
         # print(f"  Total columns: {len(all_stations_df.columns)}")
         # print(f"  File size: {combined_path.stat().st_size / (1024*1024):.2f} MB")
 
-
     if enhanced_data:
 
         # Add year column to combined dataset
@@ -1191,6 +1190,10 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
         if available_acoustic:
             try:
                 acoustic_df = all_stations_df[core_ids + available_acoustic].copy()
+
+                # Remove rows where the "ZCR" column is non-numeric
+                acoustic_df = acoustic_df[pd.to_numeric(acoustic_df['ZCR'], errors='coerce').notna()]
+
                 acoustic_path = OUTPUT_DIR / f"02_acoustic_indices_aligned_{YEAR}.parquet"
                 acoustic_df.to_parquet(acoustic_path, index=False)
                 saved_files_final.append(str(acoustic_path))
@@ -1255,7 +1258,6 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
                 print(f"  Shape: {temporal_df.shape} ({len(available_temporal)} features)")
             except Exception as e:
                 print(f"✗ Error saving temporal features: {e}")
-
 
     print(f"\n✅ Successfully saved {len(saved_files_final)} files")
 
