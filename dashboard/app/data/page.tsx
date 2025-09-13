@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
 import StationsMap from '../../components/StationsMap';
+import AcousticIndicesHeatmap from '../../components/AcousticIndicesHeatmap';
 
 export default function DataPage() {
   return (
@@ -156,25 +157,11 @@ export default function DataPage() {
 
             {/* Acoustic Indices Panel */}
             <div className="bg-card border shadow-lg rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <Activity className="h-6 w-6 text-chart-2 mr-3" />
-                  <h3 className="text-xl font-semibold">Acoustic Indices</h3>
-                </div>
-                <select className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background">
-                  <option>Select Index</option>
-                  <option>Acoustic Complexity Index</option>
-                  <option>Bioacoustic Index</option>
-                  <option>Spectral Entropy</option>
-                </select>
+              <div className="flex items-center mb-4">
+                <Activity className="h-6 w-6 text-chart-2 mr-3" />
+                <h3 className="text-xl font-semibold">Acoustic Indices</h3>
               </div>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">Acoustic indices visualization (day x hour)</p>
-                  <p className="text-sm text-muted-foreground">D3.js implementation will be added here</p>
-                </div>
-              </div>
+              <AcousticIndicesHeatmap />
             </div>
 
             {/* RMS SPL Panel */}
