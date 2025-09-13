@@ -27,7 +27,7 @@ def _():
     return (mo,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import pandas as pd
     import numpy as np
@@ -46,7 +46,7 @@ def _():
     return Path, np, pd, plt, sns
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Path):
     # Set up data directories
     data_dir_proc = Path("../data/processed")
@@ -58,7 +58,7 @@ def _(Path):
     return data_dir_proc, output_dir_plots
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(data_dir_proc, pd):
     # Load the datasets
     print("Loading datasets...")
@@ -136,7 +136,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_detections, fish_cols, np):
     # Species-level calling pattern analysis
     if not df_detections.empty and len(fish_cols) > 0:
@@ -187,7 +187,7 @@ def _(df_detections, fish_cols, np):
     return (calling_stats,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_detections, pd):
     # Temporal pattern analysis - create temporal variables
     if not df_detections.empty:
@@ -237,7 +237,7 @@ def _(df_detections, pd):
     return (df_detections_temporal,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_detections_temporal, fish_cols, output_dir_plots, plt):
     # Diel (24-hour) calling patterns
     if not df_detections_temporal.empty and len(fish_cols) > 0:
@@ -286,7 +286,7 @@ def _(df_detections_temporal, fish_cols, output_dir_plots, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_detections_temporal, fish_cols, output_dir_plots, plt):
     # Seasonal calling patterns (phenology)
     if not df_detections_temporal.empty and len(fish_cols) > 0:
@@ -354,7 +354,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(data_dir_proc, df_detections, df_indices_reduced):
     # Get the selected indices from the reduced dataset (Notebook 3 output)
     # The reduced dataset only contains the selected indices plus datetime, station, year
@@ -380,7 +380,7 @@ def _(data_dir_proc, df_detections, df_indices_reduced):
     return (selected_indices,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     df_detections_temporal,
     df_indices_reduced,
@@ -414,7 +414,7 @@ def _(
     return (df_combined,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, selected_indices):
     # Calculate diel patterns for acoustic indices
     if not df_combined.empty:
@@ -448,7 +448,7 @@ def _(df_combined, selected_indices):
     return (index_hourly_patterns,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, fish_cols, index_hourly_patterns, output_dir_plots, plt):
     # Create concordance comparison plots
     if not df_combined.empty and len(index_hourly_patterns) > 0:
@@ -512,7 +512,7 @@ def _(df_combined, fish_cols, index_hourly_patterns, output_dir_plots, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, fish_cols, pd, selected_indices):
     # Quantitative concordance analysis - correlations between indices and fish calling
     if not df_combined.empty:
@@ -573,7 +573,7 @@ def _(df_combined, fish_cols, pd, selected_indices):
     return correlation_matrix, correlations_df
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(correlation_matrix, output_dir_plots, plt, sns):
     # Visualize the correlation matrix
     if not correlation_matrix.empty:
@@ -615,7 +615,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, fish_cols, np, pd):
     # Community-level analysis
     if not df_combined.empty and len(fish_cols) > 0:
@@ -652,7 +652,7 @@ def _(df_combined, fish_cols, np, pd):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, output_dir_plots, plt, selected_indices):
     # Community activity vs acoustic indices
     if not df_combined.empty and 'total_fish_activity' in df_combined.columns:
@@ -740,7 +740,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined, df_env, pd):
     # Add environmental data to the combined dataset
     if not df_combined.empty and not df_env.empty:
@@ -767,7 +767,7 @@ def _(df_combined, df_env, pd):
     return (df_combined_env,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
     # Temperature-fish calling relationships
     if not df_combined_env.empty and 'Water temp (°C)' in df_combined_env.columns:
@@ -824,7 +824,7 @@ def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_combined_env, fish_cols, output_dir_plots, plt):
     # Station comparison analysis
     if not df_combined_env.empty and 'station' in df_combined_env.columns:
@@ -989,7 +989,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(correlation_matrix, correlations_df, data_dir_proc):
     # Save key results from this notebook for use in subsequent analyses
     if not correlation_matrix.empty:

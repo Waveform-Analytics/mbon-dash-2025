@@ -104,7 +104,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load all processed data from Notebook 1
     data_loaded = {
@@ -156,7 +156,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(STATIONS, data_loaded, pd):
     # Examine the temporal resolution and datetime columns of each dataset
     temporal_info = {}
@@ -252,7 +252,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd):
     # Create a common 2-hour time grid based on detection data
     # Detection data already has the correct 2-hour resolution
@@ -298,7 +298,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids):
     # Aggregate acoustic indices from hourly to 2-hour means
     indices_aggregated = {}
@@ -358,7 +358,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate temperature data (20-min to 2-hour)
     temperature_aggregated = {}
@@ -393,7 +393,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     return (temperature_aggregated,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate depth data (1-hour to 2-hour)
     depth_aggregated = {}
@@ -442,7 +442,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate SPL data (1-hour to 2-hour)
     spl_aggregated = {}
@@ -511,7 +511,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd):
     # Create temporal features for each station
     temporal_features = {}
@@ -578,7 +578,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     STATIONS,
     data_loaded,
@@ -676,7 +676,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(STATIONS, combined_data):
     # Create lag variables and running means for key features
     enhanced_data = {}
@@ -772,7 +772,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(STATIONS, enhanced_data, pd, plt):
     # Visualize the temporal alignment and aggregation results
     fig_align, axes_align = plt.subplots(3, 2, figsize=(15, 12))
@@ -844,7 +844,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(STATIONS, enhanced_data, plt):
     # Visualize temporal features distributions
     fig_temp_feat, axes_temp_feat = plt.subplots(2, 3, figsize=(15, 8))
@@ -917,7 +917,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(STATIONS, data_loaded, enhanced_data, pd, plt):
     # Compare data resolution before and after aggregation
     fig_compare, axes_compare = plt.subplots(2, 2, figsize=(14, 10))
@@ -1110,7 +1110,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
     # Save the aligned and enhanced datasets
     saved_files_final = []
@@ -1302,7 +1302,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     # All tasks completed successfully!
     print("✅ Notebook 2 completed successfully!")

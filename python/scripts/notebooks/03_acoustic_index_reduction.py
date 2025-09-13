@@ -106,7 +106,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(data_dir, pd):
     # Load the acoustic indices dataset from Notebook 2
     acoustic_indices_file = data_dir / "02_acoustic_indices_aligned_2021.parquet"
@@ -131,7 +131,7 @@ def _(data_dir, pd):
     return (df_acoustic_indices,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -158,7 +158,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_acoustic_indices, pd):
     if not df_acoustic_indices.empty:
         # Identify acoustic index columns - exclude core identifiers
@@ -185,12 +185,6 @@ def _(df_acoustic_indices, pd):
     return acoustic_index_cols, df_indices
 
 
-@app.cell
-def _(acoustic_index_cols):
-    acoustic_index_cols
-    return
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -207,7 +201,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_indices, pd):
     if not df_indices.empty:
         # Calculate correlation matrix
@@ -276,7 +270,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -294,7 +288,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def h_clustering(corr_matrix, fcluster, linkage, np, pd, squareform):
     if not corr_matrix.empty:
         # Perform hierarchical clustering on correlation matrix
@@ -394,7 +388,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     acoustic_index_cols,
     cluster_df,
@@ -485,7 +479,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(PCA, StandardScaler, df_indices, df_indices_reduced, np):
     if not df_indices.empty:
         # Standardize the data for PCA
@@ -568,7 +562,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -591,7 +585,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_indices, df_indices_reduced, np, pd, variance_inflation_factor):
     def calculate_vif(df_data):
         """Calculate VIF for all variables in dataframe"""
@@ -688,7 +682,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_indices_reduced, pd, selected_indices):
     from statsmodels.tsa.stattools import acf, pacf
     from statsmodels.stats.diagnostic import acorr_ljungbox
@@ -790,7 +784,7 @@ def _(df_indices_reduced, pd, selected_indices):
     return (autocorr_results,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(autocorr_results, output_dir_plots, plt):
     # Plot temporal autocorrelation functions
     if autocorr_results and len(autocorr_results) > 0:
@@ -863,7 +857,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(data_dir, df_indices_reduced_with_ids, np, pd, selected_indices, stats):
     # Load detection data for vessel analysis
     detection_file = data_dir / "02_detections_aligned_2021.parquet"
@@ -1013,7 +1007,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Path):
     # Create output directory for plots
     output_dir_plots = Path("../../dashboard/public/views/notebooks")
@@ -1022,7 +1016,7 @@ def _(Path):
     return (output_dir_plots,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     cluster_summary,
     corr_matrix,
@@ -1094,7 +1088,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     corr_matrix,
     dendrogram,
@@ -1143,7 +1137,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_indices, output_dir_plots, pca_components_full, pca_full, plt):
     # Plot 3: PCA Biplot
     if pca_full is not None and not df_indices.empty:
@@ -1182,7 +1176,7 @@ def _(df_indices, output_dir_plots, pca_components_full, pca_full, plt):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     df_indices_reduced_with_ids,
     np,
@@ -1270,7 +1264,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(env_corr_matrix, output_dir_plots, plt, sns):
     # Plot 5: Environmental correlations heatmap
     if not env_corr_matrix.empty:
@@ -1311,7 +1305,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     acoustic_index_cols,
     correlation_threshold,
@@ -1392,7 +1386,7 @@ def _(
     return (summary_results,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     Path,
     acoustic_index_cols,
