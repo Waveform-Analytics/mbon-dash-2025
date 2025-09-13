@@ -76,70 +76,85 @@ export default function HomePage() {
           >
             
             {/* Data Section */}
-            <motion.div 
-              className="bg-card rounded-lg shadow-lg p-8 border"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <div className="flex items-center mb-4">
-                <BarChart3 className="h-8 w-8 text-chart-1 mr-3" />
-                <h2 className="text-2xl font-bold text-card-foreground">Data</h2>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Explore manual detections, environmental measurements, and acoustic indices from the MBON / ESONS project.
-              </p>
-              <div className="bg-accent p-4 rounded-md">
-                <p className="text-sm text-accent-foreground">
-                  Interactive visualizations and data exploration tools
+            <Link href="/data">
+              <motion.div 
+                className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <BarChart3 className="h-8 w-8 text-chart-1 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Data</h2>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  Explore manual detections, environmental measurements, and acoustic indices from the MBON / ESONS project.
                 </p>
-              </div>
-            </motion.div>
+                <div className="bg-accent p-4 rounded-md">
+                  <p className="text-sm text-accent-foreground">
+                    Interactive visualizations and data exploration tools
+                  </p>
+                </div>
+              </motion.div>
+            </Link>
 
             {/* Analysis Section */}
-            <motion.div 
-              className="bg-card rounded-lg shadow-lg p-8 border"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <div className="flex items-center mb-4">
-                <FlaskConical className="h-8 w-8 text-chart-2 mr-3" />
-                <h2 className="text-2xl font-bold text-card-foreground">Analysis</h2>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Detailed analytical workflows and computational notebooks examining marine acoustic data patterns.
-              </p>
-              <div className="bg-muted p-4 rounded-md">
-                <p className="text-sm text-muted-foreground">
-                  Marimo notebooks with interactive analysis workflows
+            <Link href="/analysis">
+              <motion.div 
+                className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <FlaskConical className="h-8 w-8 text-chart-2 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Analysis</h2>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  Detailed analytical workflows and computational notebooks examining marine acoustic data patterns.
                 </p>
-              </div>
-            </motion.div>
+                <div className="bg-muted p-4 rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    Marimo notebooks with interactive analysis workflows
+                  </p>
+                </div>
+              </motion.div>
+            </Link>
 
             {/* Explore Section */}
-            <motion.div 
-              className="bg-card rounded-lg shadow-lg p-8 border"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.2 }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <div className="flex items-center mb-4">
-                <Compass className="h-8 w-8 text-chart-3 mr-3" />
-                <h2 className="text-2xl font-bold text-card-foreground">Explore</h2>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Interactive exploration tools and specialized views for investigating different aspects of the research.
-              </p>
-              <div className="bg-secondary p-4 rounded-md">
-                <p className="text-sm text-secondary-foreground">
-                  Interactive visualizations and custom analysis tools
+            <Link href="/explore">
+              <motion.div 
+                className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.2 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Compass className="h-8 w-8 text-chart-3 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Explore</h2>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <p className="text-muted-foreground mb-6">
+                  Interactive exploration tools and specialized views for investigating different aspects of the research.
                 </p>
-              </div>
-            </motion.div>
+                <div className="bg-secondary p-4 rounded-md">
+                  <p className="text-sm text-secondary-foreground">
+                    Interactive visualizations and custom analysis tools
+                  </p>
+                </div>
+              </motion.div>
+            </Link>
 
           </motion.div>
         </div>
