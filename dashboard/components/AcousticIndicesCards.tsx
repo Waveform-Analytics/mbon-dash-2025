@@ -116,7 +116,7 @@ const AcousticIndicesCards: React.FC = () => {
   if (error) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-red-500">Error loading data: {error}</div>
+        <div className="text-red-500">Error loading data: {error instanceof Error ? error.message : String(error)}</div>
       </div>
     );
   }
