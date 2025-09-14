@@ -4,9 +4,9 @@
 
 This MVP validates whether acoustic indices can serve as reliable proxies for species presence/absence without requiring extensive manual detection efforts. Using 2021 May River data with manual detections as ground truth, we test if acoustic indices alone can provide actionable biological information for future deployments where manual detection is impractical. The analysis builds upon insights from Transue et al. (2023) Charleston Harbor study, where biological patterns were masked by anthropogenic noise in traditional SPL approaches, by testing acoustic indices in a less urbanized estuary.
 
-**Core Research Question**: Can acoustic indices provide reliable information about fish populations WITHOUT manual detection efforts?
+**Core Research Question**: Can acoustic indices serve as effective biological screening tools and detect community-level fish patterns at scales impossible with manual detection?
 
-**Scope**: Fish-only analysis demonstrating acoustic indices as scalable monitoring solution
+**Scope**: Fish community analysis demonstrating acoustic indices as screening tools for targeted manual effort and continuous pattern detection
 **Data**: 2021 acoustic indices with manual detections as validation ground truth, environmental variables, SPL data
 **Timeline**: 8 focused marimo notebooks progressing from data preparation to validation of indices as standalone indicators
 
@@ -160,134 +160,131 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 5: Vessel Detection Model Development
+## Notebook 5: Anthropogenic Impact Assessment (Simplified)
 
-**Purpose**: Develop robust vessel detection using acoustic indices  
-**Key Outputs**: Trained vessel detection model with performance assessment
+**Purpose**: Document vessel impacts on acoustic indices and demonstrate indices work despite anthropogenic noise  
+**Key Outputs**: Evidence that indices maintain biological signal even during vessel periods
 
-### Model Development
-- Feature selection specifically for vessel detection
-- Handle class imbalance (likely more non-vessel than vessel periods)
-- Train multiple algorithms (Random Forest, LightGBM, Logistic Regression)
-- Hyperparameter optimization using time-series cross-validation
+### Core Analysis
+- Basic vessel presence/absence analysis using existing manual vessel data
+- Cohen's d effect sizes for vessel impacts on reduced index set
+- Before/during/after vessel comparisons for biological indices
+- Station-specific vessel impact patterns
 
-### Performance Assessment
-- Temporal blocked cross-validation (avoid data leakage)
-- Precision-recall curves and F1 scores
-- Confusion matrices and classification reports
-- Feature importance analysis
-
-### Model Validation
-- Performance by station and season
-- Error analysis (when does the model fail?)
-- Comparison with manual detection patterns
-
-### Static Plots to Generate
-- ROC curves and precision-recall curves
-- Feature importance plots for best model
-- Confusion matrix heatmaps
-- Prediction vs actual time series plots
-- Model performance by station and season
-- Residual analysis plots
-
-**Output**: Trained vessel detection model and performance metrics
-
----
-
-## Notebook 6: Acoustic Indices as Standalone Predictors
-
-**Purpose**: Validate that acoustic indices alone can predict fish presence/patterns without manual detection  
-**Key Outputs**: Quantified ability of indices to serve as proxies for manual detection effort
-
-### Model Architecture
-- Test both species-specific and aggregate fish activity models
-- Handle ordinal nature of 0-3 calling intensity scale
-- Address zero-inflation (many periods with no calling)
-- Compare indices-only vs indices+environmental variables
-
-### Feature Engineering for Fish Models
-- Use reduced acoustic index set from Notebook 3
-- Include environmental variables and temporal features
-- Add vessel probability predictions as feature
-- Create species-specific environmental interactions
-
-### Temporal Validation Strategy
-- Temporal blocked cross-validation with 2-week blocks (prevents temporal leakage)
-- Document explicitly: 7-day gap between train/test exceeds autocorrelation range
-- Compare: Random CV (overly optimistic) vs Blocked CV (realistic) to show importance
-- Lag analysis: How well do indices at time t predict detections at t+1, t+2?
-- Temporal transfer: Train on spring, predict fall (tests robustness)
-
-### Model Performance Metrics
-- Species-specific accuracy and weighted kappa
-- Aggregate fish activity prediction accuracy
-- Feature importance analysis (which indices matter most?)
-- Temporal persistence of predictions (do patterns hold over time?)
-
-### Static Plots to Generate
-- Model performance comparison by species
-- Feature importance rankings by species
-- Predicted vs actual calling intensity scatter plots
-- Time series of predictions vs observations
-- Confusion matrices for each species
-- Residual analysis by environmental conditions
-- Model performance across seasons and stations
-
-**Output**: Trained fish calling models with performance documentation
-
----
-
-## Notebook 7: Validation of Indices as Standalone Monitoring Tool
-
-**Purpose**: Comprehensive validation that acoustic indices alone provide reliable biological information  
-**Key Outputs**: Quantified evidence that indices can replace manual detection for broad-scale monitoring
+### Robustness Assessment  
+- Do fish-calling patterns persist during vessel periods?
+- Which indices are most/least affected by vessel presence?
+- Environmental vs anthropogenic drivers of index variation
+- Seasonal differences in vessel impact severity
 
 ### Key Validation Questions
-- Can indices alone identify spawning seasons? (Compare to known biology)
-- Do indices capture diel patterns without manual input?
-- What biological information is preserved vs lost when using indices only?
-- What is the minimum set of indices needed for reliable monitoring?
-
-### Comparative Analysis
-- Acoustic indices vs SPL-based predictions (if possible)
-- Model performance vs Transue et al. results (different year comparison)
-- Cross-station model transferability
-- Temporal stability assessment
-
-### Prediction Analysis
-- Generate predictions for full year
-- Identify periods of high prediction uncertainty
-- Assess model performance during vessel-heavy periods
-- Evaluate biological pattern preservation
+- Can indices detect biological patterns even with vessel noise?
+- Are community-level fish patterns robust to anthropogenic interference?
+- Which temporal scales minimize vessel impacts?
 
 ### Static Plots to Generate
-- Predicted vs known phenology comparison
-- Model performance across environmental gradients
-- Prediction uncertainty visualization
-- Cross-station prediction transfer assessment
-- Year-long prediction time series by species
-- Model diagnostic plots (residuals, leverage, etc.)
+- Before/during/after vessel box plots for key indices
+- Fish calling patterns: vessel vs non-vessel periods
+- Index robustness rankings (vessel sensitivity analysis)
+- Seasonal variation in anthropogenic impacts
+- Station comparison of vessel effects
 
-**Output**: Comprehensive model validation report with ecological assessment
+**Output**: Documentation that indices provide biological signal despite anthropogenic noise
 
 ---
 
-## Notebook 8: Practical Implications and Implementation Roadmap
+## Notebook 6: Community Pattern Detection and Biological Screening
 
-**Purpose**: Synthesize evidence that acoustic indices can serve as proxies for manual detection  
-**Key Outputs**: Clear recommendations for when/how to use indices instead of manual detection
+**Purpose**: Demonstrate that acoustic indices can detect community-level fish patterns and identify periods of biological interest  
+**Key Outputs**: Evidence that indices serve as effective biological screening tools for continuous monitoring
+
+### Community-Level Analysis
+- **Total fish activity prediction** (sum across all species rather than individual species)
+- **Binary presence/absence modeling** (active vs inactive periods) rather than 0-3 intensity scale
+- **Seasonal pattern detection** using indices alone (spawning periods, activity peaks)
+- **Periods of biological interest classification** for targeted manual analysis
+
+### Model Architecture (Simplified)
+- Focus on aggregate fish community activity rather than species-specific prediction
+- Binary classification: high vs low biological activity periods
+- Use reduced acoustic index set from Notebook 3
+- Include environmental variables and temporal features as available
+
+### Pattern Detection Analysis
+- **Diel rhythm concordance**: Do indices capture same 24-hour patterns as manual detections?
+- **Seasonal phenology**: Can indices identify spawning seasons and activity peaks?
+- **Cross-station consistency**: Do patterns hold across different monitoring locations?
+- **Temporal scales**: At what time scales do indices best capture biological patterns?
+
+### Screening Tool Validation
+- **Efficiency assessment**: How much manual effort could be saved by using indices to identify high-activity periods?
+- **False positive/negative rates**: When do indices miss biological activity or suggest activity when none exists?
+- **Threshold optimization**: What index values correspond to meaningful biological activity?
+
+### Static Plots to Generate
+- Community fish activity: predicted vs actual time series
+- Seasonal pattern comparison (indices vs manual detections)
+- Diel rhythm concordance analysis
+- Screening efficiency assessment (effort reduction quantification)
+- Cross-station pattern consistency
+- Threshold sensitivity analysis for biological activity detection
+
+**Output**: Evidence that indices effectively detect community patterns and serve as biological screening tools
+
+---
+
+## Notebook 7: Continuous Monitoring Validation
+
+**Purpose**: Validate that acoustic indices enable effective continuous biological monitoring at ecosystem scales  
+**Key Outputs**: Quantified evidence that indices provide continuous biological insights impossible with manual detection alone
+
+### Key Validation Questions
+- **Seasonal pattern detection**: Can indices identify spawning seasons and biological phenology?
+- **Diel pattern preservation**: Do indices capture 24-hour biological rhythms?
+- **Continuous vs snapshot monitoring**: What biological information is gained through continuous index monitoring vs 2-hour manual snapshots?
+- **Minimum viable index set**: What is the smallest set of indices needed for reliable community pattern detection?
+
+### Monitoring Efficiency Analysis
+- **Temporal coverage comparison**: Continuous indices vs sparse manual detection
+- **Pattern detection capability**: Biological events detected by indices but missed by manual sampling
+- **Cross-station transferability**: Do index-based patterns generalize across monitoring locations?
+- **Cost-benefit assessment**: Manual effort saved vs biological information retained
+
+### Ecological Pattern Validation
+- **Compare seasonal patterns**: Index-detected vs manually-detected biological activity peaks
+- **Environmental relationship consistency**: Do temperature-activity relationships match between methods?
+- **Community vs species patterns**: Where do indices excel (community) vs struggle (species-specific)?
+- **Temporal scale optimization**: At what time scales are indices most informative?
+
+### Static Plots to Generate
+- Seasonal phenology: indices vs manual detection comparison
+- Continuous monitoring advantages visualization
+- Cross-station pattern transferability assessment
+- Environmental-biological relationship concordance
+- Monitoring effort efficiency analysis
+- Minimum viable index set performance
+
+**Output**: Validation that indices enable effective continuous biological monitoring with quantified advantages over manual-only approaches
+
+---
+
+## Notebook 8: Practical Implementation as Biological Screening Tools
+
+**Purpose**: Synthesize evidence that acoustic indices serve as effective biological screening tools and continuous monitoring systems  
+**Key Outputs**: Clear recommendations for integrating indices into marine monitoring programs
 
 ### Core Findings
-- "Can acoustic indices replace manual detection?" - Quantified answer
-- Accuracy levels achievable with indices alone (by species and aggregate)
-- Minimum index set required for reliable monitoring
-- Temporal scales at which indices are most/least reliable
+- **"Can acoustic indices replace manual detection?"** - Quantified answer: "Not replace, but complement and guide"
+- **Community-level accuracy**: Performance levels achievable for aggregate biological activity detection
+- **Screening efficiency**: Manual effort reduction possible through index-guided targeted sampling  
+- **Optimal temporal scales**: Time scales at which indices are most/least informative for biological patterns
+- **Minimum viable index set**: The smallest set of indices (from 18 reduced set) needed for effective screening
 
-### Method Comparison
-- Acoustic indices vs traditional SPL approaches
-- Computational efficiency assessment
-- Practical advantages/disadvantages
-- Recommended best practices
+### Method Comparison & Integration Strategy
+- **Acoustic indices vs traditional SPL approaches**: Advantages for biological pattern detection
+- **Hybrid monitoring frameworks**: Combining continuous index monitoring with targeted manual detection
+- **Cost-benefit analysis**: Long-term monitoring efficiency gains
+- **Implementation practicality**: Computational requirements, deployment considerations
 
 ### Future Directions
 - Roadmap for including dolphins and more complex vessel analysis
@@ -323,20 +320,21 @@ Log computational time and memory usage for each major operation to inform full-
 
 ## Expected Outcomes
 
-This MVP will definitively answer: **"Can acoustic indices serve as reliable proxies for manual fish detection?"**
+This MVP will definitively answer: **"Can acoustic indices serve as effective biological screening tools and enable continuous community-level monitoring?"**
 
 Specific deliverables:
 
-1. **Quantified Proxy Performance**: X% accuracy in detecting fish presence/patterns using indices alone
-2. **Minimum Viable Index Set**: The 10-15 indices that provide maximum biological information
-3. **Temporal Robustness**: Evidence that indices maintain biological signal despite temporal autocorrelation
-4. **Practical Guidelines**: Clear recommendations for when indices can replace manual detection
-5. **Scalability Demonstration**: Framework for automated monitoring without manual effort
+1. **Community Pattern Detection**: Quantified ability to detect aggregate fish community activity and seasonal patterns using indices
+2. **Biological Screening Performance**: Efficiency of indices in identifying periods of high biological activity for targeted manual analysis
+3. **Minimum Viable Index Set**: The smallest subset (from 18 reduced indices) providing maximum community-level biological information
+4. **Continuous Monitoring Validation**: Evidence that indices capture biological patterns at temporal scales impossible with manual detection
+5. **Practical Integration Framework**: Guidelines for hybrid monitoring combining continuous indices with strategic manual detection
 
-Key advantages over manual detection:
-- Continuous monitoring capability (not just 2-hour snapshots)
-- No human effort required after initial setup
-- Noise-robust compared to traditional SPL approaches
-- Cost-effective for long-term deployments
+Key advantages over manual-only detection:
+- **Continuous biological pattern detection** (not just 2-hour snapshots)
+- **Ecosystem-scale monitoring** with minimal ongoing human effort
+- **Intelligent manual effort allocation** guided by index-detected high-activity periods
+- **Robust to anthropogenic noise** while maintaining biological signal
+- **Cost-effective for long-term community monitoring**
 
-This validation establishes acoustic indices as a practical alternative to manual detection for broad-scale marine monitoring, directly addressing the unsustainable manual effort identified by Transue et al. (2023).
+This validation establishes acoustic indices as **biological screening tools** that dramatically improve monitoring efficiency while preserving ecological insights, directly addressing the scalability limitations of manual-only approaches identified by Transue et al. (2023).
