@@ -13,8 +13,8 @@ notes/DATA-FILE-NAMING.md -- this describes the naming conventions for data file
 # Extra notes for claude code
 - don't write code or run anything unless I specifically say to do so. I like to discuss things first.
 - use uv for python dependency management
--  when adding new features like CDN support, it's better to implement them in the data layer (which we did successfully) rather than rewriting
-  working UI components.
+-  when adding new features like CDN support, it's better to implement them in the data layer (which we did successfully) rather than rewriting working UI components.
+- Python debugging scripts should go in the python/scripts folder
 
 # setup / layout
 - the heavy lifting in terms of analysis and data prep is all done in python - and is contained within the python folder. 

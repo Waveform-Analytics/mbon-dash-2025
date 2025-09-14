@@ -86,7 +86,7 @@ def _(mo):
         r"""
     ## Heatmaps
 
-    These views will include acoustic indices, manual detections, RMS SPL, and environmental data. 
+    These views will include acoustic indices, manual detections, RMS SPL, and environmental data.
     """
     )
     return
@@ -94,21 +94,30 @@ def _(mo):
 
 @app.cell
 def _(VIEWS_FOLDER, pd):
-    ## Detections
-
+    ## Manual detections
     # Import manual detections data
-
+    detections_aligned_df = pd.read_parquet("../data/processed/02_detections_aligned_2021.parquet")
+    # save to json
+    detections_aligned_df.to_json(f"{VIEWS_FOLDER}02_detections_aligned_2021.json", orient="records")
 
 
     ## Acoustic indices
-
     # Import acoustic index data
-    indices_aligned_df = pd.read_parquet("../data/processed/03_reduced_acoustic_indices.parquet")
-
+    indices_aligned_reduced_df = pd.read_parquet("../data/processed/03_reduced_acoustic_indices.parquet")
     # Save to JSON
-    indices_aligned_df.to_json(f"{VIEWS_FOLDER}03_reduced_acoustic_indices.json", orient="records")
+    indices_aligned_reduced_df.to_json(f"{VIEWS_FOLDER}03_reduced_acoustic_indices.json", orient="records")
 
 
+    ## RMS SPL + environmental data
+    # Import env data
+    environment_aligned_df = pd.read_parquet("../data/processed/02_environmental_aligned_2021.parquet")
+    # save to json
+    environment_aligned_df.to_json(f"{VIEWS_FOLDER}02_environmental_aligned_2021.json", orient="records")
+    return
+
+
+@app.cell
+def _():
     return
 
 

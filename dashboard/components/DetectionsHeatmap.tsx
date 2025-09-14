@@ -17,20 +17,20 @@ interface ProcessedDataPoint {
   date: Date;
 }
 
-interface AcousticIndicesHeatmapProps {
+interface DetectionsHeatmapProps {
   className?: string;
 }
 
-const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ className = '' }) => {
+const DetectionsHeatmap: React.FC<DetectionsHeatmapProps> = ({ className = '' }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<string>('9M');
-  const [selectedIndex, setSelectedIndex] = useState<string>('ACTspFract');
+  const [selectedSpecies, setSelectedSpecies] = useState<string>('Silver perch');
   const [stations, setStations] = useState<string[]>([]);
-  const [indices, setIndices] = useState<string[]>([]);
+  const [species, setSpecies] = useState<string[]>([]);
 
   // Fetch data from CDN
   useEffect(() => {
@@ -38,7 +38,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       try {
         setLoading(true);
         const cdnUrl = process.env.NEXT_PUBLIC_CDN_BASE_URL || '';
-        const response = await fetch(`${cdnUrl}/views/03_reduced_acoustic_indices.json`);
+        const response = await fetch(`${cdnUrl}/views/02_detections_aligned_2021.json`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -51,12 +51,12 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
         const uniqueStations = Array.from(new Set(jsonData.map(d => d.station))).sort();
         setStations(uniqueStations);
         
-        // Extract acoustic index keys (excluding metadata fields)
-        const excludeKeys = ['datetime', 'station', 'year', 'FrequencyResolution'];
-        const indexKeys = Object.keys(jsonData[0] || {})
-          .filter(key => !excludeKeys.includes(key) && typeof jsonData[0][key] === 'number')
+        // Extract species columns (excluding metadata fields)
+        const excludeKeys = ['datetime', 'station', 'year'];
+        const speciesKeys = Object.keys(jsonData[0] || {})
+          .filter(key => !excludeKeys.includes(key))
           .sort();
-        setIndices(indexKeys);
+        setSpecies(speciesKeys);
         
         setLoading(false);
       } catch (err) {
@@ -101,7 +101,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       // Use UTC time to avoid timezone issues since data is in UTC
       const dayOfYear = Math.floor((date.getTime() - new Date(Date.UTC(date.getUTCFullYear(), 0, 0)).getTime()) / 86400000);
       const hour = date.getUTCHours();  // Use UTC hours
-      const value = d[selectedIndex] as number;
+      const value = d[selectedSpecies] as number;
       
       processedData.push({
         day: dayOfYear,
@@ -159,7 +159,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
         tooltip.html(`
           Date: ${d.date.toLocaleDateString()}<br/>
           Hour: ${d.hour}:00<br/>
-          ${selectedIndex}: ${d.value.toFixed(4)}
+          ${selectedSpecies}: ${d.value}
         `)
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY - 28) + 'px');
@@ -220,7 +220,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
 
     const legendAxis = d3.axisBottom(legendScale)
       .ticks(5)
-      .tickFormat(d3.format('.3f'));
+      .tickFormat(d => d3.format('.0f')(d));
 
     const legend = svg.append('g')
       .attr('transform', `translate(${containerWidth - legendWidth - 30},${15})`);
@@ -258,14 +258,14 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       .attr('y', -5)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
-      .text(selectedIndex);
+      .text(selectedSpecies);
 
-  }, [data, selectedStation, selectedIndex]);
+  }, [data, selectedStation, selectedSpecies]);
 
   if (loading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="text-muted-foreground">Loading acoustic indices data...</div>
+        <div className="text-muted-foreground">Loading detections data...</div>
       </div>
     );
   }
@@ -294,14 +294,14 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Acoustic Index</label>
+          <label className="block text-sm font-medium mb-1">Species</label>
           <select 
             className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(e.target.value)}
+            value={selectedSpecies}
+            onChange={(e) => setSelectedSpecies(e.target.value)}
           >
-            {indices.map(index => (
-              <option key={index} value={index}>{index}</option>
+            {species.map(sp => (
+              <option key={sp} value={sp}>{sp}</option>
             ))}
           </select>
         </div>
@@ -313,4 +313,4 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
   );
 };
 
-export default AcousticIndicesHeatmap;
+export default DetectionsHeatmap;

@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
 import StationsMap from '../../components/StationsMap';
 import AcousticIndicesHeatmap from '../../components/AcousticIndicesHeatmap';
+import DetectionsHeatmap from '../../components/DetectionsHeatmap';
+import RmsSplHeatmap from '../../components/RmsSplHeatmap';
+import EnvironmentalHeatmap from '../../components/EnvironmentalHeatmap';
 
 export default function DataPage() {
   return (
@@ -134,25 +137,11 @@ export default function DataPage() {
           <div className="space-y-6">
             {/* Manual Detections Panel */}
             <div className="bg-card border shadow-lg rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <Fish className="h-6 w-6 text-chart-1 mr-3" />
-                  <h3 className="text-xl font-semibold">Manual Detections</h3>
-                </div>
-                <select className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background">
-                  <option>Select Species</option>
-                  <option>Dolphin clicks</option>
-                  <option>Fish choruses</option>
-                  <option>Snapping shrimp</option>
-                </select>
+              <div className="flex items-center mb-4">
+                <Fish className="h-6 w-6 text-chart-1 mr-3" />
+                <h3 className="text-xl font-semibold">Manual Detections</h3>
               </div>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">Heatmap visualization (day x hour)</p>
-                  <p className="text-sm text-muted-foreground">D3.js implementation will be added here</p>
-                </div>
-              </div>
+              <DetectionsHeatmap />
             </div>
 
             {/* Acoustic Indices Panel */}
@@ -166,25 +155,11 @@ export default function DataPage() {
 
             {/* RMS SPL Panel */}
             <div className="bg-card border shadow-lg rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <TrendingUp className="h-6 w-6 text-chart-3 mr-3" />
-                  <h3 className="text-xl font-semibold">RMS SPL</h3>
-                </div>
-                <select className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background">
-                  <option>Select Bandwidth</option>
-                  <option>Broadband</option>
-                  <option>Low Frequency</option>
-                  <option>High Frequency</option>
-                </select>
+              <div className="flex items-center mb-4">
+                <TrendingUp className="h-6 w-6 text-chart-3 mr-3" />
+                <h3 className="text-xl font-semibold">RMS SPL</h3>
               </div>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">RMS SPL visualization (day x hour)</p>
-                  <p className="text-sm text-muted-foreground">D3.js implementation will be added here</p>
-                </div>
-              </div>
+              <RmsSplHeatmap />
             </div>
           </div>
         </motion.section>
@@ -198,13 +173,11 @@ export default function DataPage() {
         >
           <h2 className="text-2xl font-semibold text-primary mb-6">Environmental Data</h2>
           <div className="bg-card border shadow-lg rounded-lg p-6">
-            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Database className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Environmental time series will be displayed here</p>
-                <p className="text-sm text-muted-foreground">Temperature and depth measurements over time</p>
-              </div>
+            <div className="flex items-center mb-4">
+              <Database className="h-6 w-6 text-chart-4 mr-3" />
+              <h3 className="text-xl font-semibold">Environmental Variables</h3>
             </div>
+            <EnvironmentalHeatmap />
           </div>
         </motion.section>
       </div>

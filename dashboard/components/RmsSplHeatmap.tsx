@@ -17,20 +17,20 @@ interface ProcessedDataPoint {
   date: Date;
 }
 
-interface AcousticIndicesHeatmapProps {
+interface RmsSplHeatmapProps {
   className?: string;
 }
 
-const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ className = '' }) => {
+const RmsSplHeatmap: React.FC<RmsSplHeatmapProps> = ({ className = '' }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<string>('9M');
-  const [selectedIndex, setSelectedIndex] = useState<string>('ACTspFract');
+  const [selectedBandwidth, setSelectedBandwidth] = useState<string>('Broadband (1-40000 Hz)');
   const [stations, setStations] = useState<string[]>([]);
-  const [indices, setIndices] = useState<string[]>([]);
+  const [bandwidths, setBandwidths] = useState<{ key: string; label: string }[]>([]);
 
   // Fetch data from CDN
   useEffect(() => {
@@ -38,7 +38,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       try {
         setLoading(true);
         const cdnUrl = process.env.NEXT_PUBLIC_CDN_BASE_URL || '';
-        const response = await fetch(`${cdnUrl}/views/03_reduced_acoustic_indices.json`);
+        const response = await fetch(`${cdnUrl}/views/02_environmental_aligned_2021.json`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -51,12 +51,13 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
         const uniqueStations = Array.from(new Set(jsonData.map(d => d.station))).sort();
         setStations(uniqueStations);
         
-        // Extract acoustic index keys (excluding metadata fields)
-        const excludeKeys = ['datetime', 'station', 'year', 'FrequencyResolution'];
-        const indexKeys = Object.keys(jsonData[0] || {})
-          .filter(key => !excludeKeys.includes(key) && typeof jsonData[0][key] === 'number')
-          .sort();
-        setIndices(indexKeys);
+        // Define bandwidth options based on SPL columns
+        const bandwidthOptions = [
+          { key: 'Broadband (1-40000 Hz)', label: 'Broadband' },
+          { key: 'Low (50-1200 Hz)', label: 'Low Frequency' },
+          { key: 'High (7000-40000 Hz)', label: 'High Frequency' }
+        ];
+        setBandwidths(bandwidthOptions);
         
         setLoading(false);
       } catch (err) {
@@ -101,15 +102,30 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       // Use UTC time to avoid timezone issues since data is in UTC
       const dayOfYear = Math.floor((date.getTime() - new Date(Date.UTC(date.getUTCFullYear(), 0, 0)).getTime()) / 86400000);
       const hour = date.getUTCHours();  // Use UTC hours
-      const value = d[selectedIndex] as number;
+      const value = d[selectedBandwidth] as number;
       
-      processedData.push({
-        day: dayOfYear,
-        hour: hour,
-        value: value,
-        date: date
-      });
+      // Only add data points where we have valid SPL values
+      if (value !== null && value !== undefined && !isNaN(value)) {
+        processedData.push({
+          day: dayOfYear,
+          hour: hour,
+          value: value,
+          date: date
+        });
+      }
     });
+
+    if (!processedData.length) {
+      // Show message if no data available
+      g.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '16px')
+        .style('fill', '#666')
+        .text(`No ${selectedBandwidth} data available for station ${selectedStation}`);
+      return;
+    }
 
     // Create scales
     const dayExtent = d3.extent(processedData, d => d.day) as [number, number];
@@ -156,10 +172,11 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
           .duration(200)
           .style('opacity', 0.9);
 
+        const bandwidthLabel = bandwidths.find(b => b.key === selectedBandwidth)?.label || selectedBandwidth;
         tooltip.html(`
           Date: ${d.date.toLocaleDateString()}<br/>
           Hour: ${d.hour}:00<br/>
-          ${selectedIndex}: ${d.value.toFixed(4)}
+          ${bandwidthLabel} SPL: ${d.value.toFixed(1)} dB
         `)
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY - 28) + 'px');
@@ -220,7 +237,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
 
     const legendAxis = d3.axisBottom(legendScale)
       .ticks(5)
-      .tickFormat(d3.format('.3f'));
+      .tickFormat(d => d3.format('.1f')(d));
 
     const legend = svg.append('g')
       .attr('transform', `translate(${containerWidth - legendWidth - 30},${15})`);
@@ -253,19 +270,20 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       .attr('transform', `translate(0,${legendHeight})`)
       .call(legendAxis);
 
+    const bandwidthLabel = bandwidths.find(b => b.key === selectedBandwidth)?.label || selectedBandwidth;
     legend.append('text')
       .attr('x', legendWidth / 2)
       .attr('y', -5)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
-      .text(selectedIndex);
+      .text(`${bandwidthLabel} SPL (dB)`);
 
-  }, [data, selectedStation, selectedIndex]);
+  }, [data, selectedStation, selectedBandwidth, bandwidths]);
 
   if (loading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="text-muted-foreground">Loading acoustic indices data...</div>
+        <div className="text-muted-foreground">Loading RMS SPL data...</div>
       </div>
     );
   }
@@ -294,14 +312,14 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Acoustic Index</label>
+          <label className="block text-sm font-medium mb-1">Bandwidth</label>
           <select 
             className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(e.target.value)}
+            value={selectedBandwidth}
+            onChange={(e) => setSelectedBandwidth(e.target.value)}
           >
-            {indices.map(index => (
-              <option key={index} value={index}>{index}</option>
+            {bandwidths.map(bandwidth => (
+              <option key={bandwidth.key} value={bandwidth.key}>{bandwidth.label}</option>
             ))}
           </select>
         </div>
@@ -313,4 +331,4 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
   );
 };
 
-export default AcousticIndicesHeatmap;
+export default RmsSplHeatmap;

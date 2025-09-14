@@ -17,20 +17,20 @@ interface ProcessedDataPoint {
   date: Date;
 }
 
-interface AcousticIndicesHeatmapProps {
+interface EnvironmentalHeatmapProps {
   className?: string;
 }
 
-const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ className = '' }) => {
+const EnvironmentalHeatmap: React.FC<EnvironmentalHeatmapProps> = ({ className = '' }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<string>('9M');
-  const [selectedIndex, setSelectedIndex] = useState<string>('ACTspFract');
+  const [selectedVariable, setSelectedVariable] = useState<string>('Water temp (°C)');
   const [stations, setStations] = useState<string[]>([]);
-  const [indices, setIndices] = useState<string[]>([]);
+  const [variables, setVariables] = useState<{ key: string; label: string; unit: string }[]>([]);
 
   // Fetch data from CDN
   useEffect(() => {
@@ -38,7 +38,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       try {
         setLoading(true);
         const cdnUrl = process.env.NEXT_PUBLIC_CDN_BASE_URL || '';
-        const response = await fetch(`${cdnUrl}/views/03_reduced_acoustic_indices.json`);
+        const response = await fetch(`${cdnUrl}/views/02_environmental_aligned_2021.json`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -51,12 +51,12 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
         const uniqueStations = Array.from(new Set(jsonData.map(d => d.station))).sort();
         setStations(uniqueStations);
         
-        // Extract acoustic index keys (excluding metadata fields)
-        const excludeKeys = ['datetime', 'station', 'year', 'FrequencyResolution'];
-        const indexKeys = Object.keys(jsonData[0] || {})
-          .filter(key => !excludeKeys.includes(key) && typeof jsonData[0][key] === 'number')
-          .sort();
-        setIndices(indexKeys);
+        // Define environmental variable options
+        const variableOptions = [
+          { key: 'Water temp (°C)', label: 'Temperature', unit: '°C' },
+          { key: 'Water depth (m)', label: 'Depth', unit: 'm' }
+        ];
+        setVariables(variableOptions);
         
         setLoading(false);
       } catch (err) {
@@ -101,15 +101,30 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       // Use UTC time to avoid timezone issues since data is in UTC
       const dayOfYear = Math.floor((date.getTime() - new Date(Date.UTC(date.getUTCFullYear(), 0, 0)).getTime()) / 86400000);
       const hour = date.getUTCHours();  // Use UTC hours
-      const value = d[selectedIndex] as number;
+      const value = d[selectedVariable] as number;
       
-      processedData.push({
-        day: dayOfYear,
-        hour: hour,
-        value: value,
-        date: date
-      });
+      // Only add data points where we have valid values
+      if (value !== null && value !== undefined && !isNaN(value)) {
+        processedData.push({
+          day: dayOfYear,
+          hour: hour,
+          value: value,
+          date: date
+        });
+      }
     });
+
+    if (!processedData.length) {
+      // Show message if no data available
+      g.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '16px')
+        .style('fill', '#666')
+        .text(`No ${selectedVariable} data available for station ${selectedStation}`);
+      return;
+    }
 
     // Create scales
     const dayExtent = d3.extent(processedData, d => d.day) as [number, number];
@@ -122,8 +137,18 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       .domain([0, 22])
       .range([height, 0]);
 
-    const colorScale = d3.scaleSequential(d3.interpolateViridis)
-      .domain(d3.extent(processedData, d => d.value) as [number, number]);
+    // Use different color scales for temperature vs depth
+    let colorScale;
+    if (selectedVariable === 'Water temp (°C)') {
+      // Temperature: use cool-to-warm color scale (blue = cool, red = warm)
+      const tempExtent = d3.extent(processedData, d => d.value) as [number, number];
+      colorScale = d3.scaleSequential(d3.interpolateRdYlBu)
+        .domain([tempExtent[1], tempExtent[0]]); // Reverse domain so blue = low temp, red = high temp
+    } else {
+      // Depth: use blue scale (deeper = darker blue)
+      colorScale = d3.scaleSequential(d3.interpolateBlues)
+        .domain(d3.extent(processedData, d => d.value) as [number, number]);
+    }
 
     // Calculate cell dimensions
     const cellWidth = width / (dayExtent[1] - dayExtent[0] + 1);
@@ -156,10 +181,14 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
           .duration(200)
           .style('opacity', 0.9);
 
+        const variableInfo = variables.find(v => v.key === selectedVariable);
+        const label = variableInfo?.label || selectedVariable;
+        const unit = variableInfo?.unit || '';
+        
         tooltip.html(`
           Date: ${d.date.toLocaleDateString()}<br/>
           Hour: ${d.hour}:00<br/>
-          ${selectedIndex}: ${d.value.toFixed(4)}
+          ${label}: ${d.value.toFixed(2)} ${unit}
         `)
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY - 28) + 'px');
@@ -214,13 +243,22 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
     const legendWidth = 200;
     const legendHeight = 20;
     
+    // For temperature, we want the legend to show low to high (left to right)
+    let legendDomain;
+    if (selectedVariable === 'Water temp (°C)') {
+      const tempExtent = d3.extent(processedData, d => d.value) as [number, number];
+      legendDomain = [tempExtent[0], tempExtent[1]]; // Low to high for legend
+    } else {
+      legendDomain = colorScale.domain();
+    }
+    
     const legendScale = d3.scaleLinear()
-      .domain(colorScale.domain())
+      .domain(legendDomain)
       .range([0, legendWidth]);
 
     const legendAxis = d3.axisBottom(legendScale)
       .ticks(5)
-      .tickFormat(d3.format('.3f'));
+      .tickFormat(d => d3.format('.1f')(d));
 
     const legend = svg.append('g')
       .attr('transform', `translate(${containerWidth - legendWidth - 30},${15})`);
@@ -241,7 +279,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
     colorRange.forEach(t => {
       gradient.append('stop')
         .attr('offset', `${t * 100}%`)
-        .attr('stop-color', colorScale(colorScale.domain()[0] + t * (colorScale.domain()[1] - colorScale.domain()[0])));
+        .attr('stop-color', colorScale(legendDomain[0] + t * (legendDomain[1] - legendDomain[0])));
     });
 
     legend.append('rect')
@@ -253,19 +291,23 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       .attr('transform', `translate(0,${legendHeight})`)
       .call(legendAxis);
 
+    const variableInfo = variables.find(v => v.key === selectedVariable);
+    const label = variableInfo?.label || selectedVariable;
+    const unit = variableInfo?.unit || '';
+    
     legend.append('text')
       .attr('x', legendWidth / 2)
       .attr('y', -5)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
-      .text(selectedIndex);
+      .text(`${label} (${unit})`);
 
-  }, [data, selectedStation, selectedIndex]);
+  }, [data, selectedStation, selectedVariable, variables]);
 
   if (loading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="text-muted-foreground">Loading acoustic indices data...</div>
+        <div className="text-muted-foreground">Loading environmental data...</div>
       </div>
     );
   }
@@ -294,14 +336,14 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Acoustic Index</label>
+          <label className="block text-sm font-medium mb-1">Variable</label>
           <select 
             className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(e.target.value)}
+            value={selectedVariable}
+            onChange={(e) => setSelectedVariable(e.target.value)}
           >
-            {indices.map(index => (
-              <option key={index} value={index}>{index}</option>
+            {variables.map(variable => (
+              <option key={variable.key} value={variable.key}>{variable.label}</option>
             ))}
           </select>
         </div>
@@ -313,4 +355,4 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
   );
 };
 
-export default AcousticIndicesHeatmap;
+export default EnvironmentalHeatmap;

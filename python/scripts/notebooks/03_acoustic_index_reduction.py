@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -1405,15 +1405,35 @@ def _(
 
     if not df_indices_reduced.empty:
         # Save reduced indices dataset with identifiers
-        reduced_with_ids = pd.concat([
-            df_acoustic_indices[['datetime', 'station', 'year']],
-            df_indices_reduced
-        ], axis=1)
+        # Reset indices to ensure alignment
+        ids_df = df_acoustic_indices[['datetime', 'station', 'year']].reset_index(drop=True)
+        reduced_df = df_indices_reduced.reset_index(drop=True)
+
+        # Check shapes match
+        if len(ids_df) != len(reduced_df):
+            print(f"Warning: Shape mismatch - ids: {len(ids_df)}, reduced: {len(reduced_df)}")
+            print(f"  IDs DataFrame shape: {ids_df.shape}")
+            print(f"  Reduced DataFrame shape: {reduced_df.shape}")
+
+        # Safe concatenation with aligned indices
+        reduced_with_ids = pd.concat([ids_df, reduced_df], axis=1)
+
+        # Verify no NaN values in datetime column
+        nan_count = reduced_with_ids['datetime'].isna().sum()
+        if nan_count > 0:
+            print(f"Warning: {nan_count} NaN values found in datetime column")
+            reduced_with_ids = reduced_with_ids.dropna(subset=['datetime'])
+            print(f"Dropped rows with NaN datetime. New shape: {reduced_with_ids.shape}")
 
         reduced_with_ids.to_parquet(output_data_dir / "03_reduced_acoustic_indices.parquet")
         print(f"Saved reduced acoustic indices: {output_data_dir / '03_reduced_acoustic_indices.parquet'}")
         print(f"  Shape: {reduced_with_ids.shape}")
         print(f"  Columns: {len(selected_indices)} indices + 3 identifiers")
+        print(f"  Datetime dtype: {reduced_with_ids['datetime'].dtype}")
+
+        # Verify the hours are what we expect
+        unique_hours = np.unique(reduced_with_ids['datetime'].dt.hour)
+        print(f"  Unique hours: {unique_hours}")
 
     # Save summary results as JSON
     import json
