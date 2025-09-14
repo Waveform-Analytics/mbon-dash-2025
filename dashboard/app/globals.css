@@ -113,3 +113,12 @@ html {
 
 /* Mapbox GL CSS */
 @import 'mapbox-gl/dist/mapbox-gl.css';
+
+/* Card flip animation styles */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}

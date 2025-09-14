@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
+import Link from 'next/link';
 import StationsMap from '../../components/StationsMap';
 import AcousticIndicesHeatmap from '../../components/AcousticIndicesHeatmap';
 import DetectionsHeatmap from '../../components/DetectionsHeatmap';
@@ -20,7 +21,17 @@ export default function DataPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-primary mb-2">Data Overview</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-4xl font-bold text-primary">Data Overview</h1>
+            <nav className="flex items-center space-x-4">
+              <Link href="/data" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                Overview
+              </Link>
+              <Link href="/data/acoustic-indices" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                Acoustic Indices Explorer
+              </Link>
+            </nav>
+          </div>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
         </motion.div>
         
