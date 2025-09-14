@@ -19,16 +19,16 @@ const navItems = [
     description: 'Data overview, stations, and visualizations'
   },
   {
-    href: '/analysis',
-    label: 'Analysis',
-    icon: FlaskConical,
-    description: 'Analysis workflows and computational notebooks'
-  },
-  {
     href: '/explore',
     label: 'Explore',
     icon: Compass,
     description: 'Interactive exploration tools and demos'
+  },
+  {
+    href: '/analysis',
+    label: 'Notebooks',
+    icon: FlaskConical,
+    description: 'Analysis workflows and computational notebooks'
   },
   {
     href: '/background',
