@@ -29,9 +29,19 @@ def _(mo):
 def _():
     import pandas as pd
     import numpy as np
+    import os
+    from pathlib import Path
 
-    VIEWS_FOLDER = "../data/views/"
-    return VIEWS_FOLDER, pd
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
+
+    DATA_ROOT = project_root / "data"
+    VIEWS_FOLDER = str(DATA_ROOT / "views") + "/"
+
+    return VIEWS_FOLDER, pd, DATA_ROOT
 
 
 @app.cell(hide_code=True)
@@ -47,9 +57,9 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd):
+def _(VIEWS_FOLDER, pd, DATA_ROOT):
     # Import the parquet file as a dataframe using Pandas
-    station_metadata_df = pd.read_parquet("../data/processed/metadata/deployments.parquet")
+    station_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/deployments.parquet")
 
     # Extract a subset of rows where the "Station" column has all unique values
     unique_stations_df = station_metadata_df.drop_duplicates(subset='Station')
@@ -93,26 +103,93 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd):
+def _(VIEWS_FOLDER, pd, DATA_ROOT):
     ## Manual detections
     # Import manual detections data
-    detections_aligned_df = pd.read_parquet("../data/processed/02_detections_aligned_2021.parquet")
+    detections_aligned_df = pd.read_parquet(DATA_ROOT / "processed/02_detections_aligned_2021.parquet")
     # save to json
     detections_aligned_df.to_json(f"{VIEWS_FOLDER}02_detections_aligned_2021.json", orient="records")
 
 
     ## Acoustic indices
     # Import acoustic index data
-    indices_aligned_reduced_df = pd.read_parquet("../data/processed/03_reduced_acoustic_indices.parquet")
+    indices_aligned_reduced_df = pd.read_parquet(DATA_ROOT / "processed/03_reduced_acoustic_indices.parquet")
+
+    # Add hour field for heatmap visualization (extract hour from datetime)
+    indices_aligned_reduced_df['datetime'] = pd.to_datetime(indices_aligned_reduced_df['datetime'])
+    indices_aligned_reduced_df['hour'] = indices_aligned_reduced_df['datetime'].dt.hour
+
     # Save to JSON
     indices_aligned_reduced_df.to_json(f"{VIEWS_FOLDER}03_reduced_acoustic_indices.json", orient="records")
 
 
     ## RMS SPL + environmental data
     # Import env data
-    environment_aligned_df = pd.read_parquet("../data/processed/02_environmental_aligned_2021.parquet")
+    environment_aligned_df = pd.read_parquet(DATA_ROOT / "processed/02_environmental_aligned_2021.parquet")
     # save to json
     environment_aligned_df.to_json(f"{VIEWS_FOLDER}02_environmental_aligned_2021.json", orient="records")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Full Acoustic Indices for Enhanced Heatmap
+
+    **Purpose**: Export the complete dataset with all acoustic indices and cluster metadata for the enhanced heatmap visualization.
+
+    **Data Files**:
+    - **Full indices dataset**: All 61 acoustic indices aligned to 2-hour resolution
+    - **Cluster metadata**: Cluster assignments and selection status for each index
+
+    This allows users to explore all indices organized by functional clusters in the heatmap.
+    """
+    )
+    return
+
+
+@app.cell
+def _(VIEWS_FOLDER, pd, DATA_ROOT):
+    ## Full Acoustic Indices Dataset
+    try:
+        # Load the complete dataset with all indices
+        indices_full_df = pd.read_parquet(DATA_ROOT / "processed/02_acoustic_indices_aligned_2021_full.parquet")
+
+        # Add hour field for heatmap visualization (extract hour from datetime)
+        indices_full_df['datetime'] = pd.to_datetime(indices_full_df['datetime'])
+        indices_full_df['hour'] = indices_full_df['datetime'].dt.hour
+
+        # Save full indices data
+        indices_full_df.to_json(f"{VIEWS_FOLDER}acoustic_indices_full.json", orient="records")
+
+        print(f"Saved full indices dataset:")
+        print(f"  Shape: {indices_full_df.shape}")
+        print(f"  Stations: {indices_full_df['station'].unique() if 'station' in indices_full_df.columns else 'N/A'}")
+
+        # Count indices (excluding datetime, station, year columns)
+        index_cols = [col for col in indices_full_df.columns if col not in ['datetime', 'station', 'year']]
+        print(f"  Total indices: {len(index_cols)}")
+    except FileNotFoundError:
+        print("Full indices dataset not found - run notebook 3 first to generate it")
+        indices_full_df = pd.DataFrame()
+
+    ## Cluster Metadata
+    try:
+        # Load cluster metadata
+        cluster_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices_clusters.parquet")
+
+        # Save cluster metadata
+        cluster_metadata_df.to_json(f"{VIEWS_FOLDER}acoustic_indices_clusters.json", orient="records")
+
+        print(f"\nSaved cluster metadata:")
+        print(f"  Total indices: {len(cluster_metadata_df)}")
+        print(f"  Clusters: {cluster_metadata_df['cluster_id'].nunique() if 'cluster_id' in cluster_metadata_df.columns else 'N/A'}")
+        print(f"  Selected indices: {cluster_metadata_df['is_selected'].sum() if 'is_selected' in cluster_metadata_df.columns else 'N/A'}")
+    except FileNotFoundError:
+        print("Cluster metadata not found - run notebook 3 first to generate it")
+        cluster_metadata_df = pd.DataFrame()
+
     return
 
 
@@ -137,10 +214,10 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd):
+def _(VIEWS_FOLDER, pd, DATA_ROOT):
     ## Acoustic Indices Metadata
     # Import indices metadata
-    acoustic_indices_metadata_df = pd.read_parquet("../data/processed/metadata/acoustic_indices.parquet")
+    acoustic_indices_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices.parquet")
     # save to json
     acoustic_indices_metadata_df.to_json(f"{VIEWS_FOLDER}acoustic_indices.json", orient="records")
 

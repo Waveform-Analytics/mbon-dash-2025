@@ -38,12 +38,21 @@ def _():
     import warnings
     warnings.filterwarnings('ignore')
 
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
+
+    DATA_ROOT = project_root / "data"
+
     # Set up plotting
     plt.style.use('default')
     sns.set_palette("husl")
 
     print("Libraries loaded successfully")
-    return Path, np, pd, plt, sns
+    print(f"Data root: {DATA_ROOT}")
+    return Path, np, pd, plt, sns, DATA_ROOT
 
 
 @app.cell(hide_code=True)

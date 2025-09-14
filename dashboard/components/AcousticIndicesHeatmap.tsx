@@ -17,6 +17,14 @@ interface ProcessedDataPoint {
   date: Date;
 }
 
+interface ClusterMetadata {
+  index_name: string;
+  cluster_id: number;
+  cluster_size: number;
+  is_selected: boolean;
+  selection_rationale: string;
+}
+
 interface AcousticIndicesHeatmapProps {
   className?: string;
 }
@@ -29,8 +37,11 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<string>('9M');
   const [selectedIndex, setSelectedIndex] = useState<string>('ACTspFract');
+  const [selectedCluster, setSelectedCluster] = useState<string>('All');
   const [stations, setStations] = useState<string[]>([]);
   const [indices, setIndices] = useState<string[]>([]);
+  const [clusterMetadata, setClusterMetadata] = useState<ClusterMetadata[]>([]);
+  const [clusters, setClusters] = useState<string[]>([]);
 
   // Fetch data from CDN
   useEffect(() => {
@@ -38,26 +49,44 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       try {
         setLoading(true);
         const cdnUrl = process.env.NEXT_PUBLIC_CDN_BASE_URL || '';
-        const response = await fetch(`${cdnUrl}/views/03_reduced_acoustic_indices.json`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`);
+
+        // Fetch both data and cluster metadata - use full dataset to get all indices
+        const [dataResponse, metadataResponse] = await Promise.all([
+          fetch(`${cdnUrl}/views/acoustic_indices_full.json`),
+          fetch(`${cdnUrl}/views/acoustic_indices_clusters.json`)
+        ]);
+
+        if (!dataResponse.ok) {
+          throw new Error(`Failed to fetch data: ${dataResponse.statusText}`);
         }
-        
-        const jsonData: DataPoint[] = await response.json();
+
+        const jsonData: DataPoint[] = await dataResponse.json();
         setData(jsonData);
-        
+
+        // Load cluster metadata if available
+        let metadata: ClusterMetadata[] = [];
+        if (metadataResponse.ok) {
+          metadata = await metadataResponse.json();
+          setClusterMetadata(metadata);
+
+          // Extract unique clusters
+          const uniqueClusters = Array.from(new Set(metadata.map(m => m.cluster_id)))
+            .sort((a, b) => a - b)
+            .map(id => `Cluster ${id}`);
+          setClusters(['All', ...uniqueClusters]);
+        }
+
         // Extract unique stations
         const uniqueStations = Array.from(new Set(jsonData.map(d => d.station))).sort();
         setStations(uniqueStations);
-        
+
         // Extract acoustic index keys (excluding metadata fields)
-        const excludeKeys = ['datetime', 'station', 'year', 'FrequencyResolution'];
+        const excludeKeys = ['datetime', 'station', 'year', 'FrequencyResolution', 'hour'];
         const indexKeys = Object.keys(jsonData[0] || {})
           .filter(key => !excludeKeys.includes(key) && typeof jsonData[0][key] === 'number')
           .sort();
         setIndices(indexKeys);
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -68,6 +97,37 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
 
     fetchData();
   }, []);
+
+  // Get available indices based on cluster selection
+  const availableIndices = React.useMemo(() => {
+    if (selectedCluster === 'All') {
+      // When "All" is selected, show ALL indices from the data, not just cluster metadata
+      return indices;
+    }
+
+    if (!clusterMetadata.length) {
+      return indices; // Fall back to all indices if no cluster metadata
+    }
+
+    const clusterId = parseInt(selectedCluster.replace('Cluster ', ''));
+    return clusterMetadata
+      .filter(m => m.cluster_id === clusterId)
+      .map(m => m.index_name)
+      .filter(name => indices.includes(name))
+      .sort();
+  }, [clusterMetadata, selectedCluster, indices]);
+
+  // Auto-select representative index when cluster changes
+  React.useEffect(() => {
+    if (availableIndices.length > 0 && !availableIndices.includes(selectedIndex)) {
+      // Find representative index for the cluster, or fall back to first available
+      const representative = clusterMetadata
+        .filter(m => availableIndices.includes(m.index_name))
+        .find(m => m.is_selected);
+
+      setSelectedIndex(representative?.index_name || availableIndices[0]);
+    }
+  }, [availableIndices, selectedIndex, clusterMetadata]);
 
   // Render heatmap
   useEffect(() => {
@@ -102,7 +162,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       const dayOfYear = Math.floor((date.getTime() - new Date(Date.UTC(date.getUTCFullYear(), 0, 0)).getTime()) / 86400000);
       const hour = date.getUTCHours();  // Use UTC hours
       const value = d[selectedIndex] as number;
-      
+
       processedData.push({
         day: dayOfYear,
         hour: hour,
@@ -213,7 +273,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
     // Add color legend
     const legendWidth = 200;
     const legendHeight = 20;
-    
+
     const legendScale = d3.scaleLinear()
       .domain(colorScale.domain())
       .range([0, legendWidth]);
@@ -237,7 +297,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
 
     const nStops = 10;
     const colorRange = d3.range(nStops).map(i => i / (nStops - 1));
-    
+
     colorRange.forEach(t => {
       gradient.append('stop')
         .attr('offset', `${t * 100}%`)
@@ -280,10 +340,10 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
 
   return (
     <div className={className}>
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-4 mb-4 flex-wrap">
         <div>
           <label className="block text-sm font-medium mb-1">Station</label>
-          <select 
+          <select
             className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
             value={selectedStation}
             onChange={(e) => setSelectedStation(e.target.value)}
@@ -293,16 +353,38 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
             ))}
           </select>
         </div>
+
+        {clusters.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Cluster Group</label>
+            <select
+              className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
+              value={selectedCluster}
+              onChange={(e) => setSelectedCluster(e.target.value)}
+            >
+              {clusters.map(cluster => (
+                <option key={cluster} value={cluster}>{cluster}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium mb-1">Acoustic Index</label>
-          <select 
+          <select
             className="px-3 py-2 border border-gray-200 rounded-md text-sm bg-background"
             value={selectedIndex}
             onChange={(e) => setSelectedIndex(e.target.value)}
           >
-            {indices.map(index => (
-              <option key={index} value={index}>{index}</option>
-            ))}
+            {availableIndices.map(index => {
+              const metadata = clusterMetadata.find(m => m.index_name === index);
+              const isRepresentative = metadata?.is_selected || false;
+              return (
+                <option key={index} value={index}>
+                  {index} {isRepresentative ? '★' : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>

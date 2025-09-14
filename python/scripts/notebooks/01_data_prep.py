@@ -6,59 +6,20 @@ app = marimo.App(width="medium", auto_download=["html"])
 
 @app.cell
 def _():
-    import marimo as mo
-    return (mo,)
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    # Notebook 1: Data Loading and Initial Exploration
-
-    **Purpose**: Load all data streams and perform initial quality assessment  
-    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization
-
-    This notebook processes data from three moored hydrophone stations (9M, 14M, 37M) deployed near May River in 2021. (Note that we do plan to also process 2018 data but are starting here.) We're combining multiple data streams to understand marine biodiversity patterns:
-
-    - **Acoustic indices**: Computed soundscape metrics that capture ecosystem acoustic activity 
-    - **Manual fish detections**: Human-annotated intensity level of fish species every 2 hours (where intensity level is a 0-3 integer scale with 0 being no calls, 1 being one, 2 being multiple, and 3 being a chorus where calls cannot be distinguished from each other.)
-    - **Environmental data**: Temperature (20-min intervals) and depth (1-hour intervals) measurements. Depth data can be used as a proxy for tide.
-    - **SPL data**: Sound pressure levels across frequency bands (broadband, low 50-1200Hz, high 7000-40000Hz)
-    - **Vessel detections**: Ship noise events (included in manual detection files)
-
-    Each data type was collected at different temporal resolutions, requiring careful alignment for integrated analysis.
-    """
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _():
     import pandas as pd
     import numpy as np
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    import os
     from pathlib import Path
-    import warnings
-    warnings.filterwarnings('ignore')
 
-    # Set up plotting style
-    plt.style.use('default')
-    sns.set_palette("husl")
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
 
-    # Define constants
-    STATIONS = ['9M', '14M', '37M']
-    YEAR = 2021
-    DATA_DIR = Path("../data/raw")
-    OUTPUT_DIR = Path("../data/processed")
+    DATA_ROOT = project_root / "data"
 
-    # Create output directory if it doesn't exist
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    print("✓ Libraries imported and constants defined")
-    return DATA_DIR, OUTPUT_DIR, STATIONS, YEAR, np, pd, plt, sns
-
+    return pd, DATA_ROOT
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -73,7 +34,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load acoustic indices (FullBW version)
     indices_data = {}
     indices_info = {}
@@ -112,7 +73,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load manual detection data
     detection_data = {}
     detection_info = {}
@@ -150,7 +111,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, detection_data, pd):
+def _(DATA_DIR, detection_data, pd, DATA_ROOT):
     # Load species metadata to filter detection columns
     metadata_path = DATA_DIR / "metadata" / "det_column_names.csv"
 
@@ -210,7 +171,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load temperature data (20-minute intervals)
     temp_data = {}
     temp_info = {}
@@ -235,7 +196,7 @@ def _(DATA_DIR, STATIONS, YEAR, pd):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load depth data (1-hour intervals)
     depth_data = {}
     depth_info = {}
@@ -272,7 +233,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load RMS SPL data (1-hour intervals)
     spl_data = {}
     spl_info = {}
@@ -791,7 +752,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, depth_data, pd, plt, spl_data, temp_data):
+def _(STATIONS, depth_data, pd, plt, spl_data, temp_data, DATA_ROOT):
     # Create time series plots for temperature, depth, and SPL
     fig_ts, axes_ts = plt.subplots(3, 3, figsize=(18, 10))
 
@@ -1035,7 +996,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, metadata_df, pd):
+def _(DATA_DIR, metadata_df, pd, DATA_ROOT):
     # Load deployment metadata from Excel file
     metadata_excel_path = DATA_DIR / "metadata" / "1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
     metadata_data = {}

@@ -58,12 +58,21 @@ def _():
     plt.style.use('default')
     sns.set_palette("husl")
 
-    # Data directory
-    data_dir = Path("../data/processed")
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
+
+    # Data directories
+    DATA_ROOT = project_root / "data"
+    data_dir = DATA_ROOT / "processed"
 
     print("Libraries loaded successfully")
+    print(f"Data root: {DATA_ROOT}")
     print(f"Data directory: {data_dir}")
     return (
+        DATA_ROOT,
         PCA,
         Path,
         StandardScaler,
@@ -466,6 +475,74 @@ def _(
     )
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Cluster Metadata Export
+
+    Creating comprehensive metadata for all acoustic indices including:
+    - Cluster assignments for each index
+    - Whether the index was selected as representative
+    - Cluster statistics (size, rationale)
+
+    This metadata will be used for the enhanced heatmap visualization that shows all indices organized by cluster.
+    """
+    )
+    return
+
+
+@app.cell
+def _(acoustic_index_cols, cluster_df, pd, selected_indices, selection_rationale):
+    # Create comprehensive metadata for all indices
+    index_metadata = []
+
+    if acoustic_index_cols and not cluster_df.empty:
+        for idx in acoustic_index_cols:
+            # Get cluster ID for this index
+            cluster_matches = cluster_df[cluster_df['index'] == idx]['cluster'].values
+            idx_cluster_id = int(cluster_matches[0]) if len(cluster_matches) > 0 else 0
+
+            # Get cluster size
+            cluster_size = len(cluster_df[cluster_df['cluster'] == idx_cluster_id]) if idx_cluster_id > 0 else 1
+
+            # Check if this index was selected as representative
+            is_selected = idx in selected_indices
+
+            # Get selection rationale if available
+            if is_selected and idx in selection_rationale:
+                rationale = selection_rationale[idx]
+            else:
+                rationale = f"Not selected - another index represents cluster {idx_cluster_id}"
+
+            index_metadata.append({
+                'index_name': idx,
+                'cluster_id': idx_cluster_id,
+                'cluster_size': cluster_size,
+                'is_selected': is_selected,
+                'selection_rationale': rationale
+            })
+
+        # Convert to DataFrame
+        index_metadata_df = pd.DataFrame(index_metadata)
+
+        # Sort by cluster_id and then by selection status
+        index_metadata_df = index_metadata_df.sort_values(
+            ['cluster_id', 'is_selected'],
+            ascending=[True, False]
+        )
+
+        print(f"Created metadata for {len(index_metadata_df)} indices")
+        print(f"  Clusters: {index_metadata_df['cluster_id'].nunique()}")
+        print(f"  Selected indices: {index_metadata_df['is_selected'].sum()}")
+        print(f"  Cluster sizes: {index_metadata_df.groupby('cluster_id')['index_name'].count().to_dict()}")
+    else:
+        index_metadata_df = pd.DataFrame()
+        print("No cluster data available for metadata creation")
+
+    return index_metadata_df,
+
+
 @app.cell
 def _(mo):
     mo.md(
@@ -687,9 +764,11 @@ def _(df_indices_reduced, pd, selected_indices):
     from statsmodels.tsa.stattools import acf, pacf
     from statsmodels.stats.diagnostic import acorr_ljungbox
 
+    # Initialize autocorr_results to ensure it's always defined
+    autocorr_results = {}
+
     if not df_indices_reduced.empty and len(selected_indices) > 0:
         # Analyze temporal autocorrelation for each selected index
-        autocorr_results = {}
         decorrelation_lags = {}
 
         print("=== TEMPORAL AUTOCORRELATION ANALYSIS ===\n")
@@ -1008,9 +1087,9 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(Path):
+def _(Path, DATA_ROOT):
     # Create output directory for plots
-    output_dir_plots = Path("../../dashboard/public/views/notebooks")
+    output_dir_plots = DATA_ROOT.parent / "dashboard" / "public" / "views" / "notebooks"
     output_dir_plots.mkdir(parents=True, exist_ok=True)
     print(f"Plot output directory: {output_dir_plots}")
     return (output_dir_plots,)
@@ -1388,6 +1467,7 @@ def _(
 
 @app.cell(hide_code=True)
 def _(
+    DATA_ROOT,
     Path,
     acoustic_index_cols,
     df_acoustic_indices,
@@ -1400,7 +1480,7 @@ def _(
     summary_results,
 ):
     # Save the reduced dataset and analysis results
-    output_data_dir = Path("../data/processed")
+    output_data_dir = DATA_ROOT / "processed"
     output_data_dir.mkdir(parents=True, exist_ok=True)
 
     if not df_indices_reduced.empty:
@@ -1434,6 +1514,29 @@ def _(
         # Verify the hours are what we expect
         unique_hours = np.unique(reduced_with_ids['datetime'].dt.hour)
         print(f"  Unique hours: {unique_hours}")
+
+        # Also save the FULL dataset (not reduced) for the enhanced heatmap
+        full_indices_with_ids = df_acoustic_indices.copy()  # This already includes datetime, station, year
+
+        # Remove any rows with NaN datetime
+        full_indices_with_ids = full_indices_with_ids.dropna(subset=['datetime'])
+
+        full_indices_path = output_data_dir / "02_acoustic_indices_aligned_2021_full.parquet"
+        full_indices_with_ids.to_parquet(full_indices_path)
+        print(f"\nSaved full indices dataset: {full_indices_path}")
+        print(f"  Shape: {full_indices_with_ids.shape}")
+        print(f"  Total indices: {len(acoustic_index_cols)}")
+
+        # Save cluster metadata
+        if 'index_metadata_df' in locals() and not index_metadata_df.empty:
+            metadata_dir = output_data_dir / "metadata"
+            metadata_dir.mkdir(exist_ok=True)
+
+            metadata_path = metadata_dir / "acoustic_indices_clusters.parquet"
+            index_metadata_df.to_parquet(metadata_path)
+            print(f"\nSaved cluster metadata: {metadata_path}")
+            print(f"  Indices: {len(index_metadata_df)}")
+            print(f"  Clusters: {index_metadata_df['cluster_id'].nunique()}")
 
     # Save summary results as JSON
     import json

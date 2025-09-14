@@ -17,47 +17,45 @@ notes/DATA-FILE-NAMING.md -- this describes the naming conventions for data file
 - Python debugging scripts should go in the python/scripts folder
 
 # setup / layout
-- the heavy lifting in terms of analysis and data prep is all done in python - and is contained within the python folder. 
+- the heavy lifting in terms of analysis and data prep is all done in python - and is contained within the python folder.
 - the site is build using nextjs and is contained with the dashboard folder.
 
-# Special marimo notebook rules
+# Marimo Notebook Standards
 
-## Variable Conflict Rules
-- **Marimo Variable Conflict Rules**: Marimo notebooks are reactive - ALL variables are globally scoped across the entire notebook. Never define the same variable name in multiple cells or there will be conflicts.
+## Path Resolution
+**IMPORTANT**: All marimo notebooks must use standardized path resolution to work regardless of where they are launched from.
 
-  **Common Conflict Patterns to Avoid:**
-  - Loop variables: `for station in STATIONS` → Use unique names like `station_idx`, `station_det`, `station_temp`
-  - DataFrame variables: `df = pd.read_csv()` → Use unique names like `df_idx`, `df_det`, `df_temp` 
-  - File path variables: `file_path = ...` → Use unique names like `file_path_idx`, `file_path_det`
-  - Temporary variables: `summary = {}` → Use unique names like `data_summary`, `stats_summary`
-  - Plot variables: `fig, axes = plt.subplots()` → Use unique names like `fig_temporal`, `axes_temporal`
+**Standard Pattern**: Every marimo notebook must include this exact pattern in its imports cell:
+```python
+@app.cell
+def _():
+    import pandas as pd
+    import numpy as np
+    # ... other imports ...
+    from pathlib import Path
 
-  **Naming Strategy:**
-  - Add descriptive suffixes: `_idx` (indices), `_det` (detection), `_temp` (temperature), `_spl` (SPL), `_stats` (statistics)
-  - Use descriptive prefixes: `temporal_`, `coverage_`, `summary_` 
-  - Make all variables semantically unique across the entire notebook
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
 
-  **Return Statement Rules:**
-  - Each cell must return ALL variables it creates: `return (var1, var2, var3)`
-  - Single variable: `return (variable,)` (note the comma for tuple)
-  - No variables: `return` (empty return)
+    DATA_ROOT = project_root / "data"
 
-  **Before writing any marimo notebook, scan for these common conflicts and use unique names from the start.**
+    return pd, DATA_ROOT  # Always return DATA_ROOT
+```
 
-## Markdown Documentation Style for Notebooks
-- **Target audience**: Intelligent readers (stats people, biologists) who haven't been immersed in this specific data process
-- **Tone**: Direct, plainspoken, respectful - avoid jargon but don't talk down to people  
-- **Goal**: Enable quick understanding when returning to notebooks months/years later
+**File Path Usage**: Always use `DATA_ROOT` for file paths:
+- ✅ Correct: `pd.read_parquet(DATA_ROOT / "processed/file.parquet")`
+- ❌ Wrong: `pd.read_parquet("../data/processed/file.parquet")`
+- ❌ Wrong: `pd.read_parquet("../../data/processed/file.parquet")`
 
-  **Section Structure:**
-  - **Introduction**: Provide context about data sources, collection methods, and why different streams are combined
-  - **Before each major section**: 2-3 sentences explaining what the data represents and why it matters
-  - **Before analyses**: Brief explanation of what the analysis accomplishes and why it's useful
-  - **After key results**: Practical interpretation guidance (what patterns to look for, what results mean)
+**Function Signatures**: Include `DATA_ROOT` in all cell function signatures that read files:
+- ✅ Correct: `def _(pd, DATA_ROOT):`
+- ❌ Wrong: `def _(pd):`
 
-  **Writing Guidelines:**
-  - Focus on "why" not just "what" - explain the purpose behind each step
-  - Define technical terms in context (e.g., "SPL (Sound Pressure Level) measurements quantify...")
-  - Use bullet points and clear formatting for readability
-  - Add result interpretation with → arrows for key takeaways
-  - Keep explanations concise but complete - assume intelligence, provide necessary context
+This pattern ensures notebooks work when run:
+- From marimo UI launched from any directory
+- As scripts from any directory
+- From different development environments
+

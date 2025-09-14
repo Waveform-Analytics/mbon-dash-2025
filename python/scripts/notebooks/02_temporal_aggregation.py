@@ -6,82 +6,20 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    return (mo,)
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    # Notebook 2: Temporal Alignment and Aggregation
-
-    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections  
-    **Key Outputs**: Four separate, analysis-ready datasets organized by data type
-
-    ## Overview
-
-    This notebook addresses the critical challenge of temporal misalignment across our diverse data streams. The raw data comes at different temporal resolutions:
-
-    - **Manual fish detections**: Already at 2-hour intervals (our target resolution)
-    - **Acoustic indices**: Calculated hourly from continuous recordings  
-    - **Temperature data**: Logged every 20 minutes by autonomous sensors
-    - **Depth/pressure data**: Recorded hourly for tidal analysis
-    - **SPL (Sound Pressure Level)**: Calculated hourly from acoustic recordings
-
-    The 2-hour target resolution matches the manual detection protocol, where trained analysts reviewed 2-minute segments recorded every 2-hours and scored fish calling activity on a 0-3 intensity scale for each species. This temporal framework becomes our analytical backbone.
-
-    ## Process Overview
-
-    **Data Alignment Steps:**
-
-    1. **Load processed data** from Notebook 1 (all stations, all data types)
-    2. **Examine temporal patterns** to understand each data stream's characteristics  
-    3. **Create 2-hour time grids** using detection timestamps as the reference
-    4. **Aggregate higher-resolution data** (temperature, indices) to 2-hour means
-    5. **Align lower-resolution data** (depth, SPL) to 2-hour windows
-    6. **Engineer temporal features** for biological pattern recognition
-    7. **Create lag variables** to capture delayed ecological responses
-    8. **Generate organized outputs** by data type for downstream analysis
-
-    **Why This Matters:**
-    - Enables integration of acoustic, environmental, and biological data
-    - Preserves temporal patterns critical for understanding marine soundscape ecology  
-    - Creates features that capture both immediate and delayed responses to environmental changes
-    - Establishes consistent temporal framework for species-specific calling pattern analysis
-    """
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _():
     import pandas as pd
     import numpy as np
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    import os
     from pathlib import Path
-    from datetime import datetime, timedelta
-    import warnings
-    warnings.filterwarnings('ignore')
 
-    # Set up plotting style
-    plt.style.use('default')
-    sns.set_palette("husl")
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
 
-    # Define constants
-    STATIONS = ['9M', '14M', '37M']
-    YEAR = 2021
-    DATA_DIR = Path("../data/processed")
-    OUTPUT_DIR = Path("../data/processed")
+    DATA_ROOT = project_root / "data"
 
-    # Aggregation window
-    AGGREGATION_HOURS = 2  # Match manual detection interval
-
-    print("✓ Libraries imported and constants defined")
-    print(f"  Aggregation window: {AGGREGATION_HOURS} hours")
-    return AGGREGATION_HOURS, DATA_DIR, OUTPUT_DIR, STATIONS, YEAR, np, pd, plt
-
+    return pd, DATA_ROOT
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -105,7 +43,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd):
+def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
     # Load all processed data from Notebook 1
     data_loaded = {
         'indices': {},
@@ -157,7 +95,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, data_loaded, pd):
+def _(STATIONS, data_loaded, pd, DATA_ROOT):
     # Examine the temporal resolution and datetime columns of each dataset
     temporal_info = {}
 
@@ -253,7 +191,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, DATA_ROOT):
     # Create a common 2-hour time grid based on detection data
     # Detection data already has the correct 2-hour resolution
 
@@ -299,7 +237,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids, DATA_ROOT):
     # Aggregate acoustic indices from hourly to 2-hour means
     indices_aggregated = {}
 
@@ -359,7 +297,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
     # Aggregate temperature data (20-min to 2-hour)
     temperature_aggregated = {}
 
@@ -394,7 +332,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
     # Aggregate depth data (1-hour to 2-hour)
     depth_aggregated = {}
 
@@ -443,7 +381,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
     # Aggregate SPL data (1-hour to 2-hour)
     spl_aggregated = {}
 
@@ -512,7 +450,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, DATA_ROOT):
     # Create temporal features for each station
     temporal_features = {}
 
@@ -773,7 +711,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, enhanced_data, pd, plt):
+def _(STATIONS, enhanced_data, pd, plt, DATA_ROOT):
     # Visualize the temporal alignment and aggregation results
     fig_align, axes_align = plt.subplots(3, 2, figsize=(15, 12))
 
@@ -918,7 +856,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, data_loaded, enhanced_data, pd, plt):
+def _(STATIONS, data_loaded, enhanced_data, pd, plt, DATA_ROOT):
     # Compare data resolution before and after aggregation
     fig_compare, axes_compare = plt.subplots(2, 2, figsize=(14, 10))
 
@@ -1111,7 +1049,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
+def _(OUTPUT_DIR, YEAR, enhanced_data, pd, DATA_ROOT):
     # Save the aligned and enhanced datasets
     saved_files_final = []
 
