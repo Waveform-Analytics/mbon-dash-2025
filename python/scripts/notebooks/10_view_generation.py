@@ -507,8 +507,53 @@ def _(
 
     except Exception as e:
         print(f"Error generating correlation heatmap data: {e}")
-        import traceback
-        traceback.print_exc()
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(DATA_ROOT, VIEWS_FOLDER, pd, json):
+    # Generate seasonal diel pattern view from notebook 4 output
+    try:
+        print("\n=== GENERATING SEASONAL DIEL PATTERN VIEW ===")
+
+        # Load the seasonal diel patterns data from notebook 4
+        diel_patterns_path = DATA_ROOT / "processed" / "04_seasonal_diel_patterns.parquet"
+
+        if not diel_patterns_path.exists():
+            print(f"Warning: Seasonal diel patterns file not found at {diel_patterns_path}")
+            print("Please run notebook 04_fish_and_indices_patterns.py first")
+        else:
+            df_diel = pd.read_parquet(diel_patterns_path)
+
+            # Convert to JSON-friendly format
+            diel_data = {
+                'patterns': df_diel.to_dict('records'),
+                'metadata': {
+                    'seasons': df_diel['season'].unique().tolist(),
+                    'hours': sorted(df_diel['hour'].unique().tolist()),
+                    'variables': {
+                        'acoustic_indices': df_diel[df_diel['variable_type'] == 'acoustic_index']['variable'].unique().tolist(),
+                        'manual_detections': df_diel[df_diel['variable_type'] == 'manual_detection']['variable'].unique().tolist()
+                    },
+                    'total_records': len(df_diel)
+                }
+            }
+
+            # Save to JSON
+            output_path = f"{VIEWS_FOLDER}seasonal_diel_patterns.json"
+            with open(output_path, 'w') as diel_file:
+                json.dump(diel_data, diel_file, indent=2)
+
+            print(f"Generated seasonal diel pattern data:")
+            print(f"  Seasons: {diel_data['metadata']['seasons']}")
+            print(f"  Acoustic indices: {diel_data['metadata']['variables']['acoustic_indices']}")
+            print(f"  Fish species: {diel_data['metadata']['variables']['manual_detections']}")
+            print(f"  Total records: {diel_data['metadata']['total_records']}")
+            print(f"  Saved to: seasonal_diel_patterns.json")
+
+    except Exception as e:
+        print(f"Error generating seasonal diel pattern data: {e}")
 
     return
 

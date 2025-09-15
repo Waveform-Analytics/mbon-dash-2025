@@ -42,6 +42,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
   const [indices, setIndices] = useState<string[]>([]);
   const [clusterMetadata, setClusterMetadata] = useState<ClusterMetadata[]>([]);
   const [clusters, setClusters] = useState<string[]>([]);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
 
   // Fetch data from CDN
   useEffect(() => {
@@ -98,6 +99,12 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
     fetchData();
   }, []);
 
+  // Track component mount state to force re-render when navigating back
+  useEffect(() => {
+    setIsComponentMounted(true);
+    return () => setIsComponentMounted(false);
+  }, []);
+
   // Get available indices based on cluster selection
   const availableIndices = React.useMemo(() => {
     if (selectedCluster === 'All') {
@@ -143,6 +150,22 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
     // Set dimensions and margins
     const margin = { top: 80, right: 50, bottom: 140, left: 70 };
     const containerWidth = containerRef.current.clientWidth;
+
+    // Skip rendering if container width is 0 (not yet rendered)
+    if (containerWidth === 0) {
+      // Use requestAnimationFrame to retry after the container is rendered
+      const rafId = requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const newWidth = containerRef.current.clientWidth;
+          if (newWidth > 0) {
+            // Trigger a re-render by updating a dummy state
+            setError(null);
+          }
+        }
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+
     const width = containerWidth - margin.left - margin.right;
     const height = 450 - margin.top - margin.bottom;
 
@@ -320,7 +343,7 @@ const AcousticIndicesHeatmap: React.FC<AcousticIndicesHeatmapProps> = ({ classNa
       .style('font-size', '12px')
       .text(selectedIndex);
 
-  }, [data, selectedStation, selectedIndex]);
+  }, [data, selectedStation, selectedIndex, isComponentMounted]);
 
   if (loading) {
     return (

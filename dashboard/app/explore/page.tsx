@@ -7,6 +7,7 @@ import PageNavigation from '@/components/PageNavigation';
 const exploreLinks = [
   { href: '/explore', label: 'Overview' },
   { href: '/explore/index-reduction', label: 'Index Reduction' },
+  { href: '/explore/fish-and-indices', label: 'Fish and Indices' },
 ];
 
 export default function ExplorePage() {

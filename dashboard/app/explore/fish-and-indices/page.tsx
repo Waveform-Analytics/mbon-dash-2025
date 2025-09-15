@@ -1,8 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Fish } from 'lucide-react';
 import PageNavigation from '@/components/PageNavigation';
-import CorrelationHeatmapSimple from '@/components/CorrelationHeatmapSimple';
+import DielPatternConcordance from '@/components/DielPatternConcordance';
 
 const exploreLinks = [
   { href: '/explore', label: 'Overview' },
@@ -10,7 +11,7 @@ const exploreLinks = [
   { href: '/explore/fish-and-indices', label: 'Fish and Indices' },
 ];
 
-export default function IndexReductionPage() {
+export default function FishAndIndicesPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -20,20 +21,20 @@ export default function IndexReductionPage() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-4xl font-bold text-primary">Index Reduction</h1>
+            <h1 className="text-4xl font-bold text-primary">Fish and Indices</h1>
             <PageNavigation links={exploreLinks} />
           </div>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Acoustic Index Correlation Matrix</h2>
+            <h2 className="text-2xl font-semibold mb-4">Diel Pattern Concordance</h2>
             <p className="text-gray-600 mb-6">
-              This visualization shows how the 61 acoustic indices correlate with each other, grouped by clusters.
-              Indices are ordered by cluster membership, with representative indices highlighted in red.
-              The colored dendrograms show the hierarchical clustering structure, with each cluster represented by a different color.
+              This visualization compares diel (24-hour) activity patterns between acoustic indices and manual fish detections.
+              By examining these patterns across seasons, we can assess whether acoustic indices capture the same biological rhythms
+              as manual detection methods, validating their use as proxies for fish activity monitoring.
             </p>
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <CorrelationHeatmapSimple />
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <DielPatternConcordance />
             </div>
           </div>
         </motion.div>

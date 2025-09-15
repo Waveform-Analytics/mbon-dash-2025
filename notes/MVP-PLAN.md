@@ -4,7 +4,7 @@
 
 This MVP validates whether acoustic indices can serve as reliable proxies for species presence/absence without requiring extensive manual detection efforts. Using 2021 May River data with manual detections as ground truth, we test if acoustic indices alone can provide actionable biological information for future deployments where manual detection is impractical. The analysis builds upon insights from Transue et al. (2023) Charleston Harbor study, where biological patterns were masked by anthropogenic noise in traditional SPL approaches, by testing acoustic indices in a less urbanized estuary.
 
-**Core Research Question**: Can acI oustic indices serve as effective biological screening tools and detect community-level fish patterns at scales impossible with manual detection?
+**Core Research Question**: Can acoustic indices serve as effective biological screening tools and detect community-level fish patterns at scales impossible with manual detection?
 
 **Scope**: Fish community analysis demonstrating acoustic indices as screening tools for targeted manual effort and continuous pattern detection
 **Data**: 2021 acoustic indices with manual detections as validation ground truth, environmental variables, SPL data
@@ -160,7 +160,7 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 5: Anthropogenic Impact Assessment (Simplified)
+## Notebook 5: Anthropogenic Impact Assessment
 
 **Purpose**: Document vessel impacts on acoustic indices and demonstrate indices work despite anthropogenic noise  
 **Key Outputs**: Evidence that indices maintain biological signal even during vessel periods

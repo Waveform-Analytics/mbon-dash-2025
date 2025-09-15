@@ -68,7 +68,8 @@ export default function Navigation() {
           {/* Navigation Links */}
           <div className="flex items-center space-x-0.5">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              // Check if current path matches this section (exact match or starts with the section path)
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
               const Icon = item.icon;
               
               return (

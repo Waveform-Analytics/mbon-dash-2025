@@ -56,10 +56,10 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(Path):
+def _(DATA_ROOT):
     # Set up data directories
-    data_dir_proc = Path("../data/processed")
-    output_dir_plots = Path("../../dashboard/public/views/notebooks")
+    data_dir_proc = DATA_ROOT / "processed"
+    output_dir_plots = DATA_ROOT.parent / "dashboard" / "public" / "views" / "notebooks"
     output_dir_plots.mkdir(parents=True, exist_ok=True)
 
     print(f"Data directory: {data_dir_proc}")
@@ -996,6 +996,80 @@ def _(
         mo.md("## Summary: Insufficient data for concordance analysis")
 
     return
+
+
+@app.cell(hide_code=True)
+def _(df_combined, fish_cols, selected_indices, pd, DATA_ROOT):
+    # Generate seasonal diel patterns for interactive visualization
+    if not df_combined.empty and 'season' in df_combined.columns and 'hour' in df_combined.columns:
+        print("=== GENERATING SEASONAL DIEL PATTERNS FOR VISUALIZATION ===\n")
+
+        # Create a list to store all seasonal diel data
+        seasonal_diel_data = []
+
+        # Get unique seasons
+        seasons = df_combined['season'].unique()
+
+        # Select top indices and fish species for visualization (4 of each for 8 panels)
+        viz_indices = selected_indices[:4] if len(selected_indices) >= 4 else selected_indices
+        viz_fish = fish_cols[:4] if len(fish_cols) >= 4 else fish_cols
+
+        # Process each season
+        for season in seasons:
+            season_data = df_combined[df_combined['season'] == season]
+
+            # Process acoustic indices
+            for idx in viz_indices:
+                if idx in season_data.columns:
+                    hourly_stats = season_data.groupby('hour')[idx].agg(['mean', 'std', 'count']).reset_index()
+
+                    for _, hour_row in hourly_stats.iterrows():
+                        seasonal_diel_data.append({
+                            'season': season,
+                            'hour': int(hour_row['hour']),
+                            'variable': idx,
+                            'variable_type': 'acoustic_index',
+                            'mean': float(hour_row['mean']) if pd.notna(hour_row['mean']) else 0,
+                            'std': float(hour_row['std']) if pd.notna(hour_row['std']) else 0,
+                            'count': int(hour_row['count']) if pd.notna(hour_row['count']) else 0
+                        })
+
+            # Process fish species
+            for fish_sp in viz_fish:
+                if fish_sp in season_data.columns:
+                    hourly_stats = season_data.groupby('hour')[fish_sp].agg(['mean', 'std', 'count']).reset_index()
+
+                    for _, hour_row_fish in hourly_stats.iterrows():
+                        seasonal_diel_data.append({
+                            'season': season,
+                            'hour': int(hour_row_fish['hour']),
+                            'variable': fish_sp,
+                            'variable_type': 'manual_detection',
+                            'mean': float(hour_row_fish['mean']) if pd.notna(hour_row_fish['mean']) else 0,
+                            'std': float(hour_row_fish['std']) if pd.notna(hour_row_fish['std']) else 0,
+                            'count': int(hour_row_fish['count']) if pd.notna(hour_row_fish['count']) else 0
+                        })
+
+        # Convert to DataFrame and save
+        df_seasonal_diel = pd.DataFrame(seasonal_diel_data)
+
+        # Save for notebook 10 to convert to JSON
+        output_path = DATA_ROOT / "processed" / "04_seasonal_diel_patterns.parquet"
+        df_seasonal_diel.to_parquet(output_path)
+        print(f"Saved seasonal diel patterns: {output_path}")
+
+        # Summary statistics
+        print(f"\nSeasonal Diel Pattern Summary:")
+        print(f"  Seasons: {list(seasons)}")
+        print(f"  Acoustic indices: {viz_indices}")
+        print(f"  Fish species: {viz_fish}")
+        print(f"  Total records: {len(df_seasonal_diel)}")
+
+    else:
+        print("Insufficient data for seasonal diel pattern generation")
+        df_seasonal_diel = pd.DataFrame()
+
+    return (df_seasonal_diel,)
 
 
 @app.cell(hide_code=True)

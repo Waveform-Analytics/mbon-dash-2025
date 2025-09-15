@@ -146,7 +146,7 @@ export default function HomePage() {
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  Detailed analytical workflows and computational notebooks examining marine acoustic data patterns.
+                  Computational notebooks with analytical workflows for marine acoustic data analysis.
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <p className="text-sm text-muted-foreground">
