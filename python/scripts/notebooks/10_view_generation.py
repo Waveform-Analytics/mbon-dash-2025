@@ -32,6 +32,9 @@ def _():
     import os
     from pathlib import Path
 
+    from scipy.cluster.hierarchy import linkage, dendrogram
+    from scipy.spatial.distance import squareform
+
     # Find project root by looking for the data folder
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
     project_root = current_dir
@@ -41,7 +44,7 @@ def _():
     DATA_ROOT = project_root / "data"
     VIEWS_FOLDER = str(DATA_ROOT / "views") + "/"
 
-    return DATA_ROOT, VIEWS_FOLDER, pd
+    return DATA_ROOT, VIEWS_FOLDER, dendrogram, linkage, pd, squareform
 
 
 @app.cell(hide_code=True)
@@ -325,6 +328,187 @@ def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
     import json
     with open(f"{VIEWS_FOLDER}acoustic_indices_histograms.json", 'w') as f:
         json.dump(indices_histogram_data, f, indent=2)
+
+    return i, json
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Correlation Heatmap Data
+
+    **Purpose**: Generate correlation matrix and dendrogram data for the index reduction visualization.
+
+    **Data Structure**: Pre-computed correlation values, dendrogram layout, and cluster metadata optimized for D3.js rendering with sticky labels and aligned dendrogram.
+    """
+    )
+    return
+
+
+@app.cell
+def _(
+    DATA_ROOT,
+    VIEWS_FOLDER,
+    dendrogram,
+    i,
+    indices_full_df,
+    json,
+    linkage,
+    pd,
+    squareform,
+):
+
+    ## Prepare correlation heatmap data
+    try:
+        # Load cluster metadata for ordering and colors
+        heatmap_cluster_metadata = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices_clusters.parquet")
+        print(f"Loaded cluster metadata for {len(heatmap_cluster_metadata)} indices")
+
+        # Get acoustic index columns (exclude datetime, station, year)
+        index_columns_heatmap = [col for col in indices_full_df.columns
+                        if col not in ['datetime', 'station', 'year']]
+
+        print(f"Computing correlation matrix for {len(index_columns_heatmap)} acoustic indices...")
+
+        # Compute correlation matrix
+        correlation_matrix = indices_full_df[index_columns_heatmap].corr()
+
+        # Order indices by cluster for visual grouping
+        # First, create a mapping of index to cluster
+        heatmap_index_to_cluster = dict(zip(heatmap_cluster_metadata['index_name'],
+                                           heatmap_cluster_metadata['cluster_id']))
+
+        # Sort indices by cluster_id, then by name within cluster
+        heatmap_ordered_indices = sorted(index_columns_heatmap,
+                                       key=lambda x: (heatmap_index_to_cluster.get(x, 999), x))
+
+        # Reorder correlation matrix
+        heatmap_correlation_matrix = correlation_matrix.loc[heatmap_ordered_indices, heatmap_ordered_indices]
+
+        ## Generate hierarchical clustering dendrogram
+        # Convert correlation to distance (1 - |correlation|)
+        # Use absolute correlation to ensure positive distances
+        heatmap_distance_matrix = 1 - heatmap_correlation_matrix.abs()
+
+        # Ensure all distances are non-negative and handle any floating point errors
+        heatmap_distance_matrix = heatmap_distance_matrix.clip(lower=0)
+
+        # Perform hierarchical clustering
+        heatmap_linkage_matrix = linkage(squareform(heatmap_distance_matrix), method='average')
+
+        # Generate dendrogram data (but don't plot)
+        heatmap_dendrogram_data = dendrogram(heatmap_linkage_matrix, labels=heatmap_ordered_indices, no_plot=True)
+
+        ## Flatten correlation matrix for client efficiency
+        heatmap_matrix_data = []
+        for i_heatmap, row_index in enumerate(heatmap_ordered_indices):
+            for j, col_index in enumerate(heatmap_ordered_indices):
+                correlation_value = heatmap_correlation_matrix.iloc[i_heatmap, j]
+
+                # Get cluster info
+                row_cluster = heatmap_index_to_cluster.get(row_index)
+                col_cluster = heatmap_index_to_cluster.get(col_index)
+
+                heatmap_matrix_data.append({
+                    'row_index': row_index,
+                    'col_index': col_index,
+                    'correlation': float(correlation_value) if not pd.isna(correlation_value) else 0.0,
+                    'row_cluster': int(row_cluster) if row_cluster is not None else None,
+                    'col_cluster': int(col_cluster) if col_cluster is not None else None,
+                    'row_position': i_heatmap,
+                    'col_position': j
+                })
+
+        ## Generate index metadata with display order
+        heatmap_index_metadata = []
+        heatmap_cluster_colors = {
+            1: '#FF6B6B', 2: '#4ECDC4', 3: '#45B7D1', 4: '#96CEB4', 5: '#FFEAA7',
+            6: '#DDA0DD', 7: '#98D8C8', 8: '#F7DC6F', 9: '#BB8FCE', 10: '#85C1E9',
+            11: '#F8C471', 12: '#82E0AA', 13: '#F1948A', 14: '#85C1E9', 15: '#D2B4DE',
+            16: '#A3E4D7', 17: '#F9E79F', 18: '#FADBD8'
+        }
+
+        for i_heatmap, index_name_heatmap in enumerate(heatmap_ordered_indices):
+            heatmap_cluster_info = heatmap_cluster_metadata[heatmap_cluster_metadata['index_name'] == index_name_heatmap]
+
+            if len(heatmap_cluster_info) > 0:
+                heatmap_cluster_id = int(heatmap_cluster_info.iloc[0]['cluster_id'])
+                heatmap_is_selected = bool(heatmap_cluster_info.iloc[0]['is_selected'])
+            else:
+                heatmap_cluster_id = None
+                heatmap_is_selected = False
+
+            heatmap_index_metadata.append({
+                'index_name': index_name_heatmap,
+                'cluster_id': heatmap_cluster_id,
+                'is_selected': heatmap_is_selected,
+                'display_order': i_heatmap,
+                'cluster_color': heatmap_cluster_colors.get(heatmap_cluster_id, '#CCCCCC') if heatmap_cluster_id else '#CCCCCC'
+            })
+
+        ## Generate cluster boundary data for visual grouping
+        heatmap_clusters = []
+        heatmap_current_cluster = None
+        heatmap_start_pos = 0
+
+        for i_heatmap, metadata in enumerate(heatmap_index_metadata):
+            if metadata['cluster_id'] != heatmap_current_cluster:
+                if heatmap_current_cluster is not None:
+                    # Close previous cluster
+                    heatmap_clusters.append({
+                        'cluster_id': heatmap_current_cluster,
+                        'start_position': heatmap_start_pos,
+                        'end_position': i_heatmap - 1,
+                        'color': heatmap_cluster_colors.get(heatmap_current_cluster, '#CCCCCC'),
+                        'size': i_heatmap - heatmap_start_pos
+                    })
+
+                # Start new cluster
+                heatmap_current_cluster = metadata['cluster_id']
+                heatmap_start_pos = i_heatmap
+
+        # Don't forget the last cluster
+        if heatmap_current_cluster is not None:
+            heatmap_clusters.append({
+                'cluster_id': heatmap_current_cluster,
+                'start_position': heatmap_start_pos,
+                'end_position': len(heatmap_index_metadata) - 1,
+                'color': heatmap_cluster_colors.get(heatmap_current_cluster, '#CCCCCC'),
+                'size': len(heatmap_index_metadata) - heatmap_start_pos
+            })
+
+        ## Prepare final data structure
+        heatmap_data = {
+            'matrix_data': heatmap_matrix_data,
+            'index_metadata': heatmap_index_metadata,
+            'dendrogram': {
+                'icoord': heatmap_dendrogram_data['icoord'],
+                'dcoord': heatmap_dendrogram_data['dcoord'],
+                'ivl': heatmap_dendrogram_data['ivl'],
+                'leaves': heatmap_dendrogram_data['leaves']
+            },
+            'clusters': heatmap_clusters,
+            'dimensions': {
+                'n_indices': len(heatmap_ordered_indices),
+                'n_clusters': len(heatmap_clusters)
+            }
+        }
+
+        # Save to JSON
+        with open(f"{VIEWS_FOLDER}correlation_heatmap.json", 'w') as file:
+            json.dump(heatmap_data, file, indent=2)
+
+        print(f"Generated correlation heatmap data:")
+        print(f"  Matrix entries: {len(heatmap_matrix_data):,}")
+        print(f"  Indices: {len(heatmap_index_metadata)}")
+        print(f"  Clusters: {len(heatmap_clusters)}")
+        print(f"  Saved to: correlation_heatmap.json")
+
+    except Exception as e:
+        print(f"Error generating correlation heatmap data: {e}")
+        import traceback
+        traceback.print_exc()
 
     return
 

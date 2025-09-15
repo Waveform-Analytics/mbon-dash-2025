@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import PageNavigation from '@/components/PageNavigation';
+import CorrelationHeatmapSimple from '@/components/CorrelationHeatmapSimple';
 
 const exploreLinks = [
   { href: '/explore', label: 'Overview' },
@@ -22,6 +23,18 @@ export default function IndexReductionPage() {
             <PageNavigation links={exploreLinks} />
           </div>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Acoustic Index Correlation Matrix</h2>
+            <p className="text-gray-600 mb-6">
+              This visualization shows how the 61 acoustic indices correlate with each other, grouped by clusters.
+              Indices are ordered by cluster membership, with representative indices highlighted in red.
+              The colored dendrograms show the hierarchical clustering structure, with each cluster represented by a different color.
+            </p>
+            <div className="bg-white rounded-lg shadow-lg p-4">
+              <CorrelationHeatmapSimple />
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>
