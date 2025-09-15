@@ -168,7 +168,7 @@ const CorrelationHeatmapSimple: React.FC = () => {
       const midPoint = (icoord[0] + icoord[3]) / 2;
       const clusterIndex = Math.floor(midPoint / 10);
       const metadata = data.index_metadata[clusterIndex];
-      const branchColor = metadata ? clusterColorMap.get(metadata.cluster_id) || '#666' : '#666';
+      const branchColor = metadata && metadata.cluster_id !== null ? clusterColorMap.get(metadata.cluster_id) || '#666' : '#666';
 
       const pathData = orientation === 'left'
         ? d3.line<number>()

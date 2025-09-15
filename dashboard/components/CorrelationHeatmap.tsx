@@ -60,10 +60,6 @@ const MATRIX_AREA_HEIGHT = CONTAINER_HEIGHT - COL_LABEL_HEIGHT; // 520px
 const CorrelationHeatmap: React.FC = () => {
   const { data: heatmapData, loading, error } = useViewData<HeatmapData>('correlation_heatmap');
   const containerRef = useRef<HTMLDivElement>(null);
-  const matrixRef = useRef<HTMLDivElement>(null);
-  const rowLabelsRef = useRef<HTMLDivElement>(null);
-  const colLabelsRef = useRef<HTMLDivElement>(null);
-  const dendrogramRef = useRef<SVGSVGElement>(null);
 
   console.log('Component render - loading:', loading, 'error:', error, 'data:', heatmapData);
 

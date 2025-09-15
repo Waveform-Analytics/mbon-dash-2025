@@ -29,13 +29,6 @@ interface AcousticIndex {
   is_selected?: boolean;
 }
 
-interface ClusterData {
-  index_name: string;
-  cluster_id: number;
-  cluster_size: number;
-  is_selected: boolean;
-  selection_rationale: string;
-}
 
 // Define category colors
 const categoryColors: Record<string, { bg: string; border: string; text: string; pill: string }> = {
