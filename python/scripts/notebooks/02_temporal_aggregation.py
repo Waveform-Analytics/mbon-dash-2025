@@ -21,7 +21,7 @@ def _():
 
     DATA_ROOT = project_root / "data"
 
-    return mo, np, pd, plt, DATA_ROOT
+    return DATA_ROOT, mo, np, pd, plt
 
 
 @app.cell(hide_code=True)
@@ -41,7 +41,7 @@ def _(DATA_ROOT):
     print(f"  Aggregation interval: {AGGREGATION_HOURS} hours")
     print(f"  Data directory: {DATA_DIR}")
 
-    return YEAR, STATIONS, AGGREGATION_HOURS, DATA_DIR, OUTPUT_DIR
+    return AGGREGATION_HOURS, DATA_DIR, OUTPUT_DIR, STATIONS, YEAR
 
 
 @app.cell(hide_code=True)
@@ -1071,37 +1071,10 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
     # Save the aligned and enhanced datasets
     saved_files_final = []
-
-    # # Save individual station files
-    # for station_save_final in STATIONS:
-    #     if station_save_final in enhanced_data:
-    #         df_save_final = enhanced_data[station_save_final].copy()
-
-    #         # Fix data types for Parquet compatibility
-    #         for col_fix in df_save_final.columns:
-    #             # Convert detection columns (likely to be numeric) that are object type
-    #             if df_save_final[col_fix].dtype == 'object':
-    #                 # Try to convert to numeric, but skip datetime and categorical columns
-    #                 if col_fix not in ['datetime', 'season', 'time_period', 'station']:
-    #                     try:
-    #                         # Convert to numeric, replacing any non-numeric values with NaN
-    #                         df_save_final[col_fix] = pd.to_numeric(df_save_final[col_fix], errors='coerce')
-    #                     except:
-    #                         # If conversion fails, keep as string
-    #                         pass
-
-    #         # Save as parquet
-    #         output_path_final = OUTPUT_DIR / f"02_aligned_{station_save_final}_{YEAR}.parquet"
-    #         df_save_final.to_parquet(output_path_final, index=False)
-    #         saved_files_final.append(str(output_path_final))
-
-    #         print(f"✓ Saved {station_save_final}: {output_path_final}")
-    #         print(f"  Shape: {df_save_final.shape}")
-    #         print(f"  File size: {output_path_final.stat().st_size / (1024*1024):.2f} MB")
 
     # Also create and save a combined dataset with all stations
     if enhanced_data:
@@ -1116,15 +1089,6 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
                     except:
                         pass
 
-        # combined_path = OUTPUT_DIR / f"02_aligned_all_stations_{YEAR}.parquet"
-        # all_stations_df.to_parquet(combined_path, index=False)
-        # saved_files_final.append(str(combined_path))
-
-        # print(f"\n✓ Saved combined dataset: {combined_path}")
-        # print(f"  Total rows: {len(all_stations_df)}")
-        # print(f"  Total columns: {len(all_stations_df.columns)}")
-        # print(f"  File size: {combined_path.stat().st_size / (1024*1024):.2f} MB")
-
     if enhanced_data:
 
         # Add year column to combined dataset
@@ -1138,7 +1102,7 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
             'ZCR', 'MEANt', 'VARt', 'SKEWt', 'KURTt', 'LEQt', 'BGNt', 'SNRt', 'MED', 'Ht',
             'ACTtFraction', 'ACTtCount', 'ACTtMean', 'EVNtFraction', 'EVNtMean', 'EVNtCount',
             'MEANf', 'VARf', 'SKEWf', 'KURTf', 'NBPEAKS', 'LEQf', 'ENRf', 'BGNf', 'SNRf', 'Hf',
-            'EAS', 'ECU', 'ECV', 'EPS', 'EPS_KURT', 'EPS_SKEW', 'ACI', 'FrequencyResolution',
+            'EAS', 'ECU', 'ECV', 'EPS', 'EPS_KURT', 'EPS_SKEW', 'ACI', 
             'NDSI', 'rBA', 'AnthroEnergy', 'BioEnergy', 'BI', 'ROU', 'ADI', 'AEI',
             'LFC', 'MFC', 'HFC', 'ACTspFract', 'ACTspCount', 'ACTspMean',
             'EVNspFract', 'EVNspMean', 'EVNspCount', 'TFSD', 'H_Havrda', 'H_Renyi',

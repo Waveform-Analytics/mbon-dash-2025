@@ -6,8 +6,11 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import marimo as mo
     import pandas as pd
     import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     import os
     from pathlib import Path
 
@@ -18,8 +21,17 @@ def _():
         project_root = project_root.parent
 
     DATA_ROOT = project_root / "data"
+    DATA_DIR = DATA_ROOT / "raw"  # Raw data directory
+    OUTPUT_DIR = DATA_ROOT / "processed"  # Processed data output directory
+    YEAR = 2021  # Analysis year
+    STATIONS = ['9M', '14M', '37M']
 
-    return np, pd
+    print(f"Data root: {DATA_ROOT}")
+    print(f"Raw data directory: {DATA_DIR}")
+    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"Analysis year: {YEAR}")
+
+    return DATA_DIR, OUTPUT_DIR, STATIONS, YEAR, mo, np, pd, plt, sns
 
 
 @app.cell(hide_code=True)
@@ -32,12 +44,6 @@ def _(mo):
     """
     )
     return
-
-
-@app.cell
-def _():
-    import marimo as mo
-    return (mo,)
 
 
 @app.cell(hide_code=True)
