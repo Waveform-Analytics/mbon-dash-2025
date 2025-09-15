@@ -2,6 +2,12 @@
 
 import { motion } from 'framer-motion';
 import { BarChart3 } from 'lucide-react';
+import PageNavigation from '@/components/PageNavigation';
+
+const exploreLinks = [
+  { href: '/explore', label: 'Overview' },
+  { href: '/explore/index-reduction', label: 'Index Reduction' },
+];
 
 export default function ExplorePage() {
   return (
@@ -12,7 +18,10 @@ export default function ExplorePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-primary mb-2">Explore</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-4xl font-bold text-primary">Explore</h1>
+            <PageNavigation links={exploreLinks} />
+          </div>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
         </motion.div>
 
@@ -24,9 +33,9 @@ export default function ExplorePage() {
         >
           <div className="bg-card rounded-lg shadow-lg border p-12 text-center max-w-md">
             <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-card-foreground mb-4">Interactive Visualizations Coming Soon</h2>
+            <h2 className="text-2xl font-bold text-card-foreground mb-4">Coming Soon</h2>
             <p className="text-muted-foreground">
-              This section will feature interactive data exploration tools and visualizations. Check back soon!
+              Interactive data exploration and analysis visualizations.
             </p>
           </div>
         </motion.div>

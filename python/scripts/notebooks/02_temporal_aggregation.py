@@ -6,8 +6,10 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import marimo as mo
     import pandas as pd
     import numpy as np
+    import matplotlib.pyplot as plt
     import os
     from pathlib import Path
 
@@ -19,7 +21,28 @@ def _():
 
     DATA_ROOT = project_root / "data"
 
-    return pd, DATA_ROOT
+    return mo, np, pd, plt, DATA_ROOT
+
+
+@app.cell(hide_code=True)
+def _(DATA_ROOT):
+    # Configuration variables
+    YEAR = 2021
+    STATIONS = ['9M', '14M', '37M']
+    AGGREGATION_HOURS = 2  # Aggregate to 2-hour intervals
+
+    # Data directories
+    DATA_DIR = DATA_ROOT / "processed"
+    OUTPUT_DIR = DATA_ROOT / "processed"
+
+    print(f"Configuration:")
+    print(f"  Year: {YEAR}")
+    print(f"  Stations: {STATIONS}")
+    print(f"  Aggregation interval: {AGGREGATION_HOURS} hours")
+    print(f"  Data directory: {DATA_DIR}")
+
+    return YEAR, STATIONS, AGGREGATION_HOURS, DATA_DIR, OUTPUT_DIR
+
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -43,7 +66,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load all processed data from Notebook 1
     data_loaded = {
         'indices': {},
@@ -95,7 +118,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, data_loaded, pd, DATA_ROOT):
+def _(STATIONS, data_loaded, pd):
     # Examine the temporal resolution and datetime columns of each dataset
     temporal_info = {}
 
@@ -191,7 +214,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd):
     # Create a common 2-hour time grid based on detection data
     # Detection data already has the correct 2-hour resolution
 
@@ -237,7 +260,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, time_grids):
     # Aggregate acoustic indices from hourly to 2-hour means
     indices_aggregated = {}
 
@@ -297,7 +320,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate temperature data (20-min to 2-hour)
     temperature_aggregated = {}
 
@@ -332,7 +355,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate depth data (1-hour to 2-hour)
     depth_aggregated = {}
 
@@ -381,7 +404,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
     # Aggregate SPL data (1-hour to 2-hour)
     spl_aggregated = {}
 
@@ -450,7 +473,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd, DATA_ROOT):
+def _(AGGREGATION_HOURS, STATIONS, data_loaded, np, pd):
     # Create temporal features for each station
     temporal_features = {}
 
@@ -711,7 +734,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, enhanced_data, pd, plt, DATA_ROOT):
+def _(STATIONS, enhanced_data, pd, plt):
     # Visualize the temporal alignment and aggregation results
     fig_align, axes_align = plt.subplots(3, 2, figsize=(15, 12))
 
@@ -856,7 +879,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, data_loaded, enhanced_data, pd, plt, DATA_ROOT):
+def _(STATIONS, data_loaded, enhanced_data, pd, plt):
     # Compare data resolution before and after aggregation
     fig_compare, axes_compare = plt.subplots(2, 2, figsize=(14, 10))
 
@@ -1049,7 +1072,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(OUTPUT_DIR, YEAR, enhanced_data, pd, DATA_ROOT):
+def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
     # Save the aligned and enhanced datasets
     saved_files_final = []
 

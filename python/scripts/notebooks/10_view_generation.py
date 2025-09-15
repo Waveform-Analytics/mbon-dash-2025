@@ -41,7 +41,7 @@ def _():
     DATA_ROOT = project_root / "data"
     VIEWS_FOLDER = str(DATA_ROOT / "views") + "/"
 
-    return VIEWS_FOLDER, pd, DATA_ROOT
+    return DATA_ROOT, VIEWS_FOLDER, pd
 
 
 @app.cell(hide_code=True)
@@ -57,7 +57,7 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd, DATA_ROOT):
+def _(DATA_ROOT, VIEWS_FOLDER, pd):
     # Import the parquet file as a dataframe using Pandas
     station_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/deployments.parquet")
 
@@ -103,7 +103,7 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd, DATA_ROOT):
+def _(DATA_ROOT, VIEWS_FOLDER, pd):
     ## Manual detections
     # Import manual detections data
     detections_aligned_df = pd.read_parquet(DATA_ROOT / "processed/02_detections_aligned_2021.parquet")
@@ -116,8 +116,8 @@ def _(VIEWS_FOLDER, pd, DATA_ROOT):
     indices_aligned_reduced_df = pd.read_parquet(DATA_ROOT / "processed/03_reduced_acoustic_indices.parquet")
 
     # Add hour field for heatmap visualization (extract hour from datetime)
-    indices_aligned_reduced_df['datetime'] = pd.to_datetime(indices_aligned_reduced_df['datetime'])
-    indices_aligned_reduced_df['hour'] = indices_aligned_reduced_df['datetime'].dt.hour
+    # indices_aligned_reduced_df['datetime'] = pd.to_datetime(indices_aligned_reduced_df['datetime'])
+    # indices_aligned_reduced_df['hour'] = indices_aligned_reduced_df['datetime'].dt.hour
 
     # Save to JSON
     indices_aligned_reduced_df.to_json(f"{VIEWS_FOLDER}03_reduced_acoustic_indices.json", orient="records")
@@ -150,15 +150,15 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd, DATA_ROOT):
+def _(DATA_ROOT, VIEWS_FOLDER, pd):
     ## Full Acoustic Indices Dataset
     try:
         # Load the complete dataset with all indices
         indices_full_df = pd.read_parquet(DATA_ROOT / "processed/02_acoustic_indices_aligned_2021_full.parquet")
 
         # Add hour field for heatmap visualization (extract hour from datetime)
-        indices_full_df['datetime'] = pd.to_datetime(indices_full_df['datetime'])
-        indices_full_df['hour'] = indices_full_df['datetime'].dt.hour
+        # indices_full_df['datetime'] = pd.to_datetime(indices_full_df['datetime'])
+        # indices_full_df['hour'] = indices_full_df['datetime'].dt.hour
 
         # Save full indices data
         indices_full_df.to_json(f"{VIEWS_FOLDER}acoustic_indices_full.json", orient="records")
@@ -190,7 +190,7 @@ def _(VIEWS_FOLDER, pd, DATA_ROOT):
         print("Cluster metadata not found - run notebook 3 first to generate it")
         cluster_metadata_df = pd.DataFrame()
 
-    return
+    return (indices_full_df,)
 
 
 @app.cell(hide_code=True)
@@ -214,7 +214,7 @@ def _(mo):
 
 
 @app.cell
-def _(VIEWS_FOLDER, pd, DATA_ROOT):
+def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
     ## Acoustic Indices Metadata
     # Import indices metadata
     acoustic_indices_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices.parquet")
@@ -223,7 +223,10 @@ def _(VIEWS_FOLDER, pd, DATA_ROOT):
 
     ## Acoustic Indices Cards Data Preparation
     # Get the list of acoustic index columns (exclude datetime, station, year)
-    index_columns = [col for col in indices_aligned_reduced_df.columns
+    # index_columns = [col for col in indices_aligned_reduced_df.columns
+    #                 if col not in ['datetime', 'station', 'year']]
+
+    index_columns = [col for col in indices_full_df.columns
                     if col not in ['datetime', 'station', 'year']]
 
     print(f"Preparing histogram data for {len(index_columns)} indices...")
@@ -234,8 +237,8 @@ def _(VIEWS_FOLDER, pd, DATA_ROOT):
     # Number of bins for histograms
     n_bins = 30
 
-    for station in indices_aligned_reduced_df['station'].unique():
-        station_data = indices_aligned_reduced_df[indices_aligned_reduced_df['station'] == station]
+    for station in indices_full_df['station'].unique():
+        station_data = indices_full_df[indices_full_df['station'] == station]
 
         for index_name in index_columns:
             # Get values for this index and station

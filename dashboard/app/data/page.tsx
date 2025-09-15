@@ -5,12 +5,17 @@ export const dynamic = 'force-dynamic';
 
 import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
-import Link from 'next/link';
+import PageNavigation from '@/components/PageNavigation';
 import StationsMap from '../../components/StationsMap';
 import AcousticIndicesHeatmap from '../../components/AcousticIndicesHeatmap';
 import DetectionsHeatmap from '../../components/DetectionsHeatmap';
 import RmsSplHeatmap from '../../components/RmsSplHeatmap';
 import EnvironmentalHeatmap from '../../components/EnvironmentalHeatmap';
+
+const dataLinks = [
+  { href: '/data', label: 'Overview' },
+  { href: '/data/acoustic-indices', label: 'Acoustic Indices Explorer' },
+];
 
 export default function DataPage() {
   return (
@@ -23,14 +28,7 @@ export default function DataPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-4xl font-bold text-primary">Data Overview</h1>
-            <nav className="flex items-center space-x-4">
-              <Link href="/data" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                Overview
-              </Link>
-              <Link href="/data/acoustic-indices" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                Acoustic Indices Explorer
-              </Link>
-            </nav>
+            <PageNavigation links={dataLinks} />
           </div>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
         </motion.div>
