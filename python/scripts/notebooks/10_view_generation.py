@@ -177,18 +177,18 @@ def _(DATA_ROOT, VIEWS_FOLDER, pd):
     ## Cluster Metadata
     try:
         # Load cluster metadata
-        cluster_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices_clusters.parquet")
+        cluster_metadata_df_heatmap = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices_clusters.parquet")
 
         # Save cluster metadata
-        cluster_metadata_df.to_json(f"{VIEWS_FOLDER}acoustic_indices_clusters.json", orient="records")
+        cluster_metadata_df_heatmap.to_json(f"{VIEWS_FOLDER}acoustic_indices_clusters.json", orient="records")
 
         print(f"\nSaved cluster metadata:")
-        print(f"  Total indices: {len(cluster_metadata_df)}")
-        print(f"  Clusters: {cluster_metadata_df['cluster_id'].nunique() if 'cluster_id' in cluster_metadata_df.columns else 'N/A'}")
-        print(f"  Selected indices: {cluster_metadata_df['is_selected'].sum() if 'is_selected' in cluster_metadata_df.columns else 'N/A'}")
+        print(f"  Total indices: {len(cluster_metadata_df_heatmap)}")
+        print(f"  Clusters: {cluster_metadata_df_heatmap['cluster_id'].nunique() if 'cluster_id' in cluster_metadata_df_heatmap.columns else 'N/A'}")
+        print(f"  Selected indices: {cluster_metadata_df_heatmap['is_selected'].sum() if 'is_selected' in cluster_metadata_df_heatmap.columns else 'N/A'}")
     except FileNotFoundError:
         print("Cluster metadata not found - run notebook 3 first to generate it")
-        cluster_metadata_df = pd.DataFrame()
+        cluster_metadata_df_heatmap = pd.DataFrame()
 
     return (indices_full_df,)
 
@@ -221,11 +221,16 @@ def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
     # save to json
     acoustic_indices_metadata_df.to_json(f"{VIEWS_FOLDER}acoustic_indices.json", orient="records")
 
+    ## Load Cluster Metadata
+    try:
+        cluster_metadata_df = pd.read_parquet(DATA_ROOT / "processed/metadata/acoustic_indices_clusters.parquet")
+        print(f"Loaded cluster metadata for {len(cluster_metadata_df)} indices")
+    except FileNotFoundError:
+        print("Warning: Cluster metadata not found - histograms will be generated without cluster information")
+        cluster_metadata_df = pd.DataFrame()
+
     ## Acoustic Indices Cards Data Preparation
     # Get the list of acoustic index columns (exclude datetime, station, year)
-    # index_columns = [col for col in indices_aligned_reduced_df.columns
-    #                 if col not in ['datetime', 'station', 'year']]
-
     index_columns = [col for col in indices_full_df.columns
                     if col not in ['datetime', 'station', 'year']]
 
@@ -264,6 +269,19 @@ def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
                     subcategory = "Unknown"
                     description = f"No description available for {index_name}"
 
+                # Get cluster information for this index
+                cluster_info = cluster_metadata_df[cluster_metadata_df['index_name'] == index_name]
+                if len(cluster_info) > 0:
+                    cluster_id = int(cluster_info.iloc[0]['cluster_id'])
+                    cluster_size = int(cluster_info.iloc[0]['cluster_size'])
+                    is_selected = bool(cluster_info.iloc[0]['is_selected'])
+                    selection_rationale = cluster_info.iloc[0]['selection_rationale']
+                else:
+                    cluster_id = None
+                    cluster_size = None
+                    is_selected = None
+                    selection_rationale = None
+
                 # Create histogram data structure
                 histogram_data = []
                 for i, (interval, count) in enumerate(hist_counts.items()):
@@ -276,7 +294,7 @@ def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
                     })
 
                 # Add entry for this index-station combination
-                indices_histogram_data.append({
+                index_data = {
                     'index_name': index_name,
                     'station': station,
                     'category': category,
@@ -288,7 +306,18 @@ def _(DATA_ROOT, VIEWS_FOLDER, indices_full_df, pd):
                     'mean_value': float(values.mean()),
                     'std_value': float(values.std()),
                     'histogram': histogram_data
-                })
+                }
+
+                # Add cluster information if available
+                if cluster_id is not None:
+                    index_data.update({
+                        'cluster_id': cluster_id,
+                        'cluster_size': cluster_size,
+                        'is_selected': is_selected,
+                        'selection_rationale': selection_rationale
+                    })
+
+                indices_histogram_data.append(index_data)
 
     print(f"Generated {len(indices_histogram_data)} histogram datasets")
 

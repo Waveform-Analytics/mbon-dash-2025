@@ -74,7 +74,6 @@ def _():
     return (
         DATA_ROOT,
         PCA,
-        Path,
         StandardScaler,
         data_dir,
         dendrogram,
@@ -297,7 +296,7 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def h_clustering(corr_matrix, fcluster, linkage, np, pd, squareform):
     if not corr_matrix.empty:
         # Perform hierarchical clustering on correlation matrix
@@ -493,7 +492,13 @@ def _(mo):
 
 
 @app.cell
-def _(acoustic_index_cols, cluster_df, pd, selected_indices, selection_rationale):
+def _(
+    acoustic_index_cols,
+    cluster_df,
+    pd,
+    selected_indices,
+    selection_rationale,
+):
     # Create comprehensive metadata for all indices
     index_metadata = []
 
@@ -540,7 +545,7 @@ def _(acoustic_index_cols, cluster_df, pd, selected_indices, selection_rationale
         index_metadata_df = pd.DataFrame()
         print("No cluster data available for metadata creation")
 
-    return index_metadata_df,
+    return (index_metadata_df,)
 
 
 @app.cell
@@ -621,12 +626,15 @@ def _(mo):
     The PCA results reveal the true dimensionality of the acoustic soundscape. If 7 components explain 80% of variance in 61 indices, the soundscape has approximately 7 major "acoustic dimensions" rather than 61.
 
     **What This Means:**
+
     - **Low intrinsic dimensionality**: Most acoustic variation can be captured with <10 principal components
     - **High redundancy confirmed**: Many indices measure the same underlying patterns
     - **Validation of clustering**: If our 18 clusters preserve 90%+ variance at the same PC count, the reduction is successful
 
     **Ecological Interpretation:**
+
     Each principal component likely represents a fundamental acoustic process:
+
     - PC1 might capture overall acoustic activity/intensity
     - PC2 could represent spectral vs temporal patterns  
     - PC3 might distinguish complexity vs simplicity
@@ -1087,7 +1095,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(Path, DATA_ROOT):
+def _(DATA_ROOT):
     # Create output directory for plots
     output_dir_plots = DATA_ROOT.parent / "dashboard" / "public" / "views" / "notebooks"
     output_dir_plots.mkdir(parents=True, exist_ok=True)
@@ -1468,10 +1476,10 @@ def _(
 @app.cell(hide_code=True)
 def _(
     DATA_ROOT,
-    Path,
     acoustic_index_cols,
     df_acoustic_indices,
     df_indices_reduced,
+    index_metadata_df,
     np,
     output_dir_plots,
     pd,

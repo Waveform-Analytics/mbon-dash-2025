@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell
@@ -19,7 +19,8 @@ def _():
 
     DATA_ROOT = project_root / "data"
 
-    return pd, DATA_ROOT
+    return np, pd
+
 
 @app.cell(hide_code=True)
 def _(mo):
@@ -33,8 +34,14 @@ def _(mo):
     return
 
 
+@app.cell
+def _():
+    import marimo as mo
+    return (mo,)
+
+
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load acoustic indices (FullBW version)
     indices_data = {}
     indices_info = {}
@@ -73,7 +80,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load manual detection data
     detection_data = {}
     detection_info = {}
@@ -111,7 +118,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, detection_data, pd, DATA_ROOT):
+def _(DATA_DIR, detection_data, pd):
     # Load species metadata to filter detection columns
     metadata_path = DATA_DIR / "metadata" / "det_column_names.csv"
 
@@ -171,7 +178,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load temperature data (20-minute intervals)
     temp_data = {}
     temp_info = {}
@@ -196,7 +203,7 @@ def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load depth data (1-hour intervals)
     depth_data = {}
     depth_info = {}
@@ -233,7 +240,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, STATIONS, YEAR, pd, DATA_ROOT):
+def _(DATA_DIR, STATIONS, YEAR, pd):
     # Load RMS SPL data (1-hour intervals)
     spl_data = {}
     spl_info = {}
@@ -752,7 +759,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STATIONS, depth_data, pd, plt, spl_data, temp_data, DATA_ROOT):
+def _(STATIONS, depth_data, pd, plt, spl_data, temp_data):
     # Create time series plots for temperature, depth, and SPL
     fig_ts, axes_ts = plt.subplots(3, 3, figsize=(18, 10))
 
@@ -996,7 +1003,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(DATA_DIR, metadata_df, pd, DATA_ROOT):
+def _(DATA_DIR, metadata_df, pd):
     # Load deployment metadata from Excel file
     metadata_excel_path = DATA_DIR / "metadata" / "1_Montie Lab_metadata_deployments_2017 to 2022.xlsx"
     metadata_data = {}

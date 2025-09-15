@@ -24,6 +24,17 @@ interface AcousticIndex {
   mean_value: number;
   std_value: number;
   histogram: HistogramBin[];
+  cluster_id?: number;
+  cluster_size?: number;
+  is_selected?: boolean;
+}
+
+interface ClusterData {
+  index_name: string;
+  cluster_id: number;
+  cluster_size: number;
+  is_selected: boolean;
+  selection_rationale: string;
 }
 
 // Define category colors
@@ -69,10 +80,10 @@ const categoryColors: Record<string, { bg: string; border: string; text: string;
 const AcousticIndicesCards: React.FC = () => {
   const { data: rawData, loading, error } = useViewData<AcousticIndex[]>('acoustic_indices_histograms');
   const [selectedStation, setSelectedStation] = useState<string>('9M');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCluster, setSelectedCluster] = useState<string>('All');
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [stations, setStations] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [clusters, setClusters] = useState<{id: string, label: string}[]>([]);
 
   useEffect(() => {
     if (rawData && rawData.length > 0) {
@@ -80,9 +91,21 @@ const AcousticIndicesCards: React.FC = () => {
       const uniqueStations = Array.from(new Set(rawData.map(d => d.station)));
       setStations(uniqueStations);
 
-      // Extract unique categories
-      const uniqueCategories = Array.from(new Set(rawData.map(d => d.category)));
-      setCategories(['All', ...uniqueCategories.sort()]);
+      // Extract unique clusters
+      const uniqueClusters = Array.from(new Set(
+        rawData
+          .filter(d => d.cluster_id !== undefined)
+          .map(d => d.cluster_id!)
+      )).sort((a, b) => a - b);
+
+      const clusterOptions = [
+        { id: 'All', label: 'All Clusters' },
+        ...uniqueClusters.map(id => ({
+          id: id.toString(),
+          label: `Cluster ${id}`
+        }))
+      ];
+      setClusters(clusterOptions);
     }
   }, [rawData]);
 
@@ -98,11 +121,12 @@ const AcousticIndicesCards: React.FC = () => {
     });
   };
 
-  // Filter data based on selected station and category
+  // Filter data based on selected station and cluster
   const filteredData = rawData ? rawData.filter(d => {
     const stationMatch = d.station === selectedStation;
-    const categoryMatch = selectedCategory === 'All' || d.category === selectedCategory;
-    return stationMatch && categoryMatch;
+    const clusterMatch = selectedCluster === 'All' ||
+      (d.cluster_id !== undefined && d.cluster_id.toString() === selectedCluster);
+    return stationMatch && clusterMatch;
   }) : [];
 
   if (loading) {
@@ -152,18 +176,18 @@ const AcousticIndicesCards: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <label htmlFor="category-select" className="text-sm font-medium text-gray-700">
-            Category:
+          <label htmlFor="cluster-select" className="text-sm font-medium text-gray-700">
+            Cluster:
           </label>
           <select
-            id="category-select"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            id="cluster-select"
+            value={selectedCluster}
+            onChange={(e) => setSelectedCluster(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category}
+            {clusters.map(cluster => (
+              <option key={cluster.id} value={cluster.id}>
+                {cluster.label}
               </option>
             ))}
           </select>
@@ -263,6 +287,7 @@ const IndexCard: React.FC<IndexCardProps> = ({ index, isFlipped, onClick, catego
       .attr('text-anchor', 'middle')
       .style('font-size', '13px')
       .style('font-weight', 'bold')
+      .style('fill', index.is_selected ? '#EF4444' : '#000000')
       .text(index.index_name);
 
     // Add mean line
