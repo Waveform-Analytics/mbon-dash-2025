@@ -4,7 +4,7 @@ __generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import marimo as mo
     import pandas as pd
@@ -21,11 +21,6 @@ def _():
 
     DATA_ROOT = project_root / "data"
 
-    return DATA_ROOT, mo, np, pd, plt
-
-
-@app.cell(hide_code=True)
-def _(DATA_ROOT):
     # Configuration variables
     YEAR = 2021
     STATIONS = ['9M', '14M', '37M']
@@ -40,17 +35,33 @@ def _(DATA_ROOT):
     print(f"  Stations: {STATIONS}")
     print(f"  Aggregation interval: {AGGREGATION_HOURS} hours")
     print(f"  Data directory: {DATA_DIR}")
-
-    return AGGREGATION_HOURS, DATA_DIR, OUTPUT_DIR, STATIONS, YEAR
+    return (
+        AGGREGATION_HOURS,
+        DATA_DIR,
+        OUTPUT_DIR,
+        STATIONS,
+        YEAR,
+        mo,
+        np,
+        pd,
+        plt,
+    )
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
+    # Notebook 2: Temporal Alignment and Aggregation
+
+    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections
+    **Key Outputs**: Temporally aligned dataset ready for analysis
+
+    This notebook addresses the fundamental challenge of temporal misalignment across multiple data streams with different collection frequencies. By aggregating everything to a common 2-hour resolution and engineering relevant features, we create analysis-ready datasets that preserve ecological information while enabling modeling.
+
     ## 1. Load Processed Data from Notebook 1
 
-    Loading the cleaned and standardized data streams from each station. Notebook 1 performed quality control, 
+    Loading the cleaned and standardized data streams from each station. Notebook 1 performed quality control,
     standardized column names, and converted timestamps to consistent formats. Here we systematically load:
 
     - **Acoustic indices** (50-60 indices per station): Hourly summaries of soundscape characteristics
