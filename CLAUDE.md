@@ -59,3 +59,66 @@ This pattern ensures notebooks work when run:
 - As scripts from any directory
 - From different development environments
 
+## Building New Marimo Notebooks
+
+### Required Structure and Format
+
+**1. Header Format**: Every notebook must start with the standardized header format from MVP-PLAN.md:
+```markdown
+# Notebook N: Descriptive Title
+
+**Purpose**: Brief statement of what the notebook accomplishes
+**Key Outputs**: Main deliverables/files produced
+
+Brief explanatory paragraph about the notebook's role in the analysis pipeline.
+```
+
+**2. Import Cell**: Use the standardized path resolution pattern above. Always include necessary imports:
+```python
+@app.cell
+def _():
+    import marimo as mo
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns  # if plotting
+    from pathlib import Path
+
+    # Standard path resolution pattern (see above)
+    # ...
+
+    return DATA_ROOT, OUTPUT_DIR, mo, pd, plt  # Return all needed variables
+```
+
+**3. Variable Naming Rules**:
+- **CRITICAL**: Marimo notebooks are reactive - ALL variables are globally scoped across the entire notebook
+- **Never define the same variable name in multiple cells** or there will be conflicts
+- Use unique descriptive names: `df_indices`, `df_detections`, `station_temp` instead of generic `df`, `data`, `station`
+- Add suffixes for different contexts: `_idx`, `_det`, `_temp`, `_stats`
+
+**4. Cell Return Rules**:
+- Each cell must return ALL variables it creates: `return (var1, var2, var3)`
+- Single variable: `return (variable,)` (note the comma)
+- No variables: `return` (empty return)
+- Variables passed between cells via function signatures: `def _(DATA_ROOT, df_indices, stations):`
+
+**5. Output Patterns**:
+- Processed data: Save to `DATA_ROOT / "processed"` as parquet files
+- Plots: Save to `DATA_ROOT.parent / "dashboard/public/views/notebooks"` as PNG
+- Follow naming convention: `{notebook_number}_{description}_{year}.parquet`
+
+**6. Documentation Style**:
+- Target intelligent readers who need to understand data processes
+- Use `mo.md()` cells liberally to explain each major section
+- Include "Why this matters" explanations for complex analyses
+- Document assumptions, limitations, and interpretation guidance
+
+### Common Pitfalls to Avoid
+- ❌ Using relative paths instead of DATA_ROOT
+- ❌ Defining same variable names in different cells
+- ❌ Forgetting to return variables from cells
+- ❌ Not including necessary imports in function signatures
+- ❌ Inconsistent file naming or output locations
+
+### other notes
+- use context7 marimo docs to guide notebook development
