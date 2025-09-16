@@ -5,50 +5,6 @@ app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
-def _():
-    import marimo as mo
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import os
-    from pathlib import Path
-
-    # Find project root by looking for the data folder
-    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-    project_root = current_dir
-    while not (project_root / "data").exists() and project_root != project_root.parent:
-        project_root = project_root.parent
-
-    DATA_ROOT = project_root / "data"
-
-    # Configuration variables
-    YEAR = 2021
-    STATIONS = ['9M', '14M', '37M']
-    AGGREGATION_HOURS = 2  # Aggregate to 2-hour intervals
-
-    # Data directories
-    DATA_DIR = DATA_ROOT / "processed"
-    OUTPUT_DIR = DATA_ROOT / "processed"
-
-    print(f"Configuration:")
-    print(f"  Year: {YEAR}")
-    print(f"  Stations: {STATIONS}")
-    print(f"  Aggregation interval: {AGGREGATION_HOURS} hours")
-    print(f"  Data directory: {DATA_DIR}")
-    return (
-        AGGREGATION_HOURS,
-        DATA_DIR,
-        OUTPUT_DIR,
-        STATIONS,
-        YEAR,
-        mo,
-        np,
-        pd,
-        plt,
-    )
-
-
-@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -356,7 +312,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
                 df_temp_aligned = df_temp_aligned.merge(df_temp_grouped, on='datetime', how='left')
 
                 # Forward fill small gaps (up to 3 intervals = 6 hours)
-                df_temp_aligned['Water temp (°C)'] = df_temp_aligned['Water temp (°C)'].fillna(method='ffill', limit=3)
+                df_temp_aligned['Water temp (°C)'] = df_temp_aligned['Water temp (°C)'].ffill(limit=3)
 
                 temperature_aggregated[station_agg_temp] = df_temp_aligned
 
@@ -391,7 +347,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
                 df_depth_aligned = df_depth_aligned.merge(df_depth_grouped, on='datetime', how='left')
 
                 # Forward fill small gaps
-                df_depth_aligned['Water depth (m)'] = df_depth_aligned['Water depth (m)'].fillna(method='ffill', limit=3)
+                df_depth_aligned['Water depth (m)'] = df_depth_aligned['Water depth (m)'].ffill(limit=3)
 
                 depth_aggregated[station_agg_depth] = df_depth_aligned
 
@@ -452,7 +408,7 @@ def _(AGGREGATION_HOURS, STATIONS, data_loaded, pd, time_grids):
 
                 # Forward fill small gaps
                 for col_spl_fill in available_spl_cols:
-                    df_spl_aligned[col_spl_fill] = df_spl_aligned[col_spl_fill].fillna(method='ffill', limit=3)
+                    df_spl_aligned[col_spl_fill] = df_spl_aligned[col_spl_fill].ffill(limit=3)
 
                 spl_aggregated[station_agg_spl] = df_spl_aligned
 
@@ -626,20 +582,24 @@ def _(mo):
     **Feature engineering strategy:**
 
     **Temperature features:**
+
     - **Lag variables** (1-3 intervals = 2-6 hours ago): Capture delayed thermal responses
     - **Change rates** (2h, 4h): Detect rapid warming/cooling events that might trigger behavior
     - **Rolling means** (6h, 12h): Capture longer-term thermal trends
 
     **Depth features:**
+
     - **Lag variables**: Capture tidal cycle effects on calling behavior
     - **Change rates**: Detect rising vs falling tides (fish may respond differently)
     - **Rolling means**: Smooth out tidal fluctuations to reveal underlying patterns
 
     **SPL features:**
+
     - **Lag variables**: Account for delayed responses to noise events
     - **Rolling means** (6h, 12h, 24h): Capture ambient noise climate rather than momentary sounds
 
     **Selected acoustic indices:**
+
     - **Rolling means only** (to avoid too many features): Capture recent acoustic environment trends
 
     → These engineered features help models understand not just current conditions, but recent environmental history that influences animal behavior.
@@ -1250,6 +1210,56 @@ def _():
     print("  - Visualizations generated")
     print("  - Enhanced datasets saved for next notebook")
     return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""## Imports and configuration""")
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    import marimo as mo
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import os
+    from pathlib import Path
+
+    # Find project root by looking for the data folder
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    project_root = current_dir
+    while not (project_root / "data").exists() and project_root != project_root.parent:
+        project_root = project_root.parent
+
+    DATA_ROOT = project_root / "data"
+
+    # Configuration variables
+    YEAR = 2021
+    STATIONS = ['9M', '14M', '37M']
+    AGGREGATION_HOURS = 2  # Aggregate to 2-hour intervals
+
+    # Data directories
+    DATA_DIR = DATA_ROOT / "processed"
+    OUTPUT_DIR = DATA_ROOT / "processed"
+
+    print(f"Configuration:")
+    print(f"  Year: {YEAR}")
+    print(f"  Stations: {STATIONS}")
+    print(f"  Aggregation interval: {AGGREGATION_HOURS} hours")
+    print(f"  Data directory: {DATA_DIR}")
+    return (
+        AGGREGATION_HOURS,
+        DATA_DIR,
+        OUTPUT_DIR,
+        STATIONS,
+        YEAR,
+        mo,
+        np,
+        pd,
+        plt,
+    )
 
 
 if __name__ == "__main__":

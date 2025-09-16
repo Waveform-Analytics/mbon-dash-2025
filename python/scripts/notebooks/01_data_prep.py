@@ -5,6 +5,25 @@ app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    # Notebook 1: Data Loading and Initial Exploration
+
+    **Purpose**: Load all data streams and perform initial quality assessment
+    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization
+
+    This notebook performs the foundational data loading and quality assessment for the MBON acoustic analysis pipeline. We load and examine all primary data streams including acoustic indices, manual fish detections, environmental measurements, and vessel presence data to understand data quality, temporal coverage, and basic patterns before proceeding to temporal alignment and analysis.
+
+    ## 1. Load Acoustic Indices Data
+
+    Acoustic indices are mathematical summaries of soundscape recordings that capture different aspects of ecosystem acoustic activity. The FullBW (full bandwidth) version includes indices computed across the entire frequency range of the hydrophones. These metrics help quantify biodiversity, ecosystem health, and acoustic complexity without requiring species-specific identification.
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
 def _():
     import marimo as mo
     import pandas as pd
@@ -32,25 +51,6 @@ def _():
     print(f"Analysis year: {YEAR}")
 
     return DATA_DIR, OUTPUT_DIR, STATIONS, YEAR, mo, np, pd, plt, sns
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    # Notebook 1: Data Loading and Initial Exploration
-
-    **Purpose**: Load all data streams and perform initial quality assessment
-    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization
-
-    This notebook performs the foundational data loading and quality assessment for the MBON acoustic analysis pipeline. We load and examine all primary data streams including acoustic indices, manual fish detections, environmental measurements, and vessel presence data to understand data quality, temporal coverage, and basic patterns before proceeding to temporal alignment and analysis.
-
-    ## 1. Load Acoustic Indices Data
-
-    Acoustic indices are mathematical summaries of soundscape recordings that capture different aspects of ecosystem acoustic activity. The FullBW (full bandwidth) version includes indices computed across the entire frequency range of the hydrophones. These metrics help quantify biodiversity, ecosystem health, and acoustic complexity without requiring species-specific identification.
-    """
-    )
-    return
 
 
 @app.cell(hide_code=True)

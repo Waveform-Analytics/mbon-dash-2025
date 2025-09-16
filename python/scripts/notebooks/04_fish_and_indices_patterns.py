@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", auto_download=["html"])
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -52,7 +52,7 @@ def _():
 
     print("Libraries loaded successfully")
     print(f"Data root: {DATA_ROOT}")
-    return Path, np, pd, plt, sns, DATA_ROOT
+    return DATA_ROOT, np, pd, plt, sns
 
 
 @app.cell(hide_code=True)
@@ -999,7 +999,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(df_combined, fish_cols, selected_indices, pd, DATA_ROOT):
+def _(DATA_ROOT, df_combined, fish_cols, pd, selected_indices):
     # Generate seasonal diel patterns for interactive visualization
     if not df_combined.empty and 'season' in df_combined.columns and 'hour' in df_combined.columns:
         print("=== GENERATING SEASONAL DIEL PATTERNS FOR VISUALIZATION ===\n")
@@ -1069,7 +1069,7 @@ def _(df_combined, fish_cols, selected_indices, pd, DATA_ROOT):
         print("Insufficient data for seasonal diel pattern generation")
         df_seasonal_diel = pd.DataFrame()
 
-    return (df_seasonal_diel,)
+    return
 
 
 @app.cell(hide_code=True)
