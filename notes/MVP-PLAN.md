@@ -160,36 +160,47 @@ This specific format is important because it will be used to identify the embedd
 
 ---
 
-## Notebook 5: Anthropogenic Impact Assessment
+## Notebook 5: Vessel Detection and Biological Signal Separation
 
-**Purpose**: Document vessel impacts on acoustic indices and demonstrate indices work despite anthropogenic noise  
-**Key Outputs**: Evidence that indices maintain biological signal even during vessel periods
+**Purpose**: Investigate whether acoustic indices can detect vessels and quantify how vessel noise masks biological signals
+**Key Outputs**: Vessel detection capability assessment, "clean" biological pattern analysis with vessel periods removed
 
-### Core Analysis
-- Basic vessel presence/absence analysis using existing manual vessel data
-- Cohen's d effect sizes for vessel impacts on reduced index set
-- Before/during/after vessel comparisons for biological indices
-- Station-specific vessel impact patterns
+### Part 1: Vessel Detection from Acoustic Indices
+- Train simple classifier (logistic regression/decision tree) to predict vessel presence from acoustic indices
+- Identify which indices are most predictive of vessel presence
+- Assess detection accuracy, precision, recall, and feature importance
+- Evaluate potential for real-time vessel monitoring using indices alone
+- Cross-validation to ensure robust performance across stations and seasons
 
-### Robustness Assessment  
-- Do fish-calling patterns persist during vessel periods?
-- Which indices are most/least affected by vessel presence?
-- Environmental vs anthropogenic drivers of index variation
-- Seasonal differences in vessel impact severity
+### Part 2: Biological Signal Isolation
+- Filter out all vessel periods from entire dataset (creating "clean" subset)
+- Re-analyze correlations between indices and fish detections:
+  - With all data (baseline)
+  - Vessel periods only
+  - Non-vessel periods only
+- Quantify improvement in biological signal clarity when vessels removed
+- Document which species/patterns are most masked by vessel noise
+- Compare community-level metrics (total calling, diversity) with/without vessels
 
-### Key Validation Questions
-- Can indices detect biological patterns even with vessel noise?
-- Are community-level fish patterns robust to anthropogenic interference?
-- Which temporal scales minimize vessel impacts?
+### Part 3: Temporal Stratification Analysis
+- Split analysis by season or month to account for varying biological activity
+- Test if vessel impacts vary by:
+  - Spawning vs non-spawning seasons
+  - High vs low biological activity periods
+  - Different times of day (diel patterns)
+- Identify temporal windows where biological signals are clearest
+- Assess whether seasonal models improve vessel detection accuracy
 
 ### Static Plots to Generate
-- Before/during/after vessel box plots for key indices
-- Fish calling patterns: vessel vs non-vessel periods
-- Index robustness rankings (vessel sensitivity analysis)
-- Seasonal variation in anthropogenic impacts
-- Station comparison of vessel effects
+- ROC curves and confusion matrices for vessel detection models
+- Feature importance plots for vessel-predictive indices
+- Correlation improvement plots (indices vs fish): all data vs non-vessel only
+- Seasonal breakdown of vessel impact severity
+- Time series showing detected vs actual vessel presence
+- Biological signal clarity comparison (with/without vessel filtering)
+- Temporal heatmaps of optimal monitoring windows
 
-**Output**: Documentation that indices provide biological signal despite anthropogenic noise
+**Output**: Vessel detection models, quantified signal improvement metrics, and recommendations for temporal stratification in monitoring
 
 ---
 
@@ -215,6 +226,7 @@ This specific format is important because it will be used to identify the embedd
 - **Seasonal phenology**: Can indices identify spawning seasons and activity peaks?
 - **Cross-station consistency**: Do patterns hold across different monitoring locations?
 - **Temporal scales**: At what time scales do indices best capture biological patterns?
+- **Vessel-filtered analysis**: Compare community pattern detection with/without vessel periods (using filters from Notebook 5)
 
 ### Screening Tool Validation
 - **Efficiency assessment**: How much manual effort could be saved by using indices to identify high-activity periods?
@@ -255,6 +267,7 @@ This specific format is important because it will be used to identify the embedd
 - **Environmental relationship consistency**: Do temperature-activity relationships match between methods?
 - **Community vs species patterns**: Where do indices excel (community) vs struggle (species-specific)?
 - **Temporal scale optimization**: At what time scales are indices most informative?
+- **Optimal monitoring windows**: Identify times/seasons with best signal-to-noise ratios (incorporating vessel analysis from Notebook 5)
 
 ### Static Plots to Generate
 - Seasonal phenology: indices vs manual detection comparison
@@ -283,6 +296,8 @@ This specific format is important because it will be used to identify the embedd
 ### Method Comparison & Integration Strategy
 - **Acoustic indices vs traditional SPL approaches**: Advantages for biological pattern detection
 - **Hybrid monitoring frameworks**: Combining continuous index monitoring with targeted manual detection
+- **Vessel detection capability**: Recommendations for using indices as vessel monitoring tools (from Notebook 5 findings)
+- **Optimal temporal stratification**: Best times/seasons for biological monitoring based on signal-to-noise analysis
 - **Cost-benefit analysis**: Long-term monitoring efficiency gains
 - **Implementation practicality**: Computational requirements, deployment considerations
 
