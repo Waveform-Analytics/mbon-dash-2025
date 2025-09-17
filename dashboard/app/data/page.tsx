@@ -7,10 +7,10 @@ import { motion } from 'framer-motion';
 import { BarChart3, Map, Fish, TrendingUp, Activity, Database } from 'lucide-react';
 import PageNavigation from '@/components/PageNavigation';
 import StationsMap from '../../components/StationsMap';
-import AcousticIndicesHeatmap from '../../components/AcousticIndicesHeatmap';
-import DetectionsHeatmap from '../../components/DetectionsHeatmap';
-import RmsSplHeatmap from '../../components/RmsSplHeatmap';
-import EnvironmentalHeatmap from '../../components/EnvironmentalHeatmap';
+import AcousticIndicesHeatmap from '../../components/heatmaps/AcousticIndicesHeatmap';
+import DetectionsHeatmap from '../../components/heatmaps/DetectionsHeatmap';
+import RmsSplHeatmap from '../../components/heatmaps/RmsSplHeatmap';
+import EnvironmentalHeatmap from '../../components/heatmaps/EnvironmentalHeatmap';
 
 const dataLinks = [
   { href: '/data', label: 'Overview' },
