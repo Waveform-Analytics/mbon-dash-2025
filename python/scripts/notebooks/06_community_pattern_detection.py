@@ -90,36 +90,24 @@ def _():
     return (
         DATA_ROOT,
         DecisionTreeClassifier,
-        GradientBoostingClassifier,
         LogisticRegression,
         RandomForestClassifier,
-        RobustScaler,
-        SelectKBest,
         StandardScaler,
         StratifiedKFold,
-        TimeSeriesSplit,
         accuracy_score,
-        auc,
-        classification_report,
         cohen_kappa_score,
-        confusion_matrix,
         cross_val_score,
         f1_score,
         json,
         mutual_info_classif,
         np,
         pd,
-        pearsonr,
         pickle,
         plot_dir,
         plt,
-        precision_recall_curve,
         precision_score,
         recall_score,
-        roc_curve,
-        sns,
         spearmanr,
-        stats,
         train_test_split,
     )
 
@@ -219,13 +207,7 @@ def _(mo):
 
 
 @app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "in_progress", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "pending", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "pending", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "pending", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "pending", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "pending", "activeForm": "Generating summary and saving results"}])
-    return
-
-
-@app.cell
-def _(df_master, fish_species, np):
+def _(df_master, fish_species):
     # Create community-level activity metrics
     print("Creating community activity metrics...")
 
@@ -239,17 +221,9 @@ def _(df_master, fish_species, np):
     # 3. Maximum species activity (highest calling intensity across species)
     df_community['max_species_activity'] = df_community[fish_species].max(axis=1)
 
-    # 4. Activity diversity (Shannon diversity of calling intensities)
-    def shannon_diversity(row):
-        # Calculate Shannon diversity for calling intensities
-        values = row[fish_species].values
-        values = values[values > 0]  # Only consider active species
-        if len(values) == 0:
-            return 0
-        proportions = values / values.sum()
-        return -np.sum(proportions * np.log(proportions))
-
-    df_community['activity_diversity'] = df_community.apply(shannon_diversity, axis=1)
+    # 4. Activity diversity (simplified - coefficient of variation)
+    # Calculate coefficient of variation as a diversity measure
+    df_community['activity_diversity'] = df_community[fish_species].std(axis=1) / (df_community[fish_species].mean(axis=1) + 0.01)
 
     # 5. Binary classification targets at different thresholds
     # High vs low total activity
@@ -273,7 +247,7 @@ def _(df_master, fish_species, np):
     print(f"Any activity: {df_community['any_activity'].mean():.1%}")
     print(f"Multi-species active: {df_community['multi_species_active'].mean():.1%}")
 
-    return df_community, total_activity_75th, total_activity_90th
+    return (df_community,)
 
 
 @app.cell(hide_code=True)
@@ -289,15 +263,14 @@ def _(mo):
 
 
 @app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "in_progress", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "pending", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "pending", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "pending", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "pending", "activeForm": "Generating summary and saving results"}])
+def _():
+    # Progress tracking cell
     return
 
 
 @app.cell
 def _(
     DecisionTreeClassifier,
-    GradientBoostingClassifier,
     LogisticRegression,
     RandomForestClassifier,
     StandardScaler,
@@ -334,7 +307,7 @@ def _(
         'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
         'Decision Tree': DecisionTreeClassifier(max_depth=8, min_samples_leaf=10, random_state=42),
         'Random Forest': RandomForestClassifier(n_estimators=100, max_depth=8, min_samples_leaf=5, random_state=42),
-        'Gradient Boosting': GradientBoostingClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
+        # 'Gradient Boosting': GradientBoostingClassifier(n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42)
     }
 
     # Train models for each target
@@ -397,7 +370,7 @@ def _(
 
     print(f"\nModel training complete for {len(model_results)} targets")
 
-    return X_features, X_scaled, model_results, modeling_cols, scaler, target_cols
+    return X_scaled, df_modeling, model_results, modeling_cols, target_cols
 
 
 @app.cell(hide_code=True)
@@ -413,23 +386,32 @@ def _(mo):
 
 
 @app.cell
-def _(mutual_info_classif, df_modeling, index_cols, pd, X_scaled, target_cols):
+def _(
+    X_scaled,
+    df_modeling,
+    model_results,
+    modeling_cols,
+    mutual_info_classif,
+    np,
+    pd,
+    target_cols,
+):
     # Feature importance analysis
     print("Analyzing feature importance...")
 
     feature_importance_results = {}
 
-    for target_name in target_cols:
-        if target_name not in model_results:
+    for target_name_fi in target_cols:
+        if target_name_fi not in model_results:
             continue
 
-        y_target = df_modeling[target_name]
+        y_target_fi = df_modeling[target_name_fi]
 
         # Mutual information feature importance
-        mi_scores = mutual_info_classif(X_scaled, y_target, random_state=42)
+        mi_scores = mutual_info_classif(X_scaled, y_target_fi, random_state=42)
 
         # Random Forest feature importance (if available)
-        rf_model = model_results[target_name].get('Random Forest', {}).get('model')
+        rf_model = model_results[target_name_fi].get('Random Forest', {}).get('model')
         rf_importance = rf_model.feature_importances_ if rf_model else np.zeros(len(modeling_cols))
 
         # Create feature importance dataframe
@@ -439,12 +421,12 @@ def _(mutual_info_classif, df_modeling, index_cols, pd, X_scaled, target_cols):
             'rf_importance': rf_importance
         }).sort_values('mutual_info', ascending=False)
 
-        feature_importance_results[target_name] = importance_df
+        feature_importance_results[target_name_fi] = importance_df
 
-        print(f"\nTop 5 features for {target_name}:")
+        print(f"\nTop 5 features for {target_name_fi}:")
         print(importance_df.head())
 
-    return feature_importance_results, mi_scores, rf_importance
+    return (feature_importance_results,)
 
 
 @app.cell(hide_code=True)
@@ -456,12 +438,6 @@ def _(mo):
     Comparing how well acoustic indices capture the same temporal patterns (diel and seasonal) as manual detections.
     """
     )
-    return
-
-
-@app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "completed", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "in_progress", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "pending", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "pending", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "pending", "activeForm": "Generating summary and saving results"}])
     return
 
 
@@ -550,20 +526,14 @@ def _(mo):
 
 
 @app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "completed", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "completed", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "in_progress", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "pending", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "pending", "activeForm": "Generating summary and saving results"}])
-    return
-
-
-@app.cell
-def _(df_community, model_results, np):
+def _(model_results, np):
     # Biological screening performance evaluation
     print("Evaluating biological screening performance...")
 
     screening_results = {}
 
-    for target_name, target_models in model_results.items():
-        print(f"\nScreening evaluation for: {target_name}")
+    for target_name_screen, target_models in model_results.items():
+        print(f"\nScreening evaluation for: {target_name_screen}")
 
         # Get best performing model (highest F1 score)
         best_model_name = max(target_models.keys(),
@@ -573,20 +543,20 @@ def _(df_community, model_results, np):
         print(f"Best model: {best_model_name} (F1: {best_model_results['f1']:.3f})")
 
         # Screening efficiency analysis
-        y_true = best_model_results['y_test']
-        y_pred = best_model_results['y_pred']
-        y_prob = best_model_results['y_prob']
+        y_true_screen = best_model_results['y_test']
+        y_pred_screen = best_model_results['y_pred']
+        y_prob_screen = best_model_results['y_prob']
 
         # Calculate efficiency metrics
-        true_positives = np.sum((y_true == 1) & (y_pred == 1))
-        false_positives = np.sum((y_true == 0) & (y_pred == 1))
-        true_negatives = np.sum((y_true == 0) & (y_pred == 0))
-        false_negatives = np.sum((y_true == 1) & (y_pred == 0))
+        true_positives = np.sum((y_true_screen == 1) & (y_pred_screen == 1))
+        false_positives = np.sum((y_true_screen == 0) & (y_pred_screen == 1))
+        true_negatives = np.sum((y_true_screen == 0) & (y_pred_screen == 0))
+        false_negatives = np.sum((y_true_screen == 1) & (y_pred_screen == 0))
 
         # Screening efficiency: how much effort could be saved?
-        total_periods = len(y_true)
-        flagged_periods = np.sum(y_pred == 1)
-        actual_active_periods = np.sum(y_true == 1)
+        total_periods = len(y_true_screen)
+        flagged_periods = np.sum(y_pred_screen == 1)
+        actual_active_periods = np.sum(y_true_screen == 1)
 
         # If we only manually check flagged periods, what's the efficiency?
         effort_reduction = (total_periods - flagged_periods) / total_periods
@@ -595,7 +565,7 @@ def _(df_community, model_results, np):
         # Precision in screening context: of flagged periods, how many are actually active?
         screening_precision = true_positives / flagged_periods if flagged_periods > 0 else 0
 
-        screening_results[target_name] = {
+        screening_results[target_name_screen] = {
             'best_model': best_model_name,
             'f1_score': best_model_results['f1'],
             'precision': best_model_results['precision'],
@@ -620,15 +590,15 @@ def _(df_community, model_results, np):
     print("BIOLOGICAL SCREENING ASSESSMENT SUMMARY")
     print("="*60)
 
-    for target_name, results in screening_results.items():
-        print(f"\n{target_name.upper()}:")
+    for target_name_summary, results in screening_results.items():
+        print(f"\n{target_name_summary.upper()}:")
         print(f"  Best Model: {results['best_model']}")
         print(f"  F1 Score: {results['f1_score']:.3f}")
         print(f"  Manual Effort Reduction: {results['effort_reduction']:.1%}")
         print(f"  Biological Detection Rate: {results['detection_rate']:.1%}")
         print(f"  Screening Precision: {results['screening_precision']:.1%}")
 
-    return screening_results
+    return (screening_results,)
 
 
 @app.cell(hide_code=True)
@@ -644,22 +614,16 @@ def _(mo):
 
 
 @app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "completed", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "completed", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "completed", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "in_progress", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "pending", "activeForm": "Generating summary and saving results"}])
-    return
-
-
-@app.cell
 def _(
+    diel_corr_df,
     diel_patterns,
     feature_importance_results,
+    np,
     plot_dir,
     plt,
     screening_results,
     seasonal_patterns,
-    sns,
     station_consistency,
-    target_cols,
 ):
     # Create comprehensive visualizations
     print("Creating community pattern and screening visualizations...")
@@ -698,9 +662,9 @@ def _(
 
     # Cross-station comparison
     plt.subplot(2, 2, 4)
-    for station, patterns in station_consistency.items():
+    for station_viz, patterns in station_consistency.items():
         plt.plot(patterns['diel_pattern'].index, patterns['diel_pattern'].values,
-                'o-', alpha=0.7, label=f'Station {station}')
+                'o-', alpha=0.7, label=f'Station {station_viz}')
     plt.xlabel('Hour of Day')
     plt.ylabel('Mean Fish Activity')
     plt.title('Cross-Station Diel Patterns')
@@ -717,19 +681,19 @@ def _(
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         axes = axes.ravel()
 
-        for i, (target_name, importance_df) in enumerate(feature_importance_results.items()):
+        for i, (target_name_viz, importance_df_viz) in enumerate(feature_importance_results.items()):
             if i >= 4:  # Max 4 subplots
                 break
 
             ax = axes[i]
-            top_features = importance_df.head(8)
+            top_features = importance_df_viz.head(8)
 
             y_pos = range(len(top_features))
             ax.barh(y_pos, top_features['mutual_info'], alpha=0.7, color='steelblue')
             ax.set_yticks(y_pos)
             ax.set_yticklabels(top_features['feature'], fontsize=8)
             ax.set_xlabel('Mutual Information Score')
-            ax.set_title(f'Feature Importance: {target_name}')
+            ax.set_title(f'Feature Importance: {target_name_viz}')
             ax.grid(True, alpha=0.3, axis='x')
             ax.invert_yaxis()
 
@@ -798,12 +762,12 @@ def _(mo):
 
 
 @app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "completed", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "completed", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "completed", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "completed", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "in_progress", "activeForm": "Generating summary and saving results"}])
+def _():
+    # Progress tracking cell
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     DATA_ROOT,
     df_community,
@@ -826,9 +790,9 @@ def _(
         pickle.dump(model_results, f)
 
     # Save feature importance
-    for target_name, importance_df in feature_importance_results.items():
-        filename = f"06_feature_importance_{target_name}.parquet"
-        importance_df.to_parquet(DATA_ROOT / "processed" / filename)
+    for target_name_save, importance_df_save in feature_importance_results.items():
+        filename = f"06_feature_importance_{target_name_save}.parquet"
+        importance_df_save.to_parquet(DATA_ROOT / "processed" / filename)
 
     # Save temporal concordance results
     diel_corr_df.to_parquet(DATA_ROOT / "processed/06_diel_correlations.parquet")
@@ -942,7 +906,7 @@ def _(
 
     print(f"\nAnalysis complete! All results saved to {DATA_ROOT}/processed/")
 
-    return summary_results
+    return
 
 
 @app.cell(hide_code=True)
@@ -969,6 +933,7 @@ def _(mo):
     ### Next Steps for Notebook 7
 
     The validation analysis should focus on:
+
     - **Temporal transferability**: Do these patterns hold across different time periods?
     - **Cross-site validation**: How well do models trained at one site perform at others?
     - **Continuous monitoring simulation**: What would real-world deployment look like?
@@ -976,15 +941,9 @@ def _(mo):
 
     ### The Bottom Line
 
-    Acoustic indices show **moderate but meaningful** potential as biological screening tools. While they cannot replace manual detection, they can **intelligently guide when and where to apply manual effort**, potentially revolutionizing the efficiency of acoustic monitoring programs.
+    Acoustic indices show **moderate but meaningful** potential as biological screening tools. While they cannot replace manual detection, they can **intelligently guide when and where to apply manual effort**, potentially greatly improving the efficiency of acoustic monitoring programs.
     """
     )
-    return
-
-
-@app.cell
-def _(TodoWrite):
-    TodoWrite(todos=[{"content": "Create Notebook 6 marimo file structure with proper header and imports", "status": "completed", "activeForm": "Creating Notebook 6 structure"}, {"content": "Load and prepare data for community-level analysis", "status": "completed", "activeForm": "Loading and preparing community data"}, {"content": "Create total fish activity metrics and binary classification targets", "status": "completed", "activeForm": "Creating community activity metrics"}, {"content": "Build and train community activity detection models", "status": "completed", "activeForm": "Building community detection models"}, {"content": "Analyze diel and seasonal pattern concordance", "status": "completed", "activeForm": "Analyzing temporal pattern concordance"}, {"content": "Evaluate screening tool performance and efficiency", "status": "completed", "activeForm": "Evaluating screening performance"}, {"content": "Create visualizations for community patterns and screening results", "status": "completed", "activeForm": "Creating community pattern visualizations"}, {"content": "Generate summary statistics and save results", "status": "completed", "activeForm": "Generating summary and saving results"}])
     return
 
 
