@@ -44,7 +44,7 @@ export interface UseHeatmapDataReturn {
  * Hook for fetching and managing heatmap data from CDN
  */
 export const useHeatmapData = (config: UseHeatmapDataConfig): UseHeatmapDataReturn => {
-  const { dataUrl, excludeKeys, defaultStation = '9M', defaultVariable = '', transformData } = config;
+  const { dataUrl, defaultStation = '9M', defaultVariable = '' } = config;
 
   // Use refs to store stable values
   const configRef = useRef(config);

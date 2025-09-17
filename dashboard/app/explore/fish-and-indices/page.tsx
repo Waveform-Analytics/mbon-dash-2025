@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Fish } from 'lucide-react';
 import PageNavigation from '@/components/PageNavigation';
 import DielPatternConcordance from '@/components/DielPatternConcordance';
 

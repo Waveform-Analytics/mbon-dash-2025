@@ -353,7 +353,7 @@ const BaseHeatmap: React.FC<BaseHeatmapProps> = React.memo(({
       .text(legendLabel);
 
   }, [processedData, containerWidth, customWidth, customHeight, margins, getColorScale,
-      formatTooltip, legendLabel, legendFormatter, yAxisConfig, reverseColorScale]);
+      formatTooltip, legendLabel, legendFormatter, yAxisConfig, reverseColorScale, customColorDomain]);
 
   // Handle loading state
   if (loading) {
