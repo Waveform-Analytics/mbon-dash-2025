@@ -21,7 +21,7 @@ def _():
 
         1. **Vessel Detection from Acoustic Indices**: Train classifiers to predict vessel presence using only acoustic indices
         2. **Biological Signal Isolation**: Compare fish detection patterns with and without vessel periods to quantify signal masking
-        3. **Temporal Stratification**: Examine how vessel impacts vary by season, spawning periods, and time of day
+        3. **Temporal Stratification**: Examine how fish-index correlations vary across season, spawning periods, and time of day in vessel vs non-vessel periods
 
         ## Why This Matters
 
@@ -576,8 +576,8 @@ def _(correlation_improvement, correlation_results, plot_dir, plt, sns):
 
     print(f"Biological signal clarity visualizations saved to {plot_dir}")
 
-    # Print species most affected by vessels
-    print("\nSpecies Most Affected by Vessel Noise (largest improvement when removed):")
+    # Print species with largest correlation differences
+    print("\nSpecies with Largest Correlation Changes when Vessel Periods Removed:")
     for species_name in species_improvement.tail(3).index:
         print(f"  - {species_name}: {species_improvement[species_name]:.3f}")
 
@@ -590,7 +590,7 @@ def _(mo):
         r"""
     ## Part 3: Temporal Stratification Analysis
 
-    Examining how vessel impacts vary across different temporal scales - by season, month, time of day, and biological activity periods.
+    Examining how biological signal clarity varies across different temporal scales in vessel vs non-vessel periods - by season, month, time of day, and biological activity periods.
     """
     )
     return
@@ -602,7 +602,7 @@ def _(df_full_final, fish_cols, np, pd):
     temporal_analysis = {}
 
     # 1. Seasonal Analysis
-    seasonal_vessel_impact = {}
+    seasonal_vessel_correlation = {}
     for season_name in df_full_final['season'].unique():
         season_data = df_full_final[df_full_final['season'] == season_name]
         vessel_rate = season_data['vessel_present'].mean()
@@ -615,7 +615,7 @@ def _(df_full_final, fish_cols, np, pd):
         mean_fish_vessel = season_vessel[fish_cols].mean().mean()
         mean_fish_no_vessel = season_no_vessel[fish_cols].mean().mean()
 
-        seasonal_vessel_impact[season_name] = {
+        seasonal_vessel_correlation[season_name] = {
             'vessel_rate': vessel_rate,
             'n_vessel': len(season_vessel),
             'n_no_vessel': len(season_no_vessel),
@@ -624,10 +624,10 @@ def _(df_full_final, fish_cols, np, pd):
             'activity_difference': mean_fish_no_vessel - mean_fish_vessel
         }
 
-    temporal_analysis['seasonal'] = pd.DataFrame(seasonal_vessel_impact).T
+    temporal_analysis['seasonal'] = pd.DataFrame(seasonal_vessel_correlation).T
 
     # 2. Diel Period Analysis
-    diel_vessel_impact = {}
+    diel_vessel_correlation = {}
     for period_name in df_full_final['diel_period'].unique():
         period_data = df_full_final[df_full_final['diel_period'] == period_name]
         vessel_rate_period = period_data['vessel_present'].mean()
@@ -638,7 +638,7 @@ def _(df_full_final, fish_cols, np, pd):
         mean_fish_vessel_period = period_vessel[fish_cols].mean().mean()
         mean_fish_no_vessel_period = period_no_vessel[fish_cols].mean().mean()
 
-        diel_vessel_impact[period_name] = {
+        diel_vessel_correlation[period_name] = {
             'vessel_rate': vessel_rate_period,
             'n_vessel': len(period_vessel),
             'n_no_vessel': len(period_no_vessel),
@@ -647,10 +647,10 @@ def _(df_full_final, fish_cols, np, pd):
             'activity_difference': mean_fish_no_vessel_period - mean_fish_vessel_period
         }
 
-    temporal_analysis['diel'] = pd.DataFrame(diel_vessel_impact).T
+    temporal_analysis['diel'] = pd.DataFrame(diel_vessel_correlation).T
 
     # 3. Monthly Analysis
-    monthly_vessel_impact = {}
+    monthly_vessel_correlation = {}
     for month_num in sorted(df_full_final['month'].unique()):
         month_data = df_full_final[df_full_final['month'] == month_num]
         vessel_rate_month = month_data['vessel_present'].mean()
@@ -661,7 +661,7 @@ def _(df_full_final, fish_cols, np, pd):
         mean_fish_vessel_month = month_vessel[fish_cols].mean().mean() if len(month_vessel) > 0 else np.nan
         mean_fish_no_vessel_month = month_no_vessel[fish_cols].mean().mean() if len(month_no_vessel) > 0 else np.nan
 
-        monthly_vessel_impact[month_num] = {
+        monthly_vessel_correlation[month_num] = {
             'vessel_rate': vessel_rate_month,
             'n_vessel': len(month_vessel),
             'n_no_vessel': len(month_no_vessel),
@@ -670,7 +670,7 @@ def _(df_full_final, fish_cols, np, pd):
             'activity_difference': mean_fish_no_vessel_month - mean_fish_vessel_month if not np.isnan(mean_fish_vessel_month) else np.nan
         }
 
-    temporal_analysis['monthly'] = pd.DataFrame(monthly_vessel_impact).T
+    temporal_analysis['monthly'] = pd.DataFrame(monthly_vessel_correlation).T
 
     # 4. Identify optimal monitoring windows (low vessel, high biological activity)
     df_full_final['total_fish_activity'] = df_full_final[fish_cols].sum(axis=1)
@@ -691,10 +691,10 @@ def _(df_full_final, fish_cols, np, pd):
     optimal_windows = monitoring_windows_data.nlargest(10, 'signal_to_noise')
 
     print("Temporal Stratification Results:")
-    print("\n1. Seasonal Vessel Impact:")
+    print("\n1. Seasonal Patterns - Fish Activity in Vessel vs Non-Vessel Periods:")
     print(temporal_analysis['seasonal'][['vessel_rate', 'activity_difference']])
 
-    print("\n2. Diel Period Vessel Impact:")
+    print("\n2. Diel Period Patterns - Fish Activity in Vessel vs Non-Vessel Periods:")
     print(temporal_analysis['diel'][['vessel_rate', 'activity_difference']])
 
     print("\n3. Top 5 Optimal Monitoring Windows (High Signal-to-Noise):")
@@ -709,7 +709,7 @@ def _(mo):
         r"""
     ## Temporal Stratification Visualization
 
-    Visualizing vessel impacts across different temporal scales to identify optimal monitoring periods.
+    Visualizing biological signal patterns across different temporal scales in vessel vs non-vessel periods to identify optimal monitoring periods.
     """
     )
     return
@@ -785,9 +785,57 @@ def _(
 def _(mo):
     mo.md(
         r"""
-    ## Summary and Recommendations
+    ## Summary and Scientific Interpretation
 
-    Based on our vessel detection and biological signal separation analysis, we can draw several important conclusions:
+    ### Vessel Detection from Acoustic Indices
+
+    **Finding**: Logistic regression achieves ~85% accuracy, but this is misleading due to class imbalance (80% of periods have no vessels).
+
+    **Reality Check**:
+    - Recall for vessel detection is only ~42% - we miss most actual vessel periods
+    - The model performs only moderately better than a naive baseline
+    - Cohen's kappa of 0.47 indicates "moderate" agreement beyond chance
+
+    **Interpretation**: Acoustic indices provide weak-to-moderate predictive power for vessel presence. This suggests either:
+    1. Vessel noise doesn't strongly alter the acoustic indices we're using
+    2. Other environmental factors have stronger effects on these indices
+    3. We need different acoustic features specifically designed for vessel detection
+
+    ### Index-Fish Correlations: Vessel vs Non-Vessel Periods
+
+    **Finding**: Correlations between acoustic indices and fish detections show minimal differences between vessel and non-vessel periods.
+
+    **Reality Check**:
+    - Mean absolute correlation improvement when vessels removed: <5% (essentially negligible)
+    - Correlation patterns appear virtually identical with and without vessels
+    - No strong evidence that vessel presence substantially alters index-fish relationships
+
+    **Interpretation**: The lack of difference could mean:
+    1. Vessel noise doesn't significantly mask the acoustic features these indices capture
+    2. The indices are robust to vessel noise (potentially good news for monitoring)
+    3. Our temporal resolution (2-hour windows) may be too coarse to detect acute effects
+
+    ### Temporal Patterns and Confounding Factors
+
+    **Critical Context**: Observed differences in fish calling detection rates between vessel and non-vessel periods cannot be interpreted as causal effects because:
+    - Vessels are more common during daylight hours when many fish species naturally call less
+    - Seasonal patterns in vessel activity coincide with natural biological cycles
+    - Multiple confounding factors (time of day, season, temperature) are not controlled for
+
+    ### Scientific Value of These Results
+
+    **This is still valuable science**. Negative or weak results are important findings that:
+    1. Suggest these particular acoustic indices may be robust to moderate vessel noise
+    2. Indicate that simple vessel presence/absence may not be the primary driver of acoustic index variation
+    3. Highlight the need for more sophisticated approaches to separate masking effects from behavioral responses
+
+    ### Recommendations for Future Work
+
+    1. **Control for temporal confounding**: Compare vessel vs non-vessel periods matched by hour and season
+    2. **Frequency-specific analysis**: Examine if vessel noise affects different frequency bands differently
+    3. **Higher temporal resolution**: Analyze at finer time scales to detect acute responses
+    4. **Alternative metrics**: Explore acoustic indices specifically designed to detect anthropogenic noise
+    5. **Mechanistic studies**: Design experiments to distinguish masking from behavioral effects
     """
     )
     return
@@ -802,7 +850,7 @@ def _(
     mean_correlations,
     optimal_windows,
     temporal_analysis,
-    vessel_presence_rate,
+    vessel_presence_rate_final,
     vessel_results,
 ):
     # Compile summary statistics and recommendations
@@ -811,7 +859,7 @@ def _(
             'best_model': best_model_name,
             'accuracy': float(vessel_results[best_model_name]['accuracy']),
             'cv_accuracy': float(vessel_results[best_model_name]['cv_mean']),
-            'vessel_presence_rate': float(vessel_presence_rate)
+            'vessel_presence_rate': float(vessel_presence_rate_final)
         },
         'signal_clarity': {
             'correlation_all_data': float(mean_correlations['All Data']),
@@ -854,7 +902,7 @@ def _(
 
     print("\n3. TEMPORAL PATTERNS:")
     print(f"   - Best Season for Monitoring: {summary_stats['temporal_patterns']['best_season']}")
-    print(f"   - Most Impacted Season: {summary_stats['temporal_patterns']['worst_season']}")
+    print(f"   - Season with Largest Activity Difference: {summary_stats['temporal_patterns']['worst_season']}")
     print(f"   - Best Diel Period: {summary_stats['temporal_patterns']['best_diel_period']}")
     print(f"   - Highest Vessel Activity: {summary_stats['temporal_patterns']['highest_vessel_diel']}")
 
@@ -864,25 +912,26 @@ def _(
     print(f"   - Signal-to-Noise Ratio: {summary_stats['optimal_monitoring']['top_window']['signal_to_noise']:.2f}")
 
     print("\n" + "=" * 60)
-    print("KEY RECOMMENDATIONS:")
+    print("KEY FINDINGS (HONEST ASSESSMENT):")
     print("=" * 60)
     print("""
-    1. Acoustic indices CAN detect vessel presence with moderate accuracy (~70-80%),
-       suggesting they capture anthropogenic noise signatures effectively.
+    1. Acoustic indices show WEAK predictive power for vessel detection (42% recall),
+       suggesting they are not strongly influenced by vessel presence at this temporal scale.
 
-    2. Removing vessel periods improves biological signal clarity by ~{:.0f}%,
-       demonstrating that vessel noise does mask ecological patterns.
+    2. Correlation improvements when removing vessel periods are NEGLIGIBLE (~{:.0f}%),
+       indicating vessel presence may not substantially alter index-fish relationships.
 
-    3. Temporal stratification is crucial - vessel impacts vary significantly by
-       season and time of day, with some periods offering much clearer biological signals.
+    3. Observed differences between vessel/non-vessel periods are CONFOUNDED by
+       natural diel and seasonal patterns - causal interpretation is not warranted.
 
-    4. For optimal biological monitoring, prioritize data collection during
-       identified high signal-to-noise windows when vessel activity is low
-       and biological activity is high.
+    4. These NEGATIVE RESULTS are scientifically valuable: they suggest these
+       acoustic indices may be more robust to vessel noise than expected.
 
-    5. Consider implementing a two-stage analysis approach:
-       - Stage 1: Use indices to detect and flag vessel periods
-       - Stage 2: Analyze biological patterns with vessel filtering applied
+    5. Future work should:
+       - Control for temporal confounding factors
+       - Use finer temporal resolution
+       - Explore frequency-specific effects
+       - Design studies to distinguish masking from behavioral responses
     """.format(improvement_pct))
 
     print("\nAnalysis complete! All results saved to processed data folder.")
@@ -894,9 +943,9 @@ def _(
 def _(mo):
     mo.md(
         r"""
-    ## Additional Analysis: Species-Specific Vessel Impacts
+    ## Additional Analysis: Species-Specific Differences
 
-    Let's examine which fish species are most affected by vessel noise.
+    Let's examine differences in fish calling patterns between vessel and non-vessel periods by species.
     """
     )
     return
@@ -913,7 +962,7 @@ def _(
     plot_dir,
     plt,
 ):
-    # Calculate species-specific vessel impacts
+    # Calculate species-specific differences between vessel/non-vessel periods
     species_impacts = []
 
     for fish_species in fish_cols:
@@ -929,7 +978,7 @@ def _(
                 'species': fish_species,
                 'mean_activity_vessel': vessel_activity.mean(),
                 'mean_activity_no_vessel': no_vessel_activity.mean(),
-                'activity_reduction': vessel_activity.mean() - no_vessel_activity.mean(),
+                'activity_difference': vessel_activity.mean() - no_vessel_activity.mean(),
                 'percent_change': (vessel_activity.mean() - no_vessel_activity.mean()) / (no_vessel_activity.mean() + 0.001) * 100,
                 'p_value': p_value_species,
                 'significant': p_value_species < 0.05
@@ -938,13 +987,13 @@ def _(
     df_species_impacts_final = pd.DataFrame(species_impacts)
     df_species_impacts_final = df_species_impacts_final.sort_values('percent_change')
 
-    # Species impact visualization
+    # Species difference visualization
     plt.figure(figsize=(10, 6))
     colors = ['red' if sig else 'gray' for sig in df_species_impacts_final['significant']]
     plt.barh(range(len(df_species_impacts_final)), df_species_impacts_final['percent_change'], color=colors, alpha=0.7)
     plt.yticks(range(len(df_species_impacts_final)), df_species_impacts_final['species'])
-    plt.xlabel('% Change in Calling Activity (Vessel vs No Vessel)')
-    plt.title('Vessel Impact on Fish Calling Activity')
+    plt.xlabel('% Difference in Detected Calling Activity (Vessel vs No Vessel Periods)')
+    plt.title('Fish Calling Detection Rates: Vessel vs Non-Vessel Periods')
     plt.axvline(0, color='black', linestyle='-', linewidth=0.5)
     plt.grid(True, alpha=0.3, axis='x')
     plt.tight_layout()
@@ -954,13 +1003,13 @@ def _(
     # Save results
     df_species_impacts_final.to_parquet(DATA_ROOT / "processed/05_species_vessel_impacts.parquet")
 
-    print("Species Most Negatively Affected by Vessels:")
+    print("Species with Largest Differences Between Vessel and Non-Vessel Periods:")
     for i, row in df_species_impacts_final.head(3).iterrows():
-        print(f"  - {row['species']}: {row['percent_change']:.1f}% reduction (p={row['p_value']:.3f})")
+        print(f"  - {row['species']}: {row['percent_change']:.1f}% difference (p={row['p_value']:.3f})")
 
-    print("\nSpecies Least Affected by Vessels:")
+    print("\nSpecies with Smallest Differences Between Vessel and Non-Vessel Periods:")
     for i, row in df_species_impacts_final.tail(3).iterrows():
-        print(f"  - {row['species']}: {row['percent_change']:.1f}% change (p={row['p_value']:.3f})")
+        print(f"  - {row['species']}: {row['percent_change']:.1f}% difference (p={row['p_value']:.3f})")
 
     return df_species_impacts_final,
 
