@@ -1,0 +1,1 @@
+please refer to CLAUDE.md file at the project root for more guidance

@@ -1057,30 +1057,34 @@ def _(
     print(f"""
     ## 1. COMMUNITY ACTIVITY DETECTION PERFORMANCE
 
-    **Primary Finding**: Acoustic indices show STRONG ability to detect community-level biological activity
+    **Primary Finding**: Within this study system, acoustic indices show promising ability to detect community-level biological activity
 
     **Best Overall Performance**: {best_f1_target[0].replace('_', ' ').title()}
-    - F1 Score: {best_f1_target[1]['f1_score']:.3f} (Excellent - above 0.8 is considered very good)
-    - Precision: {best_f1_target[1]['precision']:.3f} (When model predicts activity, it's right {best_f1_target[1]['precision']:.1%} of the time)
-    - Recall: {best_f1_target[1]['recall']:.3f} (Catches {best_f1_target[1]['recall']:.1%} of actual biological activity periods)
+    - F1 Score: {best_f1_target[1]['f1_score']:.3f} (Good performance - above 0.8 indicates strong model performance)
+    - Precision: {best_f1_target[1]['precision']:.3f} (When model predicts activity, it's correct {best_f1_target[1]['precision']:.1%} of the time)
+    - Recall: {best_f1_target[1]['recall']:.3f} (Detects {best_f1_target[1]['recall']:.1%} of actual biological activity periods)
 
-    **Biological Interpretation**: The model can reliably distinguish between periods when fish are
-    calling vs when they are not. This is a fundamental capability for acoustic monitoring.
+    **Biological Interpretation**: In this dataset, the model shows ability to distinguish between periods when fish are
+    calling vs when they are not. This suggests potential for acoustic monitoring applications, though validation across
+    different systems and environments is needed.
 
-    ## 2. BIOLOGICAL SCREENING TOOL VALIDATION
+    ## 2. BIOLOGICAL SCREENING TOOL POTENTIAL
 
-    **Primary Finding**: Indices excel as intelligent screening tools for manual effort guidance
+    **Primary Finding**: Results suggest indices may serve as screening tools for manual effort guidance in this study system
 
     **Best Screening Performance**: {best_screening_target[0].replace('_', ' ').title()}
-    - Detection Rate: {best_screening_target[1]['detection_rate']:.1%} (Catches most biological activity)
-    - Screening Precision: {best_screening_target[1]['screening_precision']:.1%} (Low false alarm rate)
-    - Effort Reduction: {best_screening_target[1]['effort_reduction']:.1%} (Dramatic workload savings)
+    - Detection Rate: {best_screening_target[1]['detection_rate']:.1%} (Detects most biological activity in this dataset)
+    - Screening Precision: {best_screening_target[1]['screening_precision']:.1%} (Relatively low false alarm rate)
+    - Effort Reduction: {best_screening_target[1]['effort_reduction']:.1%} (Potential workload savings)
 
-    **Practical Translation**: A researcher could:
-    1. Run acoustic indices on 100 hours of recordings
+    **Potential Application**: Based on these results, a researcher might:
+    1. Run acoustic indices on 100 hours of recordings from similar environments
     2. Model flags ~{100 - best_screening_target[1]['effort_reduction']*100:.0f} hours as "high interest"
-    3. Manual analysis of only those {100 - best_screening_target[1]['effort_reduction']*100:.0f} hours would catch {best_screening_target[1]['detection_rate']:.0f}% of biological activity
-    4. Save {best_screening_target[1]['effort_reduction']:.0f}% of manual effort while missing only {100-best_screening_target[1]['detection_rate']:.0f}% of activity
+    3. Manual analysis of only those {100 - best_screening_target[1]['effort_reduction']*100:.0f} hours could potentially catch {best_screening_target[1]['detection_rate']:.0f}% of biological activity
+    4. This approach could save {best_screening_target[1]['effort_reduction']:.0f}% of manual effort while missing {100-best_screening_target[1]['detection_rate']:.0f}% of activity
+    
+    **Important caveat**: These projections are based on one study system and require validation across different
+    environments, acoustic setups, and fish communities before operational deployment.
 
     ## 3. TEMPORAL PATTERN CONCORDANCE ANALYSIS
 
@@ -1092,8 +1096,9 @@ def _(
     - Correlation: {summary_results['temporal_concordance']['best_seasonal_correlation']['correlation']:.3f}
     - Interpretation: {"Very strong negative correlation - index shows opposite seasonal pattern to fish" if summary_results['temporal_concordance']['best_seasonal_correlation']['correlation'] < -0.8 else "Strong correlation with fish seasonal patterns"}
 
-    **Biological Significance**: Acoustic indices capture the same temporal rhythms as fish calling patterns.
-    This suggests they are measuring real biological phenomena, not just acoustic noise.
+    **Biological Significance**: Some acoustic indices show correlations with fish calling temporal patterns in this dataset.
+    This suggests they may be capturing biological phenomena rather than just acoustic noise, though this relationship
+    requires validation across different systems and temporal scales.
 
     ## 4. FEATURE IMPORTANCE INSIGHTS
 
@@ -1102,44 +1107,54 @@ def _(
     2. Water temperature - Direct physiological driver of fish activity
     3. Acoustic indices (ENRf, VARf, NBPEAKS) - Capture acoustic characteristics of biological sounds
 
-    **Scientific Interpretation**: The models rely on biologically sensible variables. The combination of
-    seasonal timing, environmental conditions, and acoustic features creates strong predictive power.
+    **Scientific Interpretation**: The models rely on biologically sensible variables in this study system. The combination of
+    seasonal timing, environmental conditions, and acoustic features shows predictive potential, though the generalizability
+    of these relationships across different marine environments remains to be tested.
 
     ## 5. COMPARISON TO SPECIES-SPECIFIC APPROACHES
 
-    **Why Community-Level Works Better**:
-    - Individual species have weak, irregular calling patterns
-    - Aggregating across species amplifies consistent biological signal
-    - Reduces noise from species-specific behavioral variation
-    - Matches practical monitoring needs (detect biological activity, then investigate specifics)
+    **Why Community-Level May Work Better (in this system)**:
+    - Individual species showed weak, irregular calling patterns in this dataset
+    - Aggregating across species appears to amplify consistent biological signal
+    - May reduce noise from species-specific behavioral variation
+    - Could match practical monitoring needs (detect biological activity, then investigate specifics)
 
-    **Analogy**: Like using a motion detector vs identifying specific animals - the former is much
-    more reliable for knowing "when something biological is happening"
+    **Working hypothesis**: Like using a motion detector vs identifying specific animals - the former may be
+    more reliable for knowing "when something biological is happening" in marine acoustic monitoring
 
     ## 6. PRACTICAL IMPLEMENTATION RECOMMENDATIONS
 
-    **Immediate Applications**:
-    1. **Smart Sampling Protocols**: Deploy indices to identify optimal times for manual analysis
-    2. **Continuous Background Monitoring**: 24/7 biological activity tracking with minimal human effort
-    3. **Rapid Site Assessment**: Quickly characterize biological activity patterns at new locations
-    4. **Quality Control**: Flag unusual periods in long-term datasets for closer examination
+    **Potential Applications (requiring further validation)**:
+    1. **Smart Sampling Protocols**: Indices might help identify optimal times for manual analysis
+    2. **Background Monitoring**: Could enable more continuous biological activity tracking
+    3. **Site Assessment**: May help characterize biological activity patterns at new locations
+    4. **Quality Control**: Could flag unusual periods in long-term datasets for examination
 
-    **Deployment Strategy**:
-    - Use Random Forest or Gradient Boosting models for maximum performance
-    - Focus on "any activity" detection for general screening
-    - Use "high activity" thresholds for identifying exceptional biological events
+    **Suggested Development Strategy**:
+    - Test Random Forest or similar ensemble methods for performance
+    - Focus initial validation on "any activity" detection for general screening
+    - Evaluate "high activity" thresholds for identifying exceptional biological events
     - Calibrate thresholds based on acceptable false positive/negative rates for specific applications
+    - Validate approach across different study systems before operational deployment
 
-    ## 7. SCIENTIFIC SIGNIFICANCE
+    ## 7. STUDY SIGNIFICANCE AND LIMITATIONS
 
-    **Novel Contribution**: This is the first demonstration that acoustic indices can serve as reliable
-    biological screening tools at the community level in marine environments.
+    **Study Contribution**: This analysis demonstrates that acoustic indices show potential for community-level
+    biological activity detection in this marine environment, suggesting possible applications as screening tools.
 
-    **Broader Impact**: Enables ecosystem-scale acoustic monitoring previously impossible due to
-    manual analysis bottlenecks. Could transform how we monitor marine soundscapes.
+    **Potential Impact**: If validated across different systems, this approach might enable more efficient
+    acoustic monitoring by reducing manual analysis bottlenecks. However, broader application requires
+    extensive testing across different marine environments, fish communities, and acoustic setups.
 
-    **Validation Strength**: Results based on {summary_results['community_metrics']['total_samples']:,}
-    samples across full annual cycle with multiple stations - robust evidence base.
+    **Study Scope**: Results based on {summary_results['community_metrics']['total_samples']:,} samples from
+    one study system across a full annual cycle with multiple stations. While this provides a solid foundation,
+    generalizability to other marine environments requires further investigation.
+    
+    **Next Steps for Validation**:
+    - Literature review of existing acoustic monitoring approaches
+    - Cross-site validation with independent datasets
+    - Comparison with other automated detection methods
+    - Testing across different fish communities and acoustic environments
     """)
 
     print(f"\nAnalysis complete! All results saved to {DATA_ROOT}/processed/")
@@ -1155,18 +1170,18 @@ def _(mo):
 
     ### What We Learned
 
-    **Community-Level Detection Works Better**: Acoustic indices show moderate success at detecting aggregate biological activity rather than species-specific patterns. This suggests their value lies in **biological screening** rather than detailed species identification.
+    **Community-Level Detection Shows Promise**: In this study system, acoustic indices showed better success at detecting aggregate biological activity rather than species-specific patterns. This suggests their potential value may lie in **biological screening** rather than detailed species identification, though this requires validation across different environments.
 
-    **Temporal Patterns Are Partially Captured**: Indices capture some diel and seasonal patterns in fish community activity, but not with the precision of manual detections. The correlation strengths vary by index and temporal scale.
+    **Temporal Patterns Show Some Concordance**: Some indices capture diel and seasonal patterns that correlate with fish community activity, though not with the precision of manual detections. The correlation strengths vary by index and temporal scale, and the generalizability of these patterns is unknown.
 
-    **Screening Tool Potential**: The most promising application is using indices as **intelligent screening tools** that flag periods likely to contain biological activity for targeted manual analysis. This could significantly reduce manual effort while maintaining high detection rates.
+    **Screening Tool Potential**: The most promising application appears to be using indices as **screening tools** that flag periods likely to contain biological activity for targeted manual analysis. This could potentially reduce manual effort while maintaining detection rates, but operational effectiveness requires validation in real-world deployment scenarios.
 
-    ### Practical Applications
+    ### Potential Applications (Requiring Validation)
 
-    1. **Smart Sampling Protocols**: Use indices to identify optimal times for detailed manual analysis
-    2. **Continuous Background Monitoring**: Deploy indices for 24/7 monitoring with periodic manual validation
-    3. **Effort Optimization**: Focus limited manual resources on periods flagged by index-based models
-    4. **Early Warning Systems**: Detect unusual biological activity patterns warranting investigation
+    1. **Smart Sampling Protocols**: Indices might help identify optimal times for detailed manual analysis
+    2. **Background Monitoring**: Could enable more continuous monitoring with periodic manual validation
+    3. **Effort Optimization**: May help focus limited manual resources on periods flagged by models
+    4. **Pattern Detection**: Could help detect unusual biological activity patterns warranting investigation
 
     ### Next Steps for Notebook 7
 
@@ -1179,7 +1194,9 @@ def _(mo):
 
     ### The Bottom Line
 
-    Acoustic indices show **moderate but meaningful** potential as biological screening tools. While they cannot replace manual detection, they can **intelligently guide when and where to apply manual effort**, potentially greatly improving the efficiency of acoustic monitoring programs.
+    In this study system, acoustic indices show **promising potential** as biological screening tools. While they cannot replace manual detection, they may be able to **help guide when and where to apply manual effort**. However, this potential must be validated across different marine environments, fish communities, and operational contexts before concluding that they can improve the efficiency of acoustic monitoring programs more broadly.
+    
+    **Critical next steps**: Cross-system validation, comparison with existing methods, and operational testing are essential before broader implementation.
     """
     )
     return
