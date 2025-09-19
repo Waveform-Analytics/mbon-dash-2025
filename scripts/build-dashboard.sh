@@ -55,7 +55,7 @@ print_info "Running dashboard build script..."
 
 cd dashboard
 if node scripts/build-notebooks.js; then
-    print_success "Dashboard build completed successfully"
+    print_success "Notebook processing completed successfully"
     
     echo ""
     print_info "Updated files:"
@@ -64,8 +64,18 @@ if node scripts/build-notebooks.js; then
     print_info "  - Metadata: public/analysis/notebooks/notebooks.json"
     
     echo ""
-    print_info "🚀 Dashboard is ready! Start with 'npm run dev' in the dashboard/ folder"
+    print_info "Running npm run build to validate the dashboard..."
+    
+    if npm run build; then
+        print_success "Dashboard build completed successfully!"
+        echo ""
+        print_info "✅ All linting and build checks passed"
+        print_info "🚀 Dashboard is ready for deployment or development"
+    else
+        print_error "npm run build failed - please fix linting or build errors"
+        exit 1
+    fi
 else
-    print_error "Dashboard build failed"
+    print_error "Notebook processing failed"
     exit 1
 fi
