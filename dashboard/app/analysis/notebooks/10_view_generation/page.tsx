@@ -23,7 +23,7 @@ export default function NotebookPage() {
             Back to Analysis
           </Link>
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-primary mb-2">Temporal Aggregation</h1>
+            <h1 className="text-3xl font-bold text-primary mb-2">View Generation</h1>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <motion.div
@@ -36,7 +36,7 @@ export default function NotebookPage() {
                   <Target className="h-4 w-4 text-chart-1 mr-2" />
                   <span className="font-semibold text-xs">PURPOSE</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Align all data to consistent 2-hour temporal resolution matching manual detections</p>
+                <p className="text-xs text-muted-foreground">Interactive marimo notebook: View Generation</p>
               </motion.div>
 
               <motion.div
@@ -49,7 +49,7 @@ export default function NotebookPage() {
                   <FlaskConical className="h-4 w-4 text-chart-2 mr-2" />
                   <span className="font-semibold text-xs">KEY OUTPUTS</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Temporally aligned dataset ready for analysis</p>
+                <p className="text-xs text-muted-foreground">Analysis results and visualizations</p>
               </motion.div>
             </div>
           </div>
@@ -68,9 +68,9 @@ export default function NotebookPage() {
           style={{ minHeight: '70vh' }}
         >
           <iframe
-            src="/analysis/notebooks/html/02_temporal_aggregation.html"
+            src="/analysis/notebooks/html/10_view_generation.html"
             className="w-full h-full border-0"
-            title="Temporal Aggregation"
+            title="View Generation"
             sandbox="allow-scripts allow-same-origin allow-forms"
             style={{ minHeight: '70vh' }}
           />

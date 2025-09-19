@@ -8,18 +8,18 @@
     "filename": "01_data_prep.html",
     "order": 1,
     "lastModified": "2025-09-12T23:03:54.429Z",
-    "fullMarkdown": "# Notebook 1: Data Loading and Initial Exploration\n\n    **Purpose**: Load all data streams and perform initial quality assessment  \n    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization\n\n    This notebook processes data from three moored hydrophone stations (9M, 14M, 37M) deployed near May River in 2021. (Note that we do plan to also process 2018 data but are starting here.) We're combining multiple data streams to understand marine biodiversity patterns:\n\n    - **Acoustic indices**: Computed soundscape metrics that capture ecosystem acoustic activity \n    - **Manual fish detections**: Human-annotated intensity level of fish species every 2 hours (where intensity level is a 0-3 integer scale with 0 being no calls, 1 being one, 2 being multiple, and 3 being a chorus where calls cannot be distinguished from each other.)\n    - **Environmental data**: Temperature (20-min intervals) and depth (1-hour intervals) measurements. Depth data can be used as a proxy for tide.\n    - **SPL data**: Sound pressure levels across frequency bands (broadband, low 50-1200Hz, high 7000-40000Hz)\n    - **Vessel detections**: Ship noise events (included in manual detection files)\n\n    Each data type was collected at different temporal resolutions, requiring careful alignment for integrated analysis."
+    "fullMarkdown": "# Notebook 1: Data Loading and Initial Exploration\n\n    **Purpose**: Load all data streams and perform initial quality assessment\n    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization\n\n    This notebook performs the foundational data loading and quality assessment for the MBON acoustic analysis pipeline. We load and examine all primary data streams including acoustic indices, manual fish detections, environmental measurements, and vessel presence data to understand data quality, temporal coverage, and basic patterns before proceeding to temporal alignment and analysis.\n\n    ## 1. Load Acoustic Indices Data\n\n    Acoustic indices are mathematical summaries of soundscape recordings that capture different aspects of ecosystem acoustic activity. The FullBW (full bandwidth) version includes indices computed across the entire frequency range of the hydrophones. These metrics help quantify biodiversity, ecosystem health, and acoustic complexity without requiring species-specific identification."
   },
   {
     "slug": "02_temporal_aggregation",
     "title": "Temporal Aggregation",
     "purpose": "Align all data to consistent 2-hour temporal resolution matching manual detections",
-    "keyOutputs": "Four separate, analysis-ready datasets organized by data type",
+    "keyOutputs": "Temporally aligned dataset ready for analysis",
     "description": "Align all data to consistent 2-hour temporal resolution matching manual detections",
     "filename": "02_temporal_aggregation.html",
     "order": 2,
     "lastModified": "2025-09-13T10:57:45.540Z",
-    "fullMarkdown": "# Notebook 2: Temporal Alignment and Aggregation\n\n    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections  \n    **Key Outputs**: Four separate, analysis-ready datasets organized by data type\n\n    ## Overview\n\n    This notebook addresses the critical challenge of temporal misalignment across our diverse data streams. The raw data comes at different temporal resolutions:\n\n    - **Manual fish detections**: Already at 2-hour intervals (our target resolution)\n    - **Acoustic indices**: Calculated hourly from continuous recordings  \n    - **Temperature data**: Logged every 20 minutes by autonomous sensors\n    - **Depth/pressure data**: Recorded hourly for tidal analysis\n    - **SPL (Sound Pressure Level)**: Calculated hourly from acoustic recordings\n\n    The 2-hour target resolution matches the manual detection protocol, where trained analysts reviewed 2-minute segments recorded every 2-hours and scored fish calling activity on a 0-3 intensity scale for each species. This temporal framework becomes our analytical backbone.\n\n    ## Process Overview\n\n    **Data Alignment Steps:**\n\n    1. **Load processed data** from Notebook 1 (all stations, all data types)\n    2. **Examine temporal patterns** to understand each data stream's characteristics  \n    3. **Create 2-hour time grids** using detection timestamps as the reference\n    4. **Aggregate higher-resolution data** (temperature, indices) to 2-hour means\n    5. **Align lower-resolution data** (depth, SPL) to 2-hour windows\n    6. **Engineer temporal features** for biological pattern recognition\n    7. **Create lag variables** to capture delayed ecological responses\n    8. **Generate organized outputs** by data type for downstream analysis\n\n    **Why This Matters:**\n    - Enables integration of acoustic, environmental, and biological data\n    - Preserves temporal patterns critical for understanding marine soundscape ecology  \n    - Creates features that capture both immediate and delayed responses to environmental changes\n    - Establishes consistent temporal framework for species-specific calling pattern analysis"
+    "fullMarkdown": "# Notebook 2: Temporal Alignment and Aggregation\n\n    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections\n    **Key Outputs**: Temporally aligned dataset ready for analysis\n\n    This notebook addresses the fundamental challenge of temporal misalignment across multiple data streams with different collection frequencies. By aggregating everything to a common 2-hour resolution and engineering relevant features, we create analysis-ready datasets that preserve ecological information while enabling modeling.\n\n    ## 1. Load Processed Data from Notebook 1\n\n    Loading the cleaned and standardized data streams from each station. Notebook 1 performed quality control,\n    standardized column names, and converted timestamps to consistent formats. Here we systematically load:\n\n    - **Acoustic indices** (50-60 indices per station): Hourly summaries of soundscape characteristics\n    - **Detection data** (2-hour intervals): Manual annotations of fish calling activity by species  \n    - **Temperature data** (20-min intervals): Water temperature from autonomous sensors\n    - **Depth data** (hourly): Water depth measurements for tidal pattern analysis\n    - **SPL data** (hourly): Sound pressure levels in multiple frequency bands\n\n    **Expected Outcome**: Five data dictionaries organized by data type and station, ready for temporal alignment."
   },
   {
     "slug": "03_acoustic_index_reduction",
@@ -29,7 +29,7 @@
     "description": "Interactive marimo notebook: Acoustic Index Reduction",
     "filename": "03_acoustic_index_reduction.html",
     "order": 3,
-    "lastModified": "2025-09-12T23:03:54.437Z",
+    "lastModified": "2025-09-13T11:11:02.502Z",
     "fullMarkdown": "## Data Loading\n\n    Loading the temporally aligned dataset from Notebook 2, which contains:\n\n    - **Acoustic indices** aggregated to 2-hour resolution (originally calculated hourly)\n    - **Environmental variables** (temperature, depth/pressure) aligned to the same temporal grid\n    - **SPL data** aligned to 2-hour intervals for comparison with index-based approaches\n    - **Vessel detection data** to assess anthropogenic noise impacts\n    - **Temporal variables** (hour, day of year, season, etc.) for downstream modeling\n\n    This 2-hour resolution matches the manual fish detection intervals, creating a consistent analytical framework. The dataset should contain ~13,000 observations (3 stations × 365 days × 12 two-hour periods per day) with 50-60 acoustic index columns plus supporting variables.\n\n    **Expected Data Quality Issues:**\n    - Some missing data due to instrument failures or maintenance\n    - Potential outliers during extreme weather events\n    - Varying data availability across stations and time periods"
   },
   {
@@ -40,7 +40,18 @@
     "description": "Interactive marimo notebook: Fish And Indices Patterns",
     "filename": "04_fish_and_indices_patterns.html",
     "order": 4,
-    "lastModified": "2025-09-12T23:03:54.443Z",
+    "lastModified": "2025-09-15T22:59:17.980Z",
     "fullMarkdown": "## Index-Manual Detection Concordance Analysis\n\n    Now we analyze whether acoustic indices capture the same temporal patterns as manual detections. This is the **critical validation** for using indices as proxies.\n\n    **Key Questions:**\n\n    1. Do acoustic indices show the same **diel patterns** as fish calling?\n    2. Do indices identify the same **seasonal peaks** (spawning periods)?\n    3. Can indices distinguish between **high/low activity periods**?\n    4. What would we conclude about fish activity using **indices alone**?\n\n    **Approach:**\n\n    - Calculate temporal patterns for selected acoustic indices\n    - Compare index patterns with manual detection patterns\n    - Assess pattern concordance using correlation and visual inspection"
+  },
+  {
+    "slug": "10_view_generation",
+    "title": "View Generation",
+    "purpose": "Interactive marimo notebook: View Generation",
+    "keyOutputs": "Analysis results and visualizations",
+    "description": "Interactive marimo notebook: View Generation",
+    "filename": "10_view_generation.html",
+    "order": 10,
+    "lastModified": "2025-09-19T15:27:04.609Z",
+    "fullMarkdown": "## Station map\n\n    The site has a Mapbox station map and requires the station coordinates. These can be extracted from a parquet formatted metadata file located in the data/processed/metadata folder."
   }
 ]

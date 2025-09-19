@@ -20,6 +20,8 @@ def _(mo):
     **Key Outputs**: Data views in json format
 
     To avoid doing extensive processing, filtering and loading of large files on the client/browser side, we will generate specific data files for each figure. Each view will contain ONLY the data needed for that particular plot, already formatted in the way it's needed.
+
+    # Test comment to trigger automatic HTML export
     """
     )
     return
