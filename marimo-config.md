@@ -181,7 +181,23 @@ def _():
 ## Troubleshooting
 
 ### Command not found: marimo
-Make sure you're using `uv run marimo check` instead of just `marimo check`.
+This project has its Python environment in the `python/` subdirectory. Make sure you're using the correct command:
+
+```bash
+# ❌ Wrong: marimo not found
+marimo check notebook.py
+
+# ❌ Wrong: uses wrong project
+uv run marimo check notebook.py
+
+# ✅ Correct: uses python subdirectory project
+uv run --project python marimo check notebook.py
+
+# ✅ Alternative: change to python directory first
+cd python && uv run marimo check ../notebook.py
+```
+
+The pre-commit hook and helper scripts handle this automatically.
 
 ### No issues detected but notebook has problems
 Try running with `--verbose` to see more detailed analysis:

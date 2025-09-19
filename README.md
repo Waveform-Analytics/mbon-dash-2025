@@ -219,28 +219,86 @@ bash scripts/cdn-workflow.sh
 
 ## 🔧 Development Workflows
 
+### Notebook & Dashboard Automation Scripts
+
+The project includes focused helper scripts in `scripts/` for common workflows:
+
+```bash
+# Export specific notebook to HTML (fast)
+./scripts/export-notebooks.sh 01_data_prep
+
+# Export all notebooks to HTML 
+./scripts/export-notebooks.sh
+
+# Build dashboard with latest HTML files
+./scripts/build-dashboard.sh
+
+# Complete rebuild: export + build + optional deploy
+./scripts/full-rebuild.sh
+./scripts/full-rebuild.sh --deploy  # with CDN deployment
+```
+
+**Key Benefits:**
+- **Fast commits**: Git hook only does quick notebook checks
+- **On-demand HTML export**: Run when you need updated HTML files
+- **Flexible workflow**: Choose when to do expensive operations
+- **Clear separation**: Development vs. production workflows
+
+### Daily Development Workflow
+
+```bash
+# 1. Edit notebooks (normal speed commits)
+git add .
+git commit -m "Updated analysis"  # Fast! Only runs marimo check
+
+# 2. When ready to update dashboard (before pushing/sharing)
+./scripts/export-notebooks.sh      # Export changed notebooks
+./scripts/build-dashboard.sh        # Update dashboard
+git add .
+git commit -m "Update dashboard with latest notebooks"
+
+# 3. For major updates or deployment
+./scripts/full-rebuild.sh --deploy  # Complete pipeline
+```
+
 ### For AI-Assisted Development
 
-1. **Load marimo helpers**: `source marimo-helpers.sh`
+1. **Load marimo helpers**: `source scripts/marimo-helpers.sh`
 2. **Check notebooks after AI generation**: `check_marimo <notebook.py>`
 3. **Watch for changes**: `watch_marimo python/scripts/notebooks/`
-4. **Git hooks** automatically check notebooks before commits
+4. **Git hooks** automatically check notebooks before commits (fast!)
+5. **Export HTML when ready**: `./scripts/export-notebooks.sh`
 
 ### For Dashboard Development
 
-1. **Update data**: Run relevant marimo notebooks → `npm run build:notebooks`
+1. **Update data**: Run relevant marimo notebooks → `./scripts/build-dashboard.sh`
 2. **Component development**: Use existing patterns in `components/`
 3. **Data integration**: Update `lib/data.ts` for new data sources
 4. **Testing**: `npm run dev` for hot reload
+
+### Automation Approach
+
+This project strategically uses different automation tools:
+
+- **🐚 Shell Scripts** (`scripts/`): Cross-tool orchestration, environment setup, multi-step workflows
+- **📦 Package.json** (`dashboard/`): Node.js/web-specific tasks (builds, CDN, linting)
+- **🐍 UV/Python** (`python/`): Python dependency management and notebook execution
+
+**Why this approach?** Each tool handles what it does best:
+- Shell scripts coordinate between Python and Node.js ecosystems
+- npm scripts handle web development workflows
+- uv manages Python dependencies and virtual environments
+
+This separation provides flexibility while avoiding tool conflicts.
 
 ### Quality Assurance
 
 The project includes comprehensive quality tools:
 
 - **Marimo Check**: Automated notebook linting and fixing
-- **Git Hooks**: Pre-commit notebook validation
+- **Git Hooks**: Fast pre-commit notebook validation (no expensive operations)
 - **Editor Integration**: VS Code task for notebook checking
-- **Shell Helpers**: Convenient functions for common tasks
+- **Focused Scripts**: On-demand HTML export and dashboard building
 
 ---
 
@@ -265,7 +323,7 @@ The project includes comprehensive quality tools:
 
 ```bash
 # 1. Load helper functions
-source marimo-helpers.sh
+source scripts/marimo-helpers.sh
 
 # 2. Create/edit a notebook
 ai_marimo python/scripts/notebooks/new_analysis.py
@@ -273,21 +331,25 @@ ai_marimo python/scripts/notebooks/new_analysis.py
 # 3. Check and fix the notebook
 check_marimo python/scripts/notebooks/new_analysis.py
 
-# 4. Generate dashboard data (if needed)
-cd python && uv run python scripts/notebooks/10_view_generation.py
+# 4. Export to HTML and update dashboard (when ready)
+./scripts/export-notebooks.sh new_analysis
+./scripts/build-dashboard.sh
 ```
 
 ### Updating the Dashboard
 
 ```bash
-# 1. Run relevant python notebooks to update processed data
+# Option 1: Quick update for specific notebooks
+./scripts/export-notebooks.sh 10_view_generation
+./scripts/build-dashboard.sh
+
+# Option 2: Complete rebuild (all notebooks)
+./scripts/full-rebuild.sh
+
+# Option 3: Individual steps
 cd python && uv run marimo run scripts/notebooks/10_view_generation.py
-
-# 2. Build notebook metadata
-cd dashboard && npm run build:notebooks
-
-# 3. Start/restart development server
-npm run dev
+./scripts/build-dashboard.sh
+npm run dev  # in dashboard/ folder
 ```
 
 ### Processing New Data

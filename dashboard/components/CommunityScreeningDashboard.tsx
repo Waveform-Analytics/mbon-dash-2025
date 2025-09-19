@@ -198,7 +198,10 @@ const CommunityScreeningDashboard: React.FC = () => {
       return {
         colorScale: (value: number) => value >= 1 ? '#2563eb' : '#e5e7eb', // Blue for flagged, light gray for not flagged
         colorDomain: [0, 1] as [number, number],
-        legendLabel: 'Model Decision'
+        legendLabel: 'Model Decision',
+        categoricalLegend: true,
+        categoryLabels: ['Skip', 'Flag'],
+        categoryColors: ['#e5e7eb', '#2563eb']
       };
     } else {
       // Accuracy view: categorical colors
@@ -210,7 +213,10 @@ const CommunityScreeningDashboard: React.FC = () => {
           return '#6b7280'; // Gray: True negative
         },
         colorDomain: [0, 3] as [number, number],
-        legendLabel: 'Prediction Accuracy'
+        legendLabel: 'Prediction Accuracy',
+        categoricalLegend: true,
+        categoryLabels: ['Correct Skip', 'False Alarm', 'Missed Event', 'Correct Flag'],
+        categoryColors: ['#6b7280', '#ef4444', '#f59e0b', '#22c55e']
       };
     }
   }, [timelineView, timelineHeatmapData]);
@@ -259,16 +265,37 @@ const CommunityScreeningDashboard: React.FC = () => {
   useEffect(() => {
     if (!data || !metricsRef.current) return;
     drawMetricsChart();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawMetricsChart, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [data, selectedTarget, selectedThreshold]);
 
   useEffect(() => {
     if (!data || !modelsRef.current) return;
     drawModelsComparison();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawModelsComparison, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [data, selectedTarget]);
 
   useEffect(() => {
     if (!data || !featuresRef.current) return;
     drawFeatureImportance();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawFeatureImportance, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [data, selectedTarget]);
 
 
@@ -281,8 +308,13 @@ const CommunityScreeningDashboard: React.FC = () => {
     const scenarios = data.threshold_scenarios.filter(s => s.target_type === selectedTarget);
     
     const margin = { top: 20, right: 20, bottom: 40, left: 60 };
-    const width = 400 - margin.left - margin.right;
-    const height = 200 - margin.top - margin.bottom;
+    // Get the actual container width from the SVG element
+    const containerWidth = metricsRef.current.getBoundingClientRect().width || 600;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 250 - margin.top - margin.bottom;
+
+    // Set SVG width to match container
+    svg.attr('width', containerWidth);
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -362,8 +394,13 @@ const CommunityScreeningDashboard: React.FC = () => {
     const models = data.model_comparison.filter(m => m.target_type === selectedTarget);
     
     const margin = { top: 20, right: 20, bottom: 60, left: 100 };
-    const width = 300 - margin.left - margin.right;
-    const height = 200 - margin.top - margin.bottom;
+    // Get the actual container width from the SVG element
+    const containerWidth = modelsRef.current.getBoundingClientRect().width || 280;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 250 - margin.top - margin.bottom;
+
+    // Set SVG width to match container
+    svg.attr('width', containerWidth);
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -426,8 +463,13 @@ const CommunityScreeningDashboard: React.FC = () => {
       .slice(0, 10); // Top 10
     
     const margin = { top: 20, right: 20, bottom: 40, left: 120 };
-    const width = 400 - margin.left - margin.right;
+    // Get the actual container width from the SVG element
+    const containerWidth = featuresRef.current.getBoundingClientRect().width || 1000;
+    const width = containerWidth - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
+
+    // Set SVG width to match container
+    svg.attr('width', containerWidth);
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -646,45 +688,47 @@ const CommunityScreeningDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Main Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Timeline */}
-        <div className="bg-card border rounded-lg p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-2">
-              {timelineView === 'activity' && 'When Fish Were Actually Active'}
-              {timelineView === 'predictions' && 'What the Model Would Flag for Review'}
-              {timelineView === 'accuracy' && 'How Accurate Were the Model Predictions'}
-            </h3>
-            <div className="text-sm text-muted-foreground">
-              {timelineView === 'activity' && 'Color intensity shows biological activity levels throughout the year'}
-              {timelineView === 'predictions' && `Blue periods would be flagged at ${(selectedThreshold * 100).toFixed(0)}% threshold`}
-              {timelineView === 'accuracy' && 'Green=correct, Red=false alarm, Orange=missed opportunity, Gray=correct negative'}
-            </div>
-          </div>
-          <div className="w-full">
-            <BaseHeatmap
-              data={timelineHeatmapData}
-              height={350}
-              yAxisConfig={MIDNIGHT_CENTERED_Y_AXIS}
-              formatTooltip={formatTooltip}
-              {...getColorConfig}
-            />
+      {/* Timeline - Full Width */}
+      <div className="bg-card border rounded-lg p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">
+            {timelineView === 'activity' && 'When Fish Were Actually Active'}
+            {timelineView === 'predictions' && 'What the Model Would Flag for Review'}
+            {timelineView === 'accuracy' && 'How Accurate Were the Model Predictions'}
+          </h3>
+          <div className="text-sm text-muted-foreground">
+            {timelineView === 'activity' && 'Color intensity shows biological activity levels throughout the year'}
+            {timelineView === 'predictions' && `Blue periods would be flagged at ${(selectedThreshold * 100).toFixed(0)}% threshold`}
+            {timelineView === 'accuracy' && 'Green=correct, Red=false alarm, Orange=missed opportunity, Gray=correct negative'}
           </div>
         </div>
+        <div className="w-full">
+          <BaseHeatmap
+            data={timelineHeatmapData}
+            height={400}
+            yAxisConfig={MIDNIGHT_CENTERED_Y_AXIS}
+            formatTooltip={formatTooltip}
+            {...getColorConfig}
+          />
+        </div>
+      </div>
 
-        {/* Threshold Performance */}
-        <div className="bg-card border rounded-lg p-6">
+      {/* Other Charts - Row 1: Sensitivity/Performance + Model Comparison */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Threshold Performance - Takes 2/3 width */}
+        <div className="lg:col-span-2 bg-card border rounded-lg p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2">Sensitivity vs. Performance Trade-offs</h3>
             <div className="text-sm text-muted-foreground">
               See how different sensitivity levels affect accuracy and workload. Current setting shown as dashed line.
             </div>
           </div>
-          <svg ref={metricsRef} width={400} height={200} />
+          <div className="w-full">
+            <svg ref={metricsRef} className="w-full" height={250} />
+          </div>
         </div>
 
-        {/* Model Comparison */}
+        {/* Model Comparison - Takes 1/3 width */}
         <div className="bg-card border rounded-lg p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2">Which detection method works best</h3>
@@ -692,20 +736,20 @@ const CommunityScreeningDashboard: React.FC = () => {
               Comparison of different machine learning approaches for screening underwater recordings.
             </div>
           </div>
-          <svg ref={modelsRef} width={300} height={200} />
+          <svg ref={modelsRef} className="w-full" height={250} />
         </div>
+      </div>
 
-        {/* Feature Importance */}
-        <div className="bg-card border rounded-lg p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-2">What the model pays attention to</h3>
-            <div className="text-sm text-muted-foreground">
-              The environmental and temporal patterns that help predict fish activity. Month captures seasonal patterns, temperature drives fish behavior.
-            </div>
+      {/* Other Charts - Row 2: Feature Importance Full Width */}
+      <div className="bg-card border rounded-lg p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">What the model pays attention to</h3>
+          <div className="text-sm text-muted-foreground">
+            The environmental and temporal patterns that help predict fish activity. Month captures seasonal patterns, temperature drives fish behavior.
           </div>
-          <div className="w-full overflow-x-auto">
-            <svg ref={featuresRef} width={400} height={300} />
-          </div>
+        </div>
+        <div className="w-full">
+          <svg ref={featuresRef} className="w-full" height={300} />
         </div>
       </div>
       

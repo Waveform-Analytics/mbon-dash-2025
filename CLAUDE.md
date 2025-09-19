@@ -10,9 +10,10 @@ notes/SITE-IMPLEMENTATION-NOTES.md -- this describes the site implementation pla
 
 notes/DATA-FILE-NAMING.md -- this describes the naming conventions for data files, and also provides details on every file that is saved by every python marimo notebook. This is a good reference for finding the data we need for any given task (or determining that we need to generate new data)
 
-# Extra notes for claude code
+# Extra notes for AI coding agents
 - don't write code or run anything unless I specifically say to do so. I like to discuss things first.
 - use uv for python dependency management
+- python is installed in the python folder, not at the root of the repo
 -  when adding new features like CDN support, it's better to implement them in the data layer (which we did successfully) rather than rewriting working UI components.
 - Python debugging scripts should go in the python/scripts folder
 

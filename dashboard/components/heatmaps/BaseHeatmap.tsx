@@ -35,6 +35,10 @@ export interface BaseHeatmapProps {
   // Legend configuration
   legendLabel?: string;
   legendFormatter?: (value: number) => string;
+  // Categorical legend support
+  categoricalLegend?: boolean;
+  categoryLabels?: string[];
+  categoryColors?: string[];
   // Y-axis configuration (for midnight centering)
   yAxisConfig?: YAxisConfig;
   // Additional styling
@@ -58,6 +62,9 @@ const BaseHeatmap: React.FC<BaseHeatmapProps> = React.memo(({
   formatTooltip,
   legendLabel = 'Value',
   legendFormatter = (v: number) => d3.format('.3f')(v),
+  categoricalLegend = false,
+  categoryLabels = [],
+  categoryColors = [],
   yAxisConfig = STANDARD_Y_AXIS,
   className = '',
   loading = false,
@@ -296,55 +303,99 @@ const BaseHeatmap: React.FC<BaseHeatmapProps> = React.memo(({
       .text('Hour of Day');
 
     // Add color legend
-    const legendWidth = 200;
+    const legendWidth = categoricalLegend ? 400 : 200; // Wider for categorical legends
     const legendHeight = 20;
-
-    const colorScaleDomain = 'domain' in colorScale && typeof colorScale.domain === 'function'
-      ? colorScale.domain()
-      : (customColorDomain || (d3.extent(validData, d => d.value) as [number, number]) || [0, 1]);
-    const legendDomain = reverseColorScale
-      ? [colorScaleDomain[1], colorScaleDomain[0]]
-      : colorScaleDomain;
-
-    const legendScale = d3.scaleLinear()
-      .domain(legendDomain)
-      .range([0, legendWidth]);
-
-    const legendAxis = d3.axisBottom(legendScale)
-      .ticks(5)
-      .tickFormat(d => legendFormatter(Number(d)));
-
+    
+    // Position legend based on type
+    const legendX = categoricalLegend 
+      ? Math.max(20, (customWidth || containerWidth) / 2 - legendWidth / 2) // Center for categorical
+      : (customWidth || containerWidth) - legendWidth - 20; // Right-aligned for continuous
+    
     const legend = svg.append('g')
-      .attr('transform', `translate(${(customWidth || containerWidth) - legendWidth - 30},${15})`);
+      .attr('transform', `translate(${legendX},${15})`);
 
-    // Create gradient for legend
-    const gradientId = 'gradient-' + Math.random();
-    const gradient = svg.append('defs')
-      .append('linearGradient')
-      .attr('id', gradientId)
-      .attr('x1', '0%')
-      .attr('x2', '100%')
-      .attr('y1', '0%')
-      .attr('y2', '0%');
+    if (categoricalLegend && categoryLabels.length > 0 && categoryColors.length > 0) {
+      // Traditional horizontal legend (like typical chart legends)
+      const squareSize = 12;
+      const itemSpacing = 20; // Space between legend items
+      const textOffset = 5; // Space between square and text
+      
+      let currentX = 0;
+      
+      categoryLabels.forEach((label, i) => {
+        const color = categoryColors[i] || '#000000';
+        
+        // Color square
+        legend.append('rect')
+          .attr('x', currentX)
+          .attr('y', 4) // Center vertically with text
+          .attr('width', squareSize)
+          .attr('height', squareSize)
+          .style('fill', color)
+          .style('stroke', '#333')
+          .style('stroke-width', 0.5);
+          
+        // Label text
+        const text = legend.append('text')
+          .attr('x', currentX + squareSize + textOffset)
+          .attr('y', 10) // Center vertically
+          .attr('dy', '0.35em')
+          .style('font-size', '12px')
+          .style('font-weight', '500')
+          .style('fill', '#333')
+          .text(label);
+          
+        // Calculate width of this text for next item positioning
+        const textWidth = (text.node() as SVGTextElement)?.getBBox().width || 80;
+        currentX += squareSize + textOffset + textWidth + itemSpacing;
+      });
+    } else {
+      // Continuous legend (existing logic)
+      const colorScaleDomain = 'domain' in colorScale && typeof colorScale.domain === 'function'
+        ? colorScale.domain()
+        : (customColorDomain || (d3.extent(validData, d => d.value) as [number, number]) || [0, 1]);
+      const legendDomain = reverseColorScale
+        ? [colorScaleDomain[1], colorScaleDomain[0]]
+        : colorScaleDomain;
 
-    const nStops = 10;
-    const colorRange = d3.range(nStops).map(i => i / (nStops - 1));
+      const legendScale = d3.scaleLinear()
+        .domain(legendDomain)
+        .range([0, legendWidth]);
 
-    colorRange.forEach(t => {
-      gradient.append('stop')
-        .attr('offset', `${t * 100}%`)
-        .attr('stop-color', colorScale(legendDomain[0] + t * (legendDomain[1] - legendDomain[0])));
-    });
+      const legendAxis = d3.axisBottom(legendScale)
+        .ticks(5)
+        .tickFormat(d => legendFormatter(Number(d)));
 
-    legend.append('rect')
-      .attr('width', legendWidth)
-      .attr('height', legendHeight)
-      .style('fill', `url(#${gradientId})`);
+      // Create gradient for legend
+      const gradientId = 'gradient-' + Math.random();
+      const gradient = svg.append('defs')
+        .append('linearGradient')
+        .attr('id', gradientId)
+        .attr('x1', '0%')
+        .attr('x2', '100%')
+        .attr('y1', '0%')
+        .attr('y2', '0%');
 
-    legend.append('g')
-      .attr('transform', `translate(0,${legendHeight})`)
-      .call(legendAxis);
+      const nStops = 10;
+      const colorRange = d3.range(nStops).map(i => i / (nStops - 1));
 
+      colorRange.forEach(t => {
+        gradient.append('stop')
+          .attr('offset', `${t * 100}%`)
+          .attr('stop-color', colorScale(legendDomain[0] + t * (legendDomain[1] - legendDomain[0])));
+      });
+
+      legend.append('rect')
+        .attr('width', legendWidth)
+        .attr('height', legendHeight)
+        .style('fill', `url(#${gradientId})`);
+
+      legend.append('g')
+        .attr('transform', `translate(0,${legendHeight})`)
+        .call(legendAxis);
+    }
+    
+    // Add legend title
     legend.append('text')
       .attr('x', legendWidth / 2)
       .attr('y', -5)
@@ -353,7 +404,8 @@ const BaseHeatmap: React.FC<BaseHeatmapProps> = React.memo(({
       .text(legendLabel);
 
   }, [processedData, containerWidth, customWidth, customHeight, margins, getColorScale,
-      formatTooltip, legendLabel, legendFormatter, yAxisConfig, reverseColorScale, customColorDomain]);
+      formatTooltip, legendLabel, legendFormatter, yAxisConfig, reverseColorScale, customColorDomain,
+      categoricalLegend, categoryLabels, categoryColors]);
 
   // Handle loading state
   if (loading) {
