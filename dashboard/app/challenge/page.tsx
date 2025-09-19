@@ -31,7 +31,7 @@ export default function ChallengePage() {
             <div className="flex items-center mb-6">
               <Waves className="h-8 w-8 text-primary mr-3" />
               <div>
-                <h2 className="text-2xl font-bold text-card-foreground">The ESONS Foundation</h2>
+                <h2 className="text-2xl font-bold text-card-foreground">The ESONS Project</h2>
                 <p className="text-muted-foreground">
                   Building on a decade+ of proven marine acoustic monitoring
                 </p>

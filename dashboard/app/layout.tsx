@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MBON Dashboard",
-  description: "Marine Biodiversity Observation Network - USC Dashboard",
+  title: "Marine Acoustic Indices Dashboard",
+  description: "Community-level biodiversity screening using underwater sound patterns - MBON funded research",
 };
 
 export default function RootLayout({

@@ -60,8 +60,8 @@ export default function Navigation() {
               <Waves className="h-6 w-6 text-primary" />
             </motion.div>
             <div className="hidden md:block">
-              <h1 className="font-medium text-lg">MBON Dashboard</h1>
-              <p className="text-xs text-muted-foreground -mt-1">Marine Biodiversity Observation Network</p>
+              <h1 className="font-medium text-lg">Marine Acoustic Indices Dashboard</h1>
+              <p className="text-xs text-muted-foreground -mt-1">Community-level biodiversity screening using underwater sound patterns</p>
             </div>
           </Link>
 

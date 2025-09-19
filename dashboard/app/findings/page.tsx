@@ -38,7 +38,7 @@ export default function FindingsPage() {
                 <CheckCircle2 className="h-10 w-10 text-primary" />
               </motion.div>
               <h2 className="text-3xl font-bold text-card-foreground mb-4">
-                Acoustic indices can catch 85% of fish community activity while reducing analysis effort by 40-60%
+                Acoustic indices can catch 85% of fish community activity while potentially reducing analysis effort by 40-60%
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 This validation against expert manual detections shows acoustic indices can serve as effective 
@@ -63,7 +63,7 @@ export default function FindingsPage() {
               >
                 <Activity className="h-8 w-8 text-chart-2 mx-auto mb-3" />
                 <div className="text-3xl font-bold text-primary mb-2">40-60%</div>
-                <div className="text-sm text-muted-foreground">Reduction in analysis effort</div>
+                <div className="text-sm text-muted-foreground">Potential reduction in analysis effort</div>
               </motion.div>
 
               <motion.div 
