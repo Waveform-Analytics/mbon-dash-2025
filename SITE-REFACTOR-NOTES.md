@@ -21,7 +21,7 @@ Transform the dashboard from scattered technical demonstrations into a compellin
 
 ### **Phase 2: Implementation**
 - [x] Update navigation structure
-- [ ] Refactor landing page (Home)
+- [x] Refactor landing page (Home)
 - [ ] Create "The Challenge" page (replaces Background)
 - [ ] Merge Data + Explore into "Our Approach"  
 - [ ] Elevate Community Screening to "Key Findings"
@@ -166,11 +166,17 @@ Each major section should answer:
 - [x] Landing page cards updated to match new structure
 - [x] Foundation set for content migration
 
-### **Next: Landing Page Content Refactor**
-- Update hero section with narrative hook
-- Revise messaging to focus on acoustic indices innovation
-- Add context about MBON funding and broader impact
+### **Phase 2 Progress - Landing Page Complete**
+- [x] Hero section updated with compelling research question
+- [x] Messaging revised to focus on acoustic indices approach
+- [x] Project context cards added with key stats
+- [x] ESONS attribution and broader MBON impact included
+
+### **Next: Content Pages**
+- Create "The Challenge" page with ESONS foundation context
+- Build "Our Approach" by merging Data + Explore content
+- Elevate Community Screening to "Key Findings" main page
 
 ---
 
-*Last updated: 2025-09-19 - Phase 1 (Navigation) Complete*
+*Last updated: 2025-09-19 - Phase 2 (Landing Page) Complete*
