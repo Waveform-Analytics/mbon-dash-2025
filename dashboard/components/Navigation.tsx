@@ -59,7 +59,7 @@ export default function Navigation() {
             >
               <Waves className="h-6 w-6 text-primary" />
             </motion.div>
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <h1 className="font-medium text-lg">Marine Acoustic Indices Dashboard</h1>
             </div>
           </Link>
@@ -102,9 +102,10 @@ export default function Navigation() {
                   )}
 
                   {/* Tooltip for mobile */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none md:hidden">
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none md:hidden z-50">
                     <div className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded border shadow-lg whitespace-nowrap">
                       {item.label}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-popover"></div>
                     </div>
                   </div>
                 </Link>
