@@ -262,43 +262,7 @@ const CommunityScreeningDashboard: React.FC = () => {
     };
   }, [timelineView, selectedTarget, selectedThreshold]);
 
-  useEffect(() => {
-    if (!data || !metricsRef.current) return;
-    drawMetricsChart();
-
-    // Add resize listener for responsive behavior
-    const handleResize = () => {
-      setTimeout(drawMetricsChart, 100); // Debounce resize
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget, selectedThreshold, drawMetricsChart]);
-
-  useEffect(() => {
-    if (!data || !modelsRef.current) return;
-    drawModelsComparison();
-
-    // Add resize listener for responsive behavior
-    const handleResize = () => {
-      setTimeout(drawModelsComparison, 100); // Debounce resize
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget, drawModelsComparison]);
-
-  useEffect(() => {
-    if (!data || !featuresRef.current) return;
-    drawFeatureImportance();
-
-    // Add resize listener for responsive behavior
-    const handleResize = () => {
-      setTimeout(drawFeatureImportance, 100); // Debounce resize
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget, drawFeatureImportance]);
-
-
+  // Drawing functions - defined before useEffect hooks that reference them
   const drawMetricsChart = useCallback(() => {
     if (!data || !metricsRef.current) return;
 
@@ -508,6 +472,43 @@ const CommunityScreeningDashboard: React.FC = () => {
     g.append('g')
       .call(d3.axisLeft(yScale));
   }, [data, selectedTarget]);
+
+  // useEffect hooks - defined after useCallback hooks to avoid temporal dead zone
+  useEffect(() => {
+    if (!data || !metricsRef.current) return;
+    drawMetricsChart();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawMetricsChart, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [data, selectedTarget, selectedThreshold, drawMetricsChart]);
+
+  useEffect(() => {
+    if (!data || !modelsRef.current) return;
+    drawModelsComparison();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawModelsComparison, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [data, selectedTarget, drawModelsComparison]);
+
+  useEffect(() => {
+    if (!data || !featuresRef.current) return;
+    drawFeatureImportance();
+
+    // Add resize listener for responsive behavior
+    const handleResize = () => {
+      setTimeout(drawFeatureImportance, 100); // Debounce resize
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [data, selectedTarget, drawFeatureImportance]);
 
   if (loading) {
     return (

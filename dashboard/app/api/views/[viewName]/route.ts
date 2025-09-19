@@ -20,6 +20,7 @@ export async function GET(
     
     // Construct path to the view file
     const fileName = `${sanitizedViewName}.json`;
+    // Go up from dashboard directory to project root, then to data/views
     const dataPath = path.join(process.cwd(), '..', 'data', 'views', fileName);
     
     // Check if file exists
