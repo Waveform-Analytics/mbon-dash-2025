@@ -61,7 +61,7 @@ export default function Navigation() {
             </motion.div>
             <div className="hidden md:block">
               <h1 className="font-medium text-lg">Marine Acoustic Indices Dashboard</h1>
-              <p className="text-xs text-muted-foreground -mt-1">Community-level biodiversity screening using underwater sound patterns</p>
+              <p className="text-xs text-muted-foreground -mt-1">Community-level biodiversity screening</p>
             </div>
           </Link>
 
