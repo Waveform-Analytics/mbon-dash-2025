@@ -9,7 +9,6 @@ import Link from 'next/link';
 import StationsMap from '../../components/StationsMap';
 import AcousticIndicesHeatmap from '../../components/heatmaps/AcousticIndicesHeatmap';
 import DetectionsHeatmap from '../../components/heatmaps/DetectionsHeatmap';
-import RmsSplHeatmap from '../../components/heatmaps/RmsSplHeatmap';
 import EnvironmentalHeatmap from '../../components/heatmaps/EnvironmentalHeatmap';
 
 export default function ApproachPage() {
@@ -85,7 +84,7 @@ export default function ApproachPage() {
 
             <div className="mt-6 p-4 bg-card/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                <strong>Validation approach:</strong> We use existing expert manual detections as "ground truth" 
+                <strong>Validation approach:</strong> We use existing expert manual detections as &quot;ground truth&quot; 
                 to test whether acoustic indices can identify the same patterns that experienced listeners detect.
               </p>
             </div>
@@ -204,7 +203,7 @@ export default function ApproachPage() {
           <div className="bg-accent/10 border border-accent/30 rounded-lg p-6">
             <p className="text-muted-foreground">
               <strong>Why May River?</strong> This system provides an ideal test case with established fish communities, 
-              diverse acoustic environments, and high-quality manual detection data from the Montie Lab's ongoing ESONS monitoring.
+              diverse acoustic environments, and high-quality manual detection data from the Montie Lab&apos;s ongoing ESONS monitoring.
             </p>
           </div>
         </motion.section>
