@@ -25,11 +25,11 @@ export default function NotebookPage() {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold mr-4">
-                07
+                05
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Notebook 07</div>
-                <h1 className="text-3xl font-bold text-primary">Continuous Monitoring Validation</h1>
+                <div className="text-sm text-muted-foreground">Notebook 05</div>
+                <h1 className="text-3xl font-bold text-primary">Vessel Analysis</h1>
               </div>
             </div>
             
@@ -44,7 +44,7 @@ export default function NotebookPage() {
                   <Target className="h-4 w-4 text-chart-1 mr-2" />
                   <span className="font-semibold text-xs">PURPOSE</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Interactive marimo notebook: Continuous Monitoring Validation</p>
+                <p className="text-xs text-muted-foreground">Interactive marimo notebook: Vessel Analysis</p>
               </motion.div>
 
               <motion.div
@@ -76,9 +76,9 @@ export default function NotebookPage() {
           style={{ minHeight: '70vh' }}
         >
           <iframe
-            src="/analysis/notebooks/html/07_continuous_monitoring_validation.html"
+            src="/analysis/notebooks/html/05_vessel_analysis.html"
             className="w-full h-full border-0"
-            title="Continuous Monitoring Validation"
+            title="Vessel Analysis"
             sandbox="allow-scripts allow-same-origin allow-forms"
             style={{ minHeight: '70vh' }}
           />

@@ -105,7 +105,12 @@ export default function AnalysisPage() {
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                          <Activity className="h-6 w-6 text-chart-1 mr-3" />
+                          <div className="flex items-center mr-3">
+                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                              {String(notebook.order).padStart(2, '0')}
+                            </div>
+                            <Activity className="h-6 w-6 text-chart-1" />
+                          </div>
                           <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                             Live
                           </span>
@@ -113,6 +118,7 @@ export default function AnalysisPage() {
                         <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <h3 className="text-lg font-semibold mb-3 text-card-foreground">
+                        <span className="text-muted-foreground text-sm font-normal mr-2">Notebook {String(notebook.order).padStart(2, '0')}:</span>
                         {notebook.title}
                       </h3>
                       

@@ -23,7 +23,15 @@ export default function NotebookPage() {
             Back to Analysis
           </Link>
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-primary mb-2">Temporal Aggregation</h1>
+            <div className="flex items-center mb-2">
+              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold mr-4">
+                02
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Notebook 02</div>
+                <h1 className="text-3xl font-bold text-primary">Temporal Aggregation</h1>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <motion.div
