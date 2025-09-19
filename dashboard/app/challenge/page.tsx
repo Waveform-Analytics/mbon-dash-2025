@@ -95,19 +95,19 @@ export default function ChallengePage() {
                 <div className="flex items-start">
                   <div className="w-2 h-2 rounded-full bg-red-500 mt-2 mr-3 flex-shrink-0"></div>
                   <div>
-                    <strong>Resource Intensive:</strong> Each 2-hour recording requires 30+ minutes of expert analysis
+                    <strong>Resource Intensive:</strong> Each 2-minute recording requires intensive expert analysis regardless of biological content
                   </div>
                 </div>
                 <div className="flex items-start">
                   <div className="w-2 h-2 rounded-full bg-red-500 mt-2 mr-3 flex-shrink-0"></div>
                   <div>
-                    <strong>Limited Coverage:</strong> Sampling approaches miss continuous patterns and rare events
+                    <strong>Undifferentiated Effort:</strong> Current approach analyzes all recordings equally, even those with minimal biological activity
                   </div>
                 </div>
                 <div className="flex items-start">
                   <div className="w-2 h-2 rounded-full bg-red-500 mt-2 mr-3 flex-shrink-0"></div>
                   <div>
-                    <strong>Scalability Gap:</strong> Expanding to ecosystem-wide monitoring requires exponentially more effort
+                    <strong>Scalability Gap:</strong> Expanding to ecosystem-wide monitoring requires exponentially more expert hours
                   </div>
                 </div>
               </div>
