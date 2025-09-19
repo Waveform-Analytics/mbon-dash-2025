@@ -30,6 +30,18 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+print_info() {
+    echo -e "${YELLOW}ℹ️  $1${NC}"
+}
+
+# Ensure we're in project root first
+if ! cd "$(git rev-parse --show-toplevel)" 2>/dev/null; then
+    print_error "This script must be run from within the git repository"
+    exit 1
+fi
+
+PROJECT_ROOT="$(pwd)"
+
 # Commands
 cmd_help() {
     print_header
@@ -48,6 +60,7 @@ cmd_help() {
 cmd_upload() {
     print_header
     echo "Uploading view files to CDN..."
+    cd dashboard
     npm run cdn:upload
     print_success "Upload complete!"
 }
@@ -55,6 +68,7 @@ cmd_upload() {
 cmd_test() {
     print_header
     echo "Testing CDN connectivity..."
+    cd dashboard
     npm run cdn:test
     print_success "CDN test complete!"
 }
@@ -62,6 +76,7 @@ cmd_test() {
 cmd_deploy() {
     print_header
     echo "Generating views and deploying to CDN..."
+    cd dashboard
     npm run data:deploy
     print_success "Deployment complete!"
 }
@@ -69,6 +84,7 @@ cmd_deploy() {
 cmd_dev() {
     print_header
     echo "Starting dashboard development server..."
+    cd dashboard
     npm run dev
 }
 
@@ -78,7 +94,7 @@ cmd_status() {
     
     echo ""
     echo "📡 Testing CDN connectivity..."
-    if npm run cdn:test > /dev/null 2>&1; then
+    if (cd dashboard && npm run cdn:test > /dev/null 2>&1); then
         print_success "CDN is accessible"
     else
         print_error "CDN is not accessible"

@@ -3,6 +3,14 @@
 # Marimo Check Helper Functions
 # Source this file in your shell: source marimo-helpers.sh
 
+# Helper function to ensure we're in project root
+_ensure_project_root() {
+    if ! cd "$(git rev-parse --show-toplevel)" 2>/dev/null; then
+        echo "❌ Must be run from within the git repository"
+        return 1
+    fi
+}
+
 # Function to check and fix a single marimo notebook
 check_marimo() {
     local file="$1"
@@ -10,6 +18,8 @@ check_marimo() {
         echo "Usage: check_marimo <notebook.py>"
         return 1
     fi
+    
+    _ensure_project_root || return 1
     
     echo "🔍 Checking marimo notebook: $file"
     (cd python && uv run marimo check --fix --verbose "../$file")
@@ -23,6 +33,8 @@ check_marimo() {
 
 # Function to check all project marimo notebooks in python/scripts/notebooks/
 check_all_marimo() {
+    _ensure_project_root || return 1
+    
     echo "🔍 Checking all project marimo notebooks..."
     
     if [ ! -d "python/scripts/notebooks" ]; then
@@ -42,6 +54,8 @@ check_all_marimo() {
 # Function to check project marimo notebooks that were modified in the last N minutes
 check_recent_marimo() {
     local minutes="${1:-30}"  # Default to 30 minutes
+    
+    _ensure_project_root || return 1
     
     echo "🔍 Checking project notebooks modified in the last $minutes minutes..."
     
@@ -88,6 +102,8 @@ watch_marimo() {
 
 # Function to list all project marimo notebooks
 list_marimo() {
+    _ensure_project_root || return 1
+    
     echo "📝 Project marimo notebooks:"
     
     if [ ! -d "python/scripts/notebooks" ]; then
@@ -107,6 +123,8 @@ ai_marimo() {
         echo "Usage: ai_marimo <notebook_name.py>"
         return 1
     fi
+    
+    _ensure_project_root || return 1
     
     echo "🤖 AI Marimo Workflow for: $notebook_name"
     
