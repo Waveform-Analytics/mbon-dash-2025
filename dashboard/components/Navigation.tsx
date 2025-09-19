@@ -10,31 +10,31 @@ const navItems = [
     href: '/',
     label: 'Home',
     icon: Home,
-    description: 'Project overview and main dashboard'
+    description: 'Project overview and marine monitoring innovation'
   },
   {
-    href: '/data',
-    label: 'Data',
+    href: '/challenge',
+    label: 'The Challenge',
+    icon: BookOpen,
+    description: 'Marine monitoring challenges and ESONS foundation'
+  },
+  {
+    href: '/approach',
+    label: 'Our Approach',
     icon: BarChart3,
-    description: 'Data overview, stations, and visualizations'
+    description: 'Acoustic indices methodology and study design'
   },
   {
-    href: '/explore',
-    label: 'Explore',
+    href: '/findings',
+    label: 'Key Findings',
     icon: Compass,
-    description: 'Interactive exploration tools and demos'
+    description: 'Results and community-level screening validation'
   },
   {
     href: '/analysis',
-    label: 'Notebooks',
+    label: 'Deep Dive',
     icon: FlaskConical,
-    description: 'Analysis workflows and computational notebooks'
-  },
-  {
-    href: '/background',
-    label: 'Background',
-    icon: BookOpen,
-    description: 'Project background and research context'
+    description: 'Technical methods, notebooks, and future directions'
   },
 ];
 

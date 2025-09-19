@@ -49,10 +49,10 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link 
-                href="/data"
+                href="/challenge"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
               >
-                View the Data
+                Explore the Challenge
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </motion.div>
@@ -75,8 +75,8 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             
-            {/* Data Section */}
-            <Link href="/data">
+            {/* The Challenge Section */}
+            <Link href="/challenge">
               <motion.div 
                 className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
                 initial={{ opacity: 0, y: 20 }}
@@ -86,24 +86,24 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <BarChart3 className="h-8 w-8 text-chart-1 mr-3" />
-                    <h2 className="text-2xl font-bold text-card-foreground">Data</h2>
+                    <BookOpen className="h-8 w-8 text-chart-1 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">The Challenge</h2>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  Explore manual detections, environmental measurements, and acoustic indices from the MBON / ESONS project.
+                  Marine ecosystem monitoring challenges and the ESONS foundation that enables this research.
                 </p>
                 <div className="bg-accent p-4 rounded-md">
                   <p className="text-sm text-accent-foreground">
-                    Interactive visualizations and data exploration tools
+                    Context and motivation for scalable monitoring approaches
                   </p>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Explore Section */}
-            <Link href="/explore">
+            {/* Our Approach Section */}
+            <Link href="/approach">
               <motion.div
                 className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
                 initial={{ opacity: 0, y: 20 }}
@@ -113,24 +113,24 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <Compass className="h-8 w-8 text-chart-3 mr-3" />
-                    <h2 className="text-2xl font-bold text-card-foreground">Explore</h2>
+                    <BarChart3 className="h-8 w-8 text-chart-3 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Our Approach</h2>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  Interactive exploration tools and specialized views for investigating different aspects of the research.
+                  Acoustic indices methodology, study design, and validation against expert manual detections.
                 </p>
                 <div className="bg-secondary p-4 rounded-md">
                   <p className="text-sm text-secondary-foreground">
-                    Interactive visualizations and custom analysis tools
+                    Data visualizations and methodological approach
                   </p>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Notebooks Section */}
-            <Link href="/analysis">
+            {/* Key Findings Section */}
+            <Link href="/findings">
               <motion.div
                 className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
                 initial={{ opacity: 0, y: 20 }}
@@ -140,24 +140,24 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <FlaskConical className="h-8 w-8 text-chart-2 mr-3" />
-                    <h2 className="text-2xl font-bold text-card-foreground">Notebooks</h2>
+                    <Compass className="h-8 w-8 text-chart-2 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Key Findings</h2>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  Computational notebooks with analytical workflows for marine acoustic data analysis.
+                  Results from our proof-of-concept: 85% detection rate and community-level screening validation.
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <p className="text-sm text-muted-foreground">
-                    Marimo notebooks with interactive analysis workflows
+                    Interactive results dashboard and broader implications
                   </p>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Background Section */}
-            <Link href="/background">
+            {/* Deep Dive Section */}
+            <Link href="/analysis">
               <motion.div
                 className="bg-card rounded-lg shadow-lg p-8 border cursor-pointer group"
                 initial={{ opacity: 0, y: 20 }}
@@ -167,17 +167,17 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <BookOpen className="h-8 w-8 text-chart-4 mr-3" />
-                    <h2 className="text-2xl font-bold text-card-foreground">Background</h2>
+                    <FlaskConical className="h-8 w-8 text-chart-4 mr-3" />
+                    <h2 className="text-2xl font-bold text-card-foreground">Deep Dive</h2>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  Project background, research context, and detailed information about the MBON / ESONS initiatives.
+                  Technical methods, computational notebooks, and detailed analysis workflows.
                 </p>
                 <div className="bg-accent p-4 rounded-md">
                   <p className="text-sm text-accent-foreground">
-                    Research goals, methodology, and project details
+                    Marimo notebooks, methodology, and future directions
                   </p>
                 </div>
               </motion.div>

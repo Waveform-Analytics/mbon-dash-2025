@@ -49,7 +49,7 @@ export default function AnalysisPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-primary mb-2">Analysis</h1>
+          <h1 className="text-4xl font-bold text-primary mb-2">Deep Dive</h1>
           <div className="h-1 w-20 bg-primary rounded mb-8"></div>
         </motion.div>
 
