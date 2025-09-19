@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Waves, Users, Target, Clock, ArrowRight, Headphones, Fish, BarChart3 } from 'lucide-react';
+import { Waves, Target, Clock, ArrowRight, Headphones, Fish, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChallengePage() {
@@ -41,7 +41,7 @@ export default function ChallengePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <p className="text-card-foreground mb-4">
-                  <strong>Dr. Eric Montie's lab</strong> at USC Beaufort has been monitoring marine soundscapes 
+                  <strong>Dr. Eric Montie&apos;s lab</strong> at USC Beaufort has been monitoring marine soundscapes
                   across South Carolina estuaries for over a decade through the <strong>Estuarine Soundscape 
                   Observatory Network in the Southeast (ESONS)</strong>.
                 </p>
@@ -114,7 +114,7 @@ export default function ChallengePage() {
             </div>
 
             <div className="bg-card border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 text-card-foreground">What's Needed</h3>
+              <h3 className="text-lg font-semibold mb-4 text-card-foreground">What&apos;s Needed</h3>
               <div className="space-y-4 text-muted-foreground">
                 <div className="flex items-start">
                   <div className="w-2 h-2 rounded-full bg-green-500 mt-2 mr-3 flex-shrink-0"></div>
@@ -125,7 +125,7 @@ export default function ChallengePage() {
                 <div className="flex items-start">
                   <div className="w-2 h-2 rounded-full bg-green-500 mt-2 mr-3 flex-shrink-0"></div>
                   <div>
-                    <strong>Efficient Screening:</strong> Focus expert time where it's most valuable
+                    <strong>Efficient Screening:</strong> Focus expert time where it&apos;s most valuable
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -150,7 +150,7 @@ export default function ChallengePage() {
             <div className="flex items-center mb-6">
               <BarChart3 className="h-8 w-8 text-primary mr-3" />
               <div>
-                <h2 className="text-2xl font-bold text-card-foreground">MBON's Vision</h2>
+                <h2 className="text-2xl font-bold text-card-foreground">MBON&apos;s Vision</h2>
                 <p className="text-muted-foreground">
                   Marine Biodiversity Observation Network seeks scalable monitoring approaches
                 </p>

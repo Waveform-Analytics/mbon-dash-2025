@@ -42,7 +42,7 @@ export default function FindingsPage() {
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 This validation against expert manual detections shows acoustic indices can serve as effective 
-                community-level screening tools, focusing expert time where it's most valuable.
+                community-level screening tools, focusing expert time where it&apos;s most valuable.
               </p>
             </div>
             

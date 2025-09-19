@@ -109,7 +109,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.8 }}
           >
             <p className="text-muted-foreground max-w-3xl mx-auto">
-              <strong>Building on the ESONS foundation:</strong> This research builds on Dr. Eric Montie's decade+ of marine acoustic monitoring, 
+              <strong>Building on the ESONS foundation:</strong> This research builds on Dr. Eric Montie&apos;s decade+ of marine acoustic monitoring,
               testing whether acoustic indices can serve as community-level screening tools for broader marine biodiversity monitoring applications.
             </p>
           </motion.div>
