@@ -33,7 +33,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              Marine Biodiversity Observation Network
+              Can underwater sound patterns reveal marine ecosystem health?
             </motion.h1>
             <motion.p 
               className="text-xl md:text-2xl text-primary-foreground/95 mb-8 max-w-4xl mx-auto font-light"
@@ -41,7 +41,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              USC Dashboard for ESONS Project
+              We explore whether acoustic indices—automated measurements of underwater sound characteristics—can identify periods of fish community activity, potentially transforming how we monitor marine biodiversity.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -59,6 +59,62 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Project Context Cards */}
+      <motion.section 
+        className="py-12 bg-accent/10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            <motion.div 
+              className="bg-card/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border text-center"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <div className="text-3xl font-bold text-primary mb-2">1 Year</div>
+              <div className="text-sm text-muted-foreground mb-1">ESONS acoustic data analyzed</div>
+              <div className="text-xs text-muted-foreground">May River, South Carolina</div>
+            </motion.div>
+
+            <motion.div 
+              className="bg-card/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border text-center"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <div className="text-3xl font-bold text-primary mb-2">85%</div>
+              <div className="text-sm text-muted-foreground mb-1">Community activity detected</div>
+              <div className="text-xs text-muted-foreground">with 40-60% less analysis time</div>
+            </motion.div>
+
+            <motion.div 
+              className="bg-card/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border text-center"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <div className="text-3xl font-bold text-primary mb-2">MBON</div>
+              <div className="text-sm text-muted-foreground mb-1">Funded proof-of-concept</div>
+              <div className="text-xs text-muted-foreground">for scalable monitoring</div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div 
+            className="text-center mt-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <p className="text-muted-foreground max-w-3xl mx-auto">
+              <strong>Building on the ESONS foundation:</strong> This research builds on Dr. Eric Montie's decade+ of marine acoustic monitoring, 
+              testing whether acoustic indices can serve as community-level screening tools for broader marine biodiversity monitoring applications.
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Main Content Grid */}
       <motion.section 
