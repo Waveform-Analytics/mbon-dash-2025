@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import * as d3 from 'd3';
 import { useViewData } from '@/lib/data';
 import BaseHeatmap, { ProcessedDataPoint } from './heatmaps/BaseHeatmap';
@@ -272,7 +272,7 @@ const CommunityScreeningDashboard: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget, selectedThreshold]);
+  }, [data, selectedTarget, selectedThreshold, drawMetricsChart]);
 
   useEffect(() => {
     if (!data || !modelsRef.current) return;
@@ -284,7 +284,7 @@ const CommunityScreeningDashboard: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget]);
+  }, [data, selectedTarget, drawModelsComparison]);
 
   useEffect(() => {
     if (!data || !featuresRef.current) return;
@@ -296,10 +296,10 @@ const CommunityScreeningDashboard: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [data, selectedTarget]);
+  }, [data, selectedTarget, drawFeatureImportance]);
 
 
-  const drawMetricsChart = () => {
+  const drawMetricsChart = useCallback(() => {
     if (!data || !metricsRef.current) return;
 
     const svg = d3.select(metricsRef.current);
@@ -383,9 +383,9 @@ const CommunityScreeningDashboard: React.FC = () => {
       .attr('fill', 'black')
       .style('text-anchor', 'middle')
       .text('Score');
-  };
+  }, [data, selectedTarget, selectedThreshold]);
 
-  const drawModelsComparison = () => {
+  const drawModelsComparison = useCallback(() => {
     if (!data || !modelsRef.current) return;
 
     const svg = d3.select(modelsRef.current);
@@ -449,9 +449,9 @@ const CommunityScreeningDashboard: React.FC = () => {
 
     g.append('g')
       .call(d3.axisLeft(yScale));
-  };
+  }, [data, selectedTarget]);
 
-  const drawFeatureImportance = () => {
+  const drawFeatureImportance = useCallback(() => {
     if (!data || !featuresRef.current) return;
 
     const svg = d3.select(featuresRef.current);
@@ -507,7 +507,7 @@ const CommunityScreeningDashboard: React.FC = () => {
 
     g.append('g')
       .call(d3.axisLeft(yScale));
-  };
+  }, [data, selectedTarget]);
 
   if (loading) {
     return (
