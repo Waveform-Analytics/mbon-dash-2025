@@ -178,7 +178,7 @@ def _(DATA_ROOT, pd):
 
     print(f"Indices shape: {df_indices.shape}")
     print(f"Detections shape: {df_detections.shape}")
-    print(f"Environmental shape: {df_env.shape}")
+    print(f"Environmental shape: {df_env.shape}") 
     print(f"Temporal features shape: {df_temporal.shape}")
     return df_det_metadata, df_detections, df_env, df_indices, df_temporal
 

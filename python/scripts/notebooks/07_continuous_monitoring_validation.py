@@ -361,7 +361,7 @@ def _(df_analysis, index_cols_val, pd, spearmanr):
         'diel_high_fidelity': diel_high,
         'seasonal_high_fidelity': seasonal_high,
         'dual_fidelity': dual_fidelity
-    }
+    }  
     return (pattern_fidelity_results,)
 
 

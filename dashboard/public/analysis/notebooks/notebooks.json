@@ -44,6 +44,28 @@
     "fullMarkdown": "## Index-Manual Detection Concordance Analysis\n\n    Now we analyze whether acoustic indices capture the same temporal patterns as manual detections. This is the **critical validation** for using indices as proxies.\n\n    **Key Questions:**\n\n    1. Do acoustic indices show the same **diel patterns** as fish calling?\n    2. Do indices identify the same **seasonal peaks** (spawning periods)?\n    3. Can indices distinguish between **high/low activity periods**?\n    4. What would we conclude about fish activity using **indices alone**?\n\n    **Approach:**\n\n    - Calculate temporal patterns for selected acoustic indices\n    - Compare index patterns with manual detection patterns\n    - Assess pattern concordance using correlation and visual inspection"
   },
   {
+    "slug": "06_community_pattern_detection",
+    "title": "Community Pattern Detection",
+    "purpose": "Interactive marimo notebook: Community Pattern Detection",
+    "keyOutputs": "Analysis results and visualizations",
+    "description": "Interactive marimo notebook: Community Pattern Detection",
+    "filename": "06_community_pattern_detection.html",
+    "order": 6,
+    "lastModified": "2025-09-19T15:56:02.205Z",
+    "fullMarkdown": "## Data Loading and Preparation\n\n    Loading all processed datasets and preparing them for community-level analysis."
+  },
+  {
+    "slug": "07_continuous_monitoring_validation",
+    "title": "Continuous Monitoring Validation",
+    "purpose": "Interactive marimo notebook: Continuous Monitoring Validation",
+    "keyOutputs": "Analysis results and visualizations",
+    "description": "Interactive marimo notebook: Continuous Monitoring Validation",
+    "filename": "07_continuous_monitoring_validation.html",
+    "order": 7,
+    "lastModified": "2025-09-19T15:56:47.066Z",
+    "fullMarkdown": "## Data Loading and Preparation\n\n    Loading results from previous notebooks and preparing for continuous monitoring validation."
+  },
+  {
     "slug": "10_view_generation",
     "title": "View Generation",
     "purpose": "Interactive marimo notebook: View Generation",
