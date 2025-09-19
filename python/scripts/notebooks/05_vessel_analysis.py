@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -79,7 +79,6 @@ def _():
     print("Libraries loaded successfully")
     print(f"Data root: {DATA_ROOT}")
     print(f"Plot directory: {plot_dir}")
-
     return (
         DATA_ROOT,
         DecisionTreeClassifier,
@@ -144,7 +143,6 @@ def _(DATA_ROOT, pd):
     print(f"Loaded detections: {df_detections_aligned.shape}")
     print(f"Loaded environmental: {df_env_aligned.shape}")
     print(f"Loaded temporal features: {df_temporal.shape}")
-
     return (
         df_det_metadata,
         df_detections_aligned,
@@ -248,7 +246,6 @@ def _(
 
         vessel_presence_rate_final = df_full_final['vessel_present'].mean()
         print(f"Synthetic vessel presence rate: {vessel_presence_rate_final:.1%}")
-
     return df_full_final, fish_cols, index_cols, vessel_presence_rate_final
 
 
@@ -277,7 +274,7 @@ def _(
     cohen_kappa_score,
     confusion_matrix,
     cross_val_score,
-    df_full,
+    df_full_final,
     index_cols,
     mutual_info_classif,
     pd,
@@ -360,7 +357,6 @@ def _(
 
     # Save feature importance
     mi_importance.to_parquet(DATA_ROOT / "processed/05_vessel_feature_importance.parquet")
-
     return best_model_name, mi_importance, vessel_results, y_test_v
 
 
@@ -381,7 +377,6 @@ def _(
     auc,
     best_model_name,
     mi_importance,
-    np,
     plot_dir,
     plt,
     roc_curve,
@@ -435,7 +430,6 @@ def _(
     plt.show()
 
     print(f"Vessel detection visualizations saved to {plot_dir}")
-
     return
 
 
@@ -508,7 +502,6 @@ def _(DATA_ROOT, df_full_final, fish_cols, index_cols, np, pd, stats):
         corr_df_save.to_parquet(DATA_ROOT / "processed" / filename)
 
     correlation_improvement.to_parquet(DATA_ROOT / "processed/05_correlation_improvement.parquet")
-
     return (
         correlation_improvement,
         correlation_results,
@@ -580,8 +573,7 @@ def _(correlation_improvement, correlation_results, plot_dir, plt, sns):
     print("\nSpecies with Largest Correlation Changes when Vessel Periods Removed:")
     for species_name in species_improvement.tail(3).index:
         print(f"  - {species_name}: {species_improvement[species_name]:.3f}")
-
-    return species_improvement,
+    return
 
 
 @app.cell(hide_code=True)
@@ -699,7 +691,6 @@ def _(df_full_final, fish_cols, np, pd):
 
     print("\n3. Top 5 Optimal Monitoring Windows (High Signal-to-Noise):")
     print(optimal_windows[['month', 'hour', 'vessel_present', 'total_fish_activity', 'signal_to_noise']].head())
-
     return monitoring_windows_data, optimal_windows, temporal_analysis
 
 
@@ -716,14 +707,7 @@ def _(mo):
 
 
 @app.cell
-def _(
-    monitoring_windows_data,
-    optimal_windows,
-    plot_dir,
-    plt,
-    sns,
-    temporal_analysis,
-):
+def _(monitoring_windows_data, optimal_windows, plot_dir, plt, sns):
     # Create temporal stratification visualizations
     print("Creating temporal stratification visualizations...")
 
@@ -777,7 +761,6 @@ def _(
     plt.show()
 
     print(f"Temporal stratification visualizations saved to {plot_dir}")
-
     return
 
 
@@ -935,7 +918,6 @@ def _(
     """.format(improvement_pct))
 
     print("\nAnalysis complete! All results saved to processed data folder.")
-
     return
 
 
@@ -1010,8 +992,7 @@ def _(
     print("\nSpecies with Smallest Differences Between Vessel and Non-Vessel Periods:")
     for i, row in df_species_impacts_final.tail(3).iterrows():
         print(f"  - {row['species']}: {row['percent_change']:.1f}% difference (p={row['p_value']:.3f})")
-
-    return df_species_impacts_final,
+    return
 
 
 if __name__ == "__main__":

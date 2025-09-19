@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -28,7 +28,7 @@ def _():
 
         ### Community Metrics Design
         We create several aggregate metrics that summarize biological activity across all fish species:
-    
+
         - **Total activity**: Sum of calling intensities across all species (captures overall biological "energy")
         - **Number of active species**: Count of species calling in each period (community richness proxy)
         - **Maximum activity**: Peak calling intensity across species (dominant biological signal)
@@ -36,14 +36,14 @@ def _():
 
         ### Binary Classification Strategy
         Instead of predicting exact calling intensities (0-3 scale), we convert community activity into binary classification problems:
-    
+
         - **Any activity vs none**: Basic biological presence/absence detection
         - **High activity (75th/90th percentile)**: Periods of exceptional biological interest
         - **Multi-species active**: Complex community interactions vs single-species events
 
         ### Machine Learning Models
         We test multiple classification algorithms to find the best approach:
-    
+
         - **Logistic Regression**: Linear baseline, interpretable coefficients
         - **Decision Tree**: Non-linear, rule-based, highly interpretable
         - **Random Forest**: Ensemble method, handles feature interactions, robust to overfitting
@@ -51,7 +51,7 @@ def _():
 
         ### Evaluation Focus
         Rather than just accuracy, we emphasize **screening performance**:
-    
+
         - **Effort reduction**: How much manual work can be saved?
         - **Detection rate**: What percentage of biological activity is captured?
         - **Precision**: When the model flags a period, how often is it actually active?
@@ -59,7 +59,7 @@ def _():
         ## Why This Matters
 
         If acoustic indices can reliably detect periods of biological interest, they could serve as **intelligent screening tools** that guide targeted manual detection efforts. This would enable:
-    
+
         - **Continuous biological monitoring** at scales impossible with manual detection alone
         - **Efficient allocation of manual effort** to periods most likely to contain biological activity
         - **Early detection of biological events** like spawning aggregations or community shifts
@@ -119,7 +119,6 @@ def _():
     print("Libraries loaded successfully")
     print(f"Data root: {DATA_ROOT}")
     print(f"Plot directory: {plot_dir}")
-
     return (
         DATA_ROOT,
         DecisionTreeClassifier,
@@ -181,7 +180,6 @@ def _(DATA_ROOT, pd):
     print(f"Detections shape: {df_detections.shape}")
     print(f"Environmental shape: {df_env.shape}")
     print(f"Temporal features shape: {df_temporal.shape}")
-
     return df_det_metadata, df_detections, df_env, df_indices, df_temporal
 
 
@@ -223,7 +221,6 @@ def _(df_det_metadata, df_detections, df_env, df_indices, df_temporal):
     print(f"Master dataset shape: {df_master.shape}")
     print(f"Fish species columns ({len(fish_species)}): {fish_species}")
     print(f"Acoustic index columns ({len(index_cols)}): {index_cols[:5]}...")
-
     return df_master, fish_species, index_cols
 
 
@@ -316,7 +313,6 @@ def _(df_master, fish_species):
     print(f"High activity (90th): {df_community['high_activity_90th'].mean():.1%}")
     print(f"Any activity: {df_community['any_activity'].mean():.1%}")
     print(f"Multi-species active: {df_community['multi_species_active'].mean():.1%}")
-
     return (df_community,)
 
 
@@ -504,7 +500,6 @@ def _(
         model_results[target_name] = target_results
 
     print(f"\nModel training complete for {len(model_results)} targets")
-
     return X_scaled, df_modeling, model_results, modeling_cols, target_cols
 
 
@@ -560,7 +555,6 @@ def _(
 
         print(f"\nTop 5 features for {target_name_fi}:")
         print(importance_df.head())
-
     return (feature_importance_results,)
 
 
@@ -638,7 +632,6 @@ def _(df_community, index_cols, pd, spearmanr):
         }
 
     print(f"\nCross-station analysis complete for {len(station_consistency)} stations")
-
     return (
         diel_corr_df,
         diel_patterns,
@@ -766,7 +759,6 @@ def _(model_results, np):
         print(f"  Manual Effort Reduction: {results['effort_reduction']:.1%}")
         print(f"  Biological Detection Rate: {results['detection_rate']:.1%}")
         print(f"  Screening Precision: {results['screening_precision']:.1%}")
-
     return (screening_results,)
 
 
@@ -914,7 +906,6 @@ def _(
     plt.show()
 
     print(f"Community pattern visualizations saved to {plot_dir}")
-
     return
 
 
@@ -1082,7 +1073,7 @@ def _(
     2. Model flags ~{100 - best_screening_target[1]['effort_reduction']*100:.0f} hours as "high interest"
     3. Manual analysis of only those {100 - best_screening_target[1]['effort_reduction']*100:.0f} hours could potentially catch {best_screening_target[1]['detection_rate']:.0f}% of biological activity
     4. This approach could save {best_screening_target[1]['effort_reduction']:.0f}% of manual effort while missing {100-best_screening_target[1]['detection_rate']:.0f}% of activity
-    
+
     **Important caveat**: These projections are based on one study system and require validation across different
     environments, acoustic setups, and fish communities before operational deployment.
 
@@ -1149,7 +1140,7 @@ def _(
     **Study Scope**: Results based on {summary_results['community_metrics']['total_samples']:,} samples from
     one study system across a full annual cycle with multiple stations. While this provides a solid foundation,
     generalizability to other marine environments requires further investigation.
-    
+
     **Next Steps for Validation**:
     - Literature review of existing acoustic monitoring approaches
     - Cross-site validation with independent datasets
@@ -1158,7 +1149,6 @@ def _(
     """)
 
     print(f"\nAnalysis complete! All results saved to {DATA_ROOT}/processed/")
-
     return
 
 
@@ -1195,7 +1185,7 @@ def _(mo):
     ### The Bottom Line
 
     In this study system, acoustic indices show **promising potential** as biological screening tools. While they cannot replace manual detection, they may be able to **help guide when and where to apply manual effort**. However, this potential must be validated across different marine environments, fish communities, and operational contexts before concluding that they can improve the efficiency of acoustic monitoring programs more broadly.
-    
+
     **Critical next steps**: Cross-system validation, comparison with existing methods, and operational testing are essential before broader implementation.
     """
     )

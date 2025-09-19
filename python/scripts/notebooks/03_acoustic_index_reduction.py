@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -135,7 +135,6 @@ def _(data_dir, pd):
 
     # Load the metadata generated in Notebook 1
     # ...
-
     return (df_acoustic_indices,)
 
 
@@ -189,7 +188,6 @@ def _(df_acoustic_indices, pd):
         acoustic_index_cols = []
         df_indices = pd.DataFrame()
         print("Cannot identify acoustic indices - no data loaded")
-
     return acoustic_index_cols, df_indices
 
 
@@ -246,7 +244,6 @@ def _(df_indices, pd):
         high_corr_pairs = []
         high_corr_df = pd.DataFrame()
         print("Cannot calculate correlations - no index data available")
-
     return corr_matrix, correlation_threshold
 
 
@@ -370,7 +367,6 @@ def h_clustering(corr_matrix, fcluster, linkage, np, pd, squareform):
         cluster_df = pd.DataFrame()
         cluster_summary = pd.Series()
         print("Cannot perform clustering - no correlation data available")
-
     return (
         cluster_df,
         cluster_summary,
@@ -465,7 +461,6 @@ def _(
         df_indices_reduced = pd.DataFrame()
         df_indices_reduced_with_ids = pd.DataFrame()
         print("Cannot perform index reduction - no clustering data available")
-
     return (
         df_indices_reduced,
         df_indices_reduced_with_ids,
@@ -544,7 +539,6 @@ def _(
     else:
         index_metadata_df = pd.DataFrame()
         print("No cluster data available for metadata creation")
-
     return (index_metadata_df,)
 
 
@@ -612,7 +606,6 @@ def _(PCA, StandardScaler, df_indices, df_indices_reduced, np):
         pca_full = None
         pca_reduced = None
         print("Cannot perform PCA - no index data available")
-
     return cumvar_full, n_80, n_90, pca_components_full, pca_full
 
 
@@ -733,7 +726,6 @@ def _(df_indices, df_indices_reduced, np, pd, variance_inflation_factor):
 
     else:
         vif_reduced = pd.DataFrame()
-
     return (vif_reduced,)
 
 
@@ -867,7 +859,6 @@ def _(df_indices_reduced, pd, selected_indices):
         temporal_stats = {}
         decorrelation_lags = {}
         print("Cannot perform temporal analysis - no reduced index data available")
-
     return (autocorr_results,)
 
 
@@ -927,7 +918,6 @@ def _(autocorr_results, output_dir_plots, plt):
                    dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: temporal_autocorrelation.png")
-
     return
 
 
@@ -1025,7 +1015,6 @@ def _(data_dir, df_indices_reduced_with_ids, np, pd, selected_indices, stats):
         if not detection_file.exists():
             print(f"Detection file not found: {detection_file}")
         print("Vessel impact analysis skipped - focusing on index reduction")
-
     return env_corr_matrix, vessel_stats
 
 
@@ -1171,7 +1160,6 @@ def _(
         plt.show()
 
         print(f"Saved: index_analysis_overview.png")
-
     return
 
 
@@ -1220,7 +1208,6 @@ def _(
             plt.show()
 
             print(f"Saved: correlation_matrix_clustered.png")
-
     return
 
 
@@ -1259,7 +1246,6 @@ def _(df_indices, output_dir_plots, pca_components_full, pca_full, plt):
         plt.show()
 
         print(f"Saved: pca_biplot.png")
-
     return
 
 
@@ -1347,7 +1333,6 @@ def _(
         plt.show()
 
         print(f"Saved: vessel_impact_analysis.png")
-
     return
 
 
@@ -1376,7 +1361,6 @@ def _(env_corr_matrix, output_dir_plots, plt, sns):
         plt.show()
 
         print(f"Saved: index_environment_correlations.png")
-
     return
 
 
@@ -1469,7 +1453,6 @@ def _(
         print(f"  Indices analyzed: {summary_results.get('vessel_analysis_indices', 'N/A')}")
         print(f"  Large effects: {summary_results.get('large_vessel_effects', 'N/A')}")
         print(f"  Medium effects: {summary_results.get('medium_vessel_effects', 'N/A')}")
-
     return (summary_results,)
 
 
@@ -1585,7 +1568,6 @@ def _(
     print(f"  - 02_detections_aligned_2021.parquet (for fish calling data)")
     print(f"  - 02_environmental_aligned_2021.parquet (for environmental variables)")
     print(f"  - 02_temporal_features_2021.parquet (for temporal features)")
-
     return
 
 

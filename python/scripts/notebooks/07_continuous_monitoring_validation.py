@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -107,7 +107,6 @@ def _():
     print("Libraries loaded successfully")
     print(f"Data root: {DATA_ROOT}")
     print(f"Plot directory: {plot_dir}")
-
     return (
         DATA_ROOT,
         RandomForestClassifier,
@@ -164,7 +163,6 @@ def _(DATA_ROOT, pd, pickle):
     print(f"Acoustic indices shape: {df_indices_reduced.shape}")
     print(f"Environmental data shape: {df_env.shape}")
     print(f"Available community models: {list(community_models.keys())}")
-
     return df_community, df_det_metadata, df_indices_reduced
 
 
@@ -199,7 +197,6 @@ def _(df_community, df_det_metadata, df_indices_reduced):
         station_data = df_analysis[df_analysis['station'] == station]
         completeness = len(station_data) / (365 * 12)  # 365 days * 12 two-hour periods
         print(f"  Station {station}: {len(station_data):,} samples ({completeness:.1%} of theoretical maximum)")
-
     return df_analysis, index_cols_val
 
 
@@ -365,7 +362,6 @@ def _(df_analysis, index_cols_val, pd, spearmanr):
         'seasonal_high_fidelity': seasonal_high,
         'dual_fidelity': dual_fidelity
     }
-
     return (pattern_fidelity_results,)
 
 
@@ -551,7 +547,6 @@ def _(df_analysis, find_peaks, np):
                 print(f"{interval_name:15} - Correlation: {correlation:.3f}, RMSE: {rmse:.3f}, Months: {len(common_months)}")
 
     continuous_advantages['seasonal_accuracy'] = seasonal_accuracy
-
     return (continuous_advantages,)
 
 
@@ -743,7 +738,6 @@ def _(
                     print(f"    → {test_stn}: F1 = {f1:.3f}")
 
     transferability_results['models'] = model_transferability
-
     return (transferability_results,)
 
 
@@ -949,7 +943,6 @@ def _(
         'minimal_set': minimal_set,
         'optimal_set': optimal_set
     }
-
     return (optimization_results,)
 
 
@@ -1088,7 +1081,6 @@ def _(
         plt.show()
 
     print(f"Continuous monitoring validation visualizations saved to {plot_dir}")
-
     return
 
 
@@ -1290,7 +1282,6 @@ def _(
     """)
 
     print(f"\nAnalysis complete! All validation results saved to {DATA_ROOT}/processed/")
-
     return
 
 

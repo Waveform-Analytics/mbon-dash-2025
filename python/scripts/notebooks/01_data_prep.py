@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -49,7 +49,6 @@ def _():
     print(f"Raw data directory: {DATA_DIR}")
     print(f"Output directory: {OUTPUT_DIR}")
     print(f"Analysis year: {YEAR}")
-
     return DATA_DIR, OUTPUT_DIR, STATIONS, YEAR, mo, np, pd, plt, sns
 
 
@@ -174,7 +173,6 @@ def _(DATA_DIR, detection_data, pd):
         print(f"⚠️ Metadata file not found: {metadata_path}")
         print("Proceeding without species filtering")
         metadata_df = pd.DataFrame()  # Create empty df if file not found
-
     return (metadata_df,)
 
 
@@ -1070,7 +1068,6 @@ def _(DATA_DIR, metadata_df, pd):
             print(f"  - {cat}: {count} indices")
     else:
         print(f"✗ Index categories not found: {index_csv_path}")
-
     return (metadata_data,)
 
 

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
@@ -122,7 +122,6 @@ def _(data_dir_proc, pd):
         else:
             print("Warning: No fish columns found in detection data!")
             fish_cols = []
-
     return df_detections, df_env, df_indices_reduced, fish_cols
 
 
@@ -192,7 +191,6 @@ def _(df_detections, fish_cols, np):
     else:
         calling_stats = {}
         print("No fish detection data available")
-
     return (calling_stats,)
 
 
@@ -242,7 +240,6 @@ def _(df_detections, pd):
 
     else:
         df_detections_temporal = pd.DataFrame()
-
     return (df_detections_temporal,)
 
 
@@ -291,7 +288,6 @@ def _(df_detections_temporal, fish_cols, output_dir_plots, plt):
         plt.savefig(output_dir_plots / 'diel_calling_patterns.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: diel_calling_patterns.png")
-
     return
 
 
@@ -334,7 +330,6 @@ def _(df_detections_temporal, fish_cols, output_dir_plots, plt):
             month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             print(f"{species_peak}: Peak in {month_names[peak_month-1]} (intensity: {peak_value_months:.3f})")
-
     return
 
 
@@ -385,7 +380,6 @@ def _(data_dir_proc, df_detections, df_indices_reduced):
     print(f"\nData alignment check:")
     print(f"Indices temporal resolution: {len(df_indices_reduced)} observations")
     print(f"Detections temporal resolution: {len(df_detections)} observations")
-
     return (selected_indices,)
 
 
@@ -419,7 +413,6 @@ def _(
     else:
         df_combined = pd.DataFrame()
         print("Cannot create combined dataset - missing data")
-
     return (df_combined,)
 
 
@@ -453,7 +446,6 @@ def _(df_combined, selected_indices):
     else:
         index_hourly_patterns = {}
         print("No combined data available for index analysis")
-
     return (index_hourly_patterns,)
 
 
@@ -517,7 +509,6 @@ def _(df_combined, fish_cols, index_hourly_patterns, output_dir_plots, plt):
         plt.savefig(output_dir_plots / 'diel_concordance_comparison.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: diel_concordance_comparison.png")
-
     return
 
 
@@ -578,7 +569,6 @@ def _(df_combined, fish_cols, pd, selected_indices):
         correlation_matrix = pd.DataFrame()
         correlations_df = pd.DataFrame()
         print("No data available for correlation analysis")
-
     return correlation_matrix, correlations_df
 
 
@@ -603,7 +593,6 @@ def _(correlation_matrix, output_dir_plots, plt, sns):
         plt.savefig(output_dir_plots / 'index_fish_correlation_matrix.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: index_fish_correlation_matrix.png")
-
     return
 
 
@@ -657,7 +646,6 @@ def _(df_combined, fish_cols, np, pd):
 
     else:
         print("No data available for community analysis")
-
     return
 
 
@@ -726,7 +714,6 @@ def _(df_combined, output_dir_plots, plt, selected_indices):
         plt.savefig(output_dir_plots / 'community_patterns.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: community_patterns.png")
-
     return
 
 
@@ -772,7 +759,6 @@ def _(df_combined, df_env, pd):
     else:
         df_combined_env = df_combined.copy()
         print("Environmental data not available")
-
     return (df_combined_env,)
 
 
@@ -829,7 +815,6 @@ def _(df_combined_env, fish_cols, np, output_dir_plots, pd, plt):
         plt.savefig(output_dir_plots / 'temperature_calling_relationships.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: temperature_calling_relationships.png")
-
     return
 
 
@@ -895,7 +880,6 @@ def _(df_combined_env, fish_cols, output_dir_plots, plt):
         plt.savefig(output_dir_plots / 'station_comparisons.png', dpi=300, bbox_inches='tight')
         plt.show()
         print("Saved: station_comparisons.png")
-
     return
 
 
@@ -994,7 +978,6 @@ def _(
 
     else:
         mo.md("## Summary: Insufficient data for concordance analysis")
-
     return
 
 
@@ -1068,7 +1051,6 @@ def _(DATA_ROOT, df_combined, fish_cols, pd, selected_indices):
     else:
         print("Insufficient data for seasonal diel pattern generation")
         df_seasonal_diel = pd.DataFrame()
-
     return
 
 
@@ -1084,7 +1066,6 @@ def _(correlation_matrix, correlations_df, data_dir_proc):
         if not correlations_df.empty:
             correlations_df.to_parquet(data_dir_proc / "04_correlation_statistics.parquet")
             print(f"Saved correlation statistics: {data_dir_proc / '04_correlation_statistics.parquet'}")
-
     return
 
 
