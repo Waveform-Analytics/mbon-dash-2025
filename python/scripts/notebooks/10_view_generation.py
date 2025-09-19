@@ -808,7 +808,6 @@ def _(DATA_ROOT, VIEWS_FOLDER, json, pd):
         print(f"Error generating community screening dashboard data: {e}")
         import traceback
         traceback.print_exc()
-
     return
 
 

@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import { useViewData } from '@/lib/data';
+import BaseHeatmap, { ProcessedDataPoint } from './heatmaps/BaseHeatmap';
+import { MIDNIGHT_CENTERED_Y_AXIS } from './heatmaps/configs/axisConfigs';
 
 interface TimelineEntry {
   datetime: string;
@@ -111,7 +113,6 @@ const CommunityScreeningDashboard: React.FC = () => {
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [timelineView, setTimelineView] = useState<'activity' | 'predictions' | 'accuracy'>('activity');
   
-  const timelineRef = useRef<SVGSVGElement>(null);
   const metricsRef = useRef<SVGSVGElement>(null);
   const modelsRef = useRef<SVGSVGElement>(null);
   const featuresRef = useRef<SVGSVGElement>(null);
@@ -139,10 +140,121 @@ const CommunityScreeningDashboard: React.FC = () => {
     );
   }, [data, selectedTarget, selectedThreshold]);
 
-  useEffect(() => {
-    if (!filteredData || !timelineRef.current) return;
-    drawTimelineChart();
-  }, [filteredData, selectedTarget, selectedStation, timelineView, selectedThreshold]);
+  // Transform timeline data for heatmap component
+  const timelineHeatmapData = useMemo(() => {
+    if (!filteredData) return [];
+    
+    return filteredData.timeline_data.map(d => {
+      let value: number;
+      
+      if (timelineView === 'activity') {
+        // View 1: Actual activity intensity
+        const isActive = d.activity_flags[selectedTarget as keyof typeof d.activity_flags];
+        value = isActive ? d.actual_community_activity.total_fish_activity : 0;
+      } else if (timelineView === 'predictions') {
+        // View 2: Model predictions (binary: 0 or 1)
+        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
+        value = probability >= selectedThreshold ? 1 : 0;
+      } else {
+        // View 3: Prediction accuracy (categorical: 0-3)
+        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
+        const isPredictedActive = probability >= selectedThreshold;
+        const isActuallyActive = d.activity_flags[selectedTarget as keyof typeof d.activity_flags];
+        
+        if (isPredictedActive && isActuallyActive) {
+          value = 3; // True positive (correct prediction)
+        } else if (isPredictedActive && !isActuallyActive) {
+          value = 1; // False positive (false alarm)
+        } else if (!isPredictedActive && isActuallyActive) {
+          value = 2; // False negative (missed opportunity)
+        } else {
+          value = 0; // True negative (correctly identified as inactive)
+        }
+      }
+      
+      return {
+        day: d.day_of_year,
+        hour: d.hour,
+        value: value,
+        date: new Date(d.datetime),
+        originalData: d // Store original data for tooltips
+      } as ProcessedDataPoint & { originalData: TimelineEntry };
+    });
+  }, [filteredData, selectedTarget, timelineView, selectedThreshold]);
+  
+  // Create color schemes for different views
+  const getColorConfig = useMemo(() => {
+    if (timelineView === 'activity') {
+      // Activity view: sequential scale from low to high
+      const maxActivity = Math.max(...timelineHeatmapData.map(d => d.value), 1);
+      return {
+        colorScheme: 'rdylbu' as const,
+        reverseColorScale: true,
+        colorDomain: [0, maxActivity] as [number, number],
+        legendLabel: 'Fish Activity Level'
+      };
+    } else if (timelineView === 'predictions') {
+      // Predictions view: binary (flagged vs not flagged)
+      return {
+        colorScale: (value: number) => value >= 1 ? '#2563eb' : '#e5e7eb', // Blue for flagged, light gray for not flagged
+        colorDomain: [0, 1] as [number, number],
+        legendLabel: 'Model Decision'
+      };
+    } else {
+      // Accuracy view: categorical colors
+      return {
+        colorScale: (value: number) => {
+          if (value === 3) return '#22c55e'; // Green: True positive
+          if (value === 1) return '#ef4444'; // Red: False positive
+          if (value === 2) return '#f59e0b'; // Orange: False negative
+          return '#6b7280'; // Gray: True negative
+        },
+        colorDomain: [0, 3] as [number, number],
+        legendLabel: 'Prediction Accuracy'
+      };
+    }
+  }, [timelineView, timelineHeatmapData]);
+  
+  // Custom tooltip formatter
+  const formatTooltip = useMemo(() => {
+    return (d: ProcessedDataPoint & { originalData?: TimelineEntry }) => {
+      const original = d.originalData;
+      if (!original) return `Date: ${d.date.toLocaleDateString()}<br/>Hour: ${d.hour}:00<br/>Value: ${d.value}`;
+      
+      const baseInfo = `<strong>Date:</strong> ${new Date(original.datetime).toLocaleDateString()}<br/>
+                        <strong>Hour:</strong> ${original.hour}:00<br/>
+                        <strong>Station:</strong> ${original.station}`;
+      
+      if (timelineView === 'activity') {
+        return `${baseInfo}<br/>
+                <strong>Total Fish Activity:</strong> ${original.actual_community_activity.total_fish_activity}<br/>
+                <strong>Active Species:</strong> ${original.actual_community_activity.num_active_species}<br/>
+                <strong>Water Temp:</strong> ${original.environmental_context.water_temp?.toFixed(1) || 'N/A'}°C`;
+      } else if (timelineView === 'predictions') {
+        const probability = original.model_probabilities[selectedTarget]?.probability || 0;
+        const isPredictedActive = probability >= selectedThreshold;
+        return `${baseInfo}<br/>
+                <strong>Model Probability:</strong> ${(probability * 100).toFixed(1)}%<br/>
+                <strong>Model Decision:</strong> ${isPredictedActive ? 'Flag for review' : 'Skip'}<br/>
+                <strong>Threshold:</strong> ${(selectedThreshold * 100).toFixed(0)}%`;
+      } else {
+        const probability = original.model_probabilities[selectedTarget]?.probability || 0;
+        const isPredictedActive = probability >= selectedThreshold;
+        const isActuallyActive = original.activity_flags[selectedTarget as keyof typeof original.activity_flags];
+        
+        let resultType = '';
+        if (isPredictedActive && isActuallyActive) resultType = 'Correct: True Positive';
+        else if (isPredictedActive && !isActuallyActive) resultType = 'False Alarm';
+        else if (!isPredictedActive && isActuallyActive) resultType = 'Missed Opportunity';
+        else resultType = 'Correct: True Negative';
+        
+        return `${baseInfo}<br/>
+                <strong>Result:</strong> ${resultType}<br/>
+                <strong>Model Probability:</strong> ${(probability * 100).toFixed(1)}%<br/>
+                <strong>Actually Active:</strong> ${isActuallyActive ? 'Yes' : 'No'}`;
+      }
+    };
+  }, [timelineView, selectedTarget, selectedThreshold]);
 
   useEffect(() => {
     if (!data || !metricsRef.current) return;
@@ -159,169 +271,6 @@ const CommunityScreeningDashboard: React.FC = () => {
     drawFeatureImportance();
   }, [data, selectedTarget]);
 
-  const drawTimelineChart = () => {
-    if (!filteredData || !timelineRef.current) return;
-
-    const svg = d3.select(timelineRef.current);
-    svg.selectAll('*').remove();
-
-    const margin = { top: 20, right: 20, bottom: 40, left: 60 };
-    const width = 800 - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
-
-    const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Scales
-    const xScale = d3.scaleLinear()
-      .domain(d3.extent(filteredData.timeline_data, d => d.day_of_year) as [number, number])
-      .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-      .domain([0, 23])
-      .range([height, 0]);
-
-    // Define color scales for different views
-    let colorScale: (d: any) => string;
-    let getTooltipContent: (d: any) => string;
-    
-    if (timelineView === 'activity') {
-      // View 1: Actual activity intensity
-      const activityScale = d3.scaleSequential(d3.interpolateRdYlBu)
-        .domain([0, d3.max(filteredData.timeline_data, d => d.actual_community_activity.total_fish_activity) || 1]);
-      
-      colorScale = (d) => {
-        const isActive = d.activity_flags[selectedTarget as keyof typeof d.activity_flags];
-        return isActive ? activityScale(d.actual_community_activity.total_fish_activity) : '#f0f0f0';
-      };
-      
-      getTooltipContent = (d) => `
-        <strong>Date:</strong> ${new Date(d.datetime).toLocaleDateString()}<br/>
-        <strong>Hour:</strong> ${d.hour}:00<br/>
-        <strong>Station:</strong> ${d.station}<br/>
-        <strong>Total Fish Activity:</strong> ${d.actual_community_activity.total_fish_activity}<br/>
-        <strong>Active Species:</strong> ${d.actual_community_activity.num_active_species}<br/>
-        <strong>Water Temp:</strong> ${d.environmental_context.water_temp?.toFixed(1) || 'N/A'}°C
-      `;
-      
-    } else if (timelineView === 'predictions') {
-      // View 2: AI predictions at current threshold
-      colorScale = (d) => {
-        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
-        const isPredictedActive = probability >= selectedThreshold;
-        return isPredictedActive ? '#2563eb' : '#e5e7eb'; // Blue for flagged, light gray for not flagged
-      };
-      
-      getTooltipContent = (d) => {
-        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
-        const isPredictedActive = probability >= selectedThreshold;
-        return `
-          <strong>Date:</strong> ${new Date(d.datetime).toLocaleDateString()}<br/>
-          <strong>Hour:</strong> ${d.hour}:00<br/>
-          <strong>Station:</strong> ${d.station}<br/>
-          <strong>Model Probability:</strong> ${(probability * 100).toFixed(1)}%<br/>
-          <strong>Model Decision:</strong> ${isPredictedActive ? 'Flag for review' : 'Skip'}<br/>
-          <strong>Threshold:</strong> ${(selectedThreshold * 100).toFixed(0)}%
-        `;
-      };
-      
-    } else {
-      // View 3: Prediction accuracy
-      colorScale = (d) => {
-        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
-        const isPredictedActive = probability >= selectedThreshold;
-        const isActuallyActive = d.activity_flags[selectedTarget as keyof typeof d.activity_flags];
-        
-        if (isPredictedActive && isActuallyActive) {
-          return '#22c55e'; // Green: True positive (correct prediction)
-        } else if (isPredictedActive && !isActuallyActive) {
-          return '#ef4444'; // Red: False positive (false alarm)
-        } else if (!isPredictedActive && isActuallyActive) {
-          return '#f59e0b'; // Orange: False negative (missed opportunity)
-        } else {
-          return '#6b7280'; // Gray: True negative (correctly identified as inactive)
-        }
-      };
-      
-      getTooltipContent = (d) => {
-        const probability = d.model_probabilities[selectedTarget]?.probability || 0;
-        const isPredictedActive = probability >= selectedThreshold;
-        const isActuallyActive = d.activity_flags[selectedTarget as keyof typeof d.activity_flags];
-        
-        let resultType = '';
-        if (isPredictedActive && isActuallyActive) resultType = 'Correct: True Positive';
-        else if (isPredictedActive && !isActuallyActive) resultType = 'False Alarm';
-        else if (!isPredictedActive && isActuallyActive) resultType = 'Missed Opportunity';
-        else resultType = 'Correct: True Negative';
-        
-        return `
-          <strong>Date:</strong> ${new Date(d.datetime).toLocaleDateString()}<br/>
-          <strong>Hour:</strong> ${d.hour}:00<br/>
-          <strong>Station:</strong> ${d.station}<br/>
-          <strong>Result:</strong> ${resultType}<br/>
-          <strong>Model Probability:</strong> ${(probability * 100).toFixed(1)}%<br/>
-          <strong>Actually Active:</strong> ${isActuallyActive ? 'Yes' : 'No'}
-        `;
-      };
-    }
-
-    // Add cells
-    g.selectAll('.timeline-cell')
-      .data(filteredData.timeline_data)
-      .enter().append('rect')
-      .attr('class', 'timeline-cell')
-      .attr('x', d => xScale(d.day_of_year) - 2)
-      .attr('y', d => yScale(d.hour) - 6)
-      .attr('width', 4)
-      .attr('height', 12)
-      .attr('fill', colorScale)
-      .attr('stroke', '#333')
-      .attr('stroke-width', 0.2)
-      .on('mouseover', function(event, d) {
-        const tooltip = d3.select('body').append('div')
-          .attr('class', 'screening-tooltip')
-          .style('position', 'absolute')
-          .style('padding', '10px')
-          .style('background', 'rgba(0, 0, 0, 0.8)')
-          .style('color', 'white')
-          .style('border-radius', '5px')
-          .style('pointer-events', 'none')
-          .style('opacity', 0)
-          .style('z-index', 9999);
-
-        tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip.html(getTooltipContent(d))
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 28) + 'px');
-      })
-      .on('mouseout', function() {
-        d3.selectAll('.screening-tooltip').remove();
-      });
-
-    // Add axes
-    g.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale).tickFormat(d => {
-        const date = new Date(2021, 0, d);
-        return d3.timeFormat('%b')(date);
-      }))
-      .append('text')
-      .attr('x', width / 2)
-      .attr('y', 35)
-      .attr('fill', 'black')
-      .style('text-anchor', 'middle')
-      .text('Day of Year');
-
-    g.append('g')
-      .call(d3.axisLeft(yScale).tickFormat(d => `${d}:00`))
-      .append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', -40)
-      .attr('x', -height / 2)
-      .attr('fill', 'black')
-      .style('text-anchor', 'middle')
-      .text('Hour of Day');
-  };
 
   const drawMetricsChart = () => {
     if (!data || !metricsRef.current) return;
@@ -550,7 +499,7 @@ const CommunityScreeningDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-accent-foreground">
           <div>
             <p>
-              <strong>Not identifying species</strong> - just detecting "something biological happening" vs "ocean noise."
+              <strong>Not identifying species</strong> - just detecting &quot;something biological happening&quot; vs &quot;ocean noise.&quot;
               The machine learning model learns patterns in acoustic properties that indicate when fish are active.
             </p>
           </div>
@@ -562,7 +511,7 @@ const CommunityScreeningDashboard: React.FC = () => {
           </div>
         </div>
         <div className="mt-3 text-sm text-accent-foreground/80">
-          <strong>How to explore:</strong> (1) Start with "Activity View" to see ground truth → (2) Switch to "Model Flags" to see screening → (3) Check "Accuracy" to evaluate performance → (4) Adjust sensitivity and repeat.
+          <strong>How to explore:</strong> (1) Start with &quot;Activity View&quot; to see ground truth → (2) Switch to &quot;Model Flags&quot; to see screening → (3) Check &quot;Accuracy&quot; to evaluate performance → (4) Adjust sensitivity and repeat.
         </div>
       </div>
       
@@ -713,8 +662,14 @@ const CommunityScreeningDashboard: React.FC = () => {
               {timelineView === 'accuracy' && 'Green=correct, Red=false alarm, Orange=missed opportunity, Gray=correct negative'}
             </div>
           </div>
-          <div className="w-full overflow-x-auto">
-            <svg ref={timelineRef} width={800} height={300} />
+          <div className="w-full">
+            <BaseHeatmap
+              data={timelineHeatmapData}
+              height={350}
+              yAxisConfig={MIDNIGHT_CENTERED_Y_AXIS}
+              formatTooltip={formatTooltip}
+              {...getColorConfig}
+            />
           </div>
         </div>
 

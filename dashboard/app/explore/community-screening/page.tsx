@@ -43,8 +43,8 @@ export default function CommunityScreeningPage() {
             </div>
             <p className="text-muted-foreground mb-4">
               This page shows how well machine learning can screen underwater recordings for biological activity. Instead of 
-              listening to every recording manually, ML models can detect patterns that suggest "something biological happening" 
-              versus just "ocean noise," helping researchers focus their efforts on the most interesting periods.
+              listening to every recording manually, ML models can detect patterns that suggest &quot;something biological happening&quot; 
+              versus just &quot;ocean noise,&quot; helping researchers focus their efforts on the most interesting periods.
             </p>
             <div className="bg-accent/30 border border-accent rounded-md p-4 mb-4">
               <h3 className="font-medium text-accent-foreground mb-2">Try the Interactive Demo:</h3>
@@ -54,7 +54,7 @@ export default function CommunityScreeningPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="bg-accent p-3 rounded-md">
-                <strong className="text-accent-foreground">Activity View:</strong> Shows actual fish activity throughout the year - this is the ground truth we're trying to detect.
+                <strong className="text-accent-foreground">Activity View:</strong> Shows actual fish activity throughout the year - this is the ground truth we&apos;re trying to detect.
               </div>
               <div className="bg-secondary p-3 rounded-md">
                 <strong className="text-secondary-foreground">Model Flags View:</strong> Shows what periods the ML model would flag for manual review at your chosen sensitivity level.
@@ -148,7 +148,7 @@ export default function CommunityScreeningPage() {
                 <ul className="space-y-2 text-muted-foreground">
                   <li>• Individual species have weak, irregular calling patterns</li>
                   <li>• Aggregating across species amplifies consistent biological signals</li>
-                  <li>• Matches practical monitoring needs: "when to listen" vs "exactly which species"</li>
+                  <li>• Matches practical monitoring needs: &quot;when to listen&quot; vs &quot;exactly which species&quot;</li>
                   <li>• Enables continuous monitoring at ecosystem scales</li>
                 </ul>
               </div>
