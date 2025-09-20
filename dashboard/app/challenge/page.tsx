@@ -150,9 +150,9 @@ export default function ChallengePage() {
             <div className="flex items-center mb-6">
               <BarChart3 className="h-8 w-8 text-primary mr-3" />
               <div>
-                <h2 className="text-2xl font-bold text-card-foreground">MBON&apos;s Vision</h2>
+                <h2 className="text-2xl font-bold text-card-foreground">MBON&apos;s Mission</h2>
                 <p className="text-muted-foreground">
-                  Marine Biodiversity Observation Network seeks scalable monitoring approaches
+                  A global collaborative initiative for effective marine biodiversity management
                 </p>
               </div>
             </div>
@@ -160,22 +160,23 @@ export default function ChallengePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <p className="text-card-foreground mb-4">
-                  The <strong>Marine Biodiversity Observation Network (MBON)</strong> recognizes that effective 
-                  marine conservation requires monitoring approaches that can scale across different regions 
-                  and research contexts.
+                  The <strong>Marine Biodiversity Observation Network (MBON)</strong> is a growing global 
+                  initiative composed of regional networks of scientists, resource managers, and end-users 
+                  working to integrate data from existing long-term programs.
                 </p>
                 <p className="text-muted-foreground">
-                  This project uses ESONS data as a high-quality test case to explore whether automated 
-                  screening approaches could enable broader-scale marine biodiversity monitoring.
+                  This project demonstrates how innovative approaches can improve our understanding of 
+                  changes and connections between marine biodiversity and ecosystem functions—directly 
+                  supporting MBON&apos;s core mission.
                 </p>
               </div>
               <div className="bg-card/50 rounded-lg p-6">
-                <h3 className="font-semibold text-card-foreground mb-3">The Vision</h3>
+                <h3 className="font-semibold text-card-foreground mb-3">Key Goals</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• <strong>Ecosystem-scale monitoring</strong> with limited human resources</li>
-                  <li>• <strong>Cross-regional applications</strong> for diverse marine environments</li>
-                  <li>• <strong>Management-relevant</strong> information at actionable scales</li>
-                  <li>• <strong>Community-level insights</strong> for ecosystem health assessment</li>
+                  <li>• <strong>Data Integration:</strong> Connect existing long-term monitoring programs</li>
+                  <li>• <strong>Global Networks:</strong> Foster collaboration across regional networks</li>
+                  <li>• <strong>Biodiversity-Function Links:</strong> Understand ecosystem connections</li>
+                  <li>• <strong>Management Support:</strong> Provide actionable information for conservation</li>
                 </ul>
               </div>
             </div>
