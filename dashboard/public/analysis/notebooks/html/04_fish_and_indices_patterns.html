@@ -66,7 +66,154 @@
     window.__MARIMO_STATIC__ = {};
     window.__MARIMO_STATIC__.files = {};
 </script>
-</head>
+
+    <style id="mbon-code-collapse">
+      /* Hide all code cells by default */
+      .marimo-cell-code, 
+      [data-testid="code-editor"], 
+      .cm-editor,
+      .marimo-cell-editor {
+        display: none !important;
+      }
+      
+      /* Show code when explicitly expanded */
+      .marimo-cell.mbon-code-expanded .marimo-cell-code,
+      .marimo-cell.mbon-code-expanded [data-testid="code-editor"],
+      .marimo-cell.mbon-code-expanded .cm-editor,
+      .marimo-cell.mbon-code-expanded .marimo-cell-editor {
+        display: block !important;
+      }
+      
+      /* Toggle button styling */
+      .mbon-code-toggle {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        margin: 8px 0;
+        color: #475569;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mbon-code-toggle:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #334155;
+      }
+      .mbon-code-toggle:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+      
+      /* Icon styling */
+      .mbon-code-icon {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+    </style>
+  
+    <script id="mbon-code-collapse-script">
+      // Wait for page to load and marimo to initialize
+      window.addEventListener('load', function() {
+        // Use multiple checks to ensure marimo is ready
+        let attempts = 0;
+        const maxAttempts = 20;
+        
+        function initializeCodeCollapse() {
+          attempts++;
+          
+          // Check if marimo content is loaded
+          const marimoRoot = document.querySelector('#root');
+          const hasMarimoContent = marimoRoot && marimoRoot.children.length > 0;
+          
+          if (hasMarimoContent || attempts >= maxAttempts) {
+            addCodeToggleButtons();
+          } else {
+            // Wait a bit more for marimo to initialize
+            setTimeout(initializeCodeCollapse, 200);
+          }
+        }
+        
+        // Start initialization after a short delay
+        setTimeout(initializeCodeCollapse, 500);
+      });
+      
+      function addCodeToggleButtons() {
+        // Multiple selectors to catch different marimo versions
+        const cellSelectors = [
+          '.marimo-cell',
+          '[data-testid="marimo-cell"]',
+          '.cell',
+          '[class*="cell"]'
+        ];
+        
+        let cellsFound = [];
+        
+        // Try each selector
+        cellSelectors.forEach(selector => {
+          const cells = document.querySelectorAll(selector);
+          if (cells.length > 0) {
+            cellsFound = Array.from(cells);
+          }
+        });
+        
+        // Fallback: look for code editors directly
+        if (cellsFound.length === 0) {
+          const codeEditors = document.querySelectorAll('.cm-editor, [data-testid="code-editor"]');
+          codeEditors.forEach(editor => {
+            // Find parent container that might be the cell
+            let cell = editor.closest('div[class*="cell"]') || editor.parentElement;
+            while (cell && !cell.classList.contains('marimo-cell') && cell.parentElement) {
+              cell = cell.parentElement;
+            }
+            if (cell) cellsFound.push(cell);
+          });
+        }
+        
+        console.log('MBON: Found', cellsFound.length, 'potential code cells');
+        
+        cellsFound.forEach(function(cell, index) {
+          // Check if this cell has code content
+          const hasCode = cell.querySelector('.cm-editor, [data-testid="code-editor"], .marimo-cell-code, .marimo-cell-editor');
+          
+          if (hasCode && !cell.querySelector('.mbon-code-toggle')) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'mbon-code-toggle';
+            toggleBtn.setAttribute('aria-label', 'Toggle code visibility');
+            toggleBtn.setAttribute('type', 'button');
+            
+            // Add icon and text
+            toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/></svg>Show Code';
+            
+            toggleBtn.onclick = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              if (cell.classList.contains('mbon-code-expanded')) {
+                cell.classList.remove('mbon-code-expanded');
+                toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/></svg>Show Code';
+              } else {
+                cell.classList.add('mbon-code-expanded');
+                toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>Hide Code';
+              }
+            };
+            
+            // Insert toggle button at the beginning of the cell
+            cell.insertBefore(toggleBtn, cell.firstChild);
+            console.log('MBON: Added toggle button to cell', index + 1);
+          }
+        });
+        
+        console.log('MBON: Code collapse initialization complete');
+      }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
     <!-- This is a portal for the data editor to render in -->

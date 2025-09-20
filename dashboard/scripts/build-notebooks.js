@@ -332,12 +332,7 @@ function cleanMarimoHtml(htmlContent) {
             toggleBtn.setAttribute('type', 'button');
             
             // Add icon and text
-            toggleBtn.innerHTML = `
-              <svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/>
-              </svg>
-              Show Code
-            `;
+            toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/></svg>Show Code';
             
             toggleBtn.onclick = function(e) {
               e.preventDefault();
@@ -345,20 +340,10 @@ function cleanMarimoHtml(htmlContent) {
               
               if (cell.classList.contains('mbon-code-expanded')) {
                 cell.classList.remove('mbon-code-expanded');
-                toggleBtn.innerHTML = `
-                  <svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/>
-                  </svg>
-                  Show Code
-                `;
+                toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 4.854a.5.5 0 1 0-.708-.708l-3.5 3.5a.5.5 0 0 0 0 .708l3.5 3.5a.5.5 0 0 0 .708-.708L2.707 8l3.147-3.146zm4.292 0a.5.5 0 0 1 .708-.708l3.5 3.5a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708-.708L13.293 8l-3.147-3.146z"/></svg>Show Code';
               } else {
                 cell.classList.add('mbon-code-expanded');
-                toggleBtn.innerHTML = `
-                  <svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
-                  </svg>
-                  Hide Code
-                `;
+                toggleBtn.innerHTML = '<svg class="mbon-code-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>Hide Code';
               }
             };
             
