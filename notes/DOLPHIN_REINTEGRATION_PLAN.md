@@ -4,12 +4,23 @@
 ## Overview
 Dolphins were filtered out early in the analysis (around notebooks 2-3), but they should be part of the complete marine biological community. This plan systematically adds them back through the existing pipeline, culminating in comparative modeling (fish-only vs full marine community) in notebook 6.
 
+## Key Challenge: Metric Incompatibility
+**Fish vs Dolphin Measurements:**
+- **Fish**: Intensity scale 0-3 (0=absent, 1=one, 2=more than one, 3=chorus)
+- **Dolphins**: Raw counts (unbounded integers for echolocation, whistles, burst pulses)
+
+**Solution: Hybrid Approach**
+- **Preserve fish intensity scale** (keeps existing analysis intact)
+- **Convert dolphin counts to comparable 0-3 intensity scale**
+- **Combine all dolphin types** (echolocation + whistles + burst pulses = total dolphin activity)
+
 ## Strategy
 1. **Work through existing notebooks sequentially** - modify to include dolphins
 2. **Keep existing fish-only analysis** - don't break what's working
-3. **Add dolphins to create full marine community metrics** 
-4. **Comparative modeling in notebook 6** - fish-only vs marine community
-5. **Dashboard updates** - only if comparative results are compelling
+3. **Add dolphin intensity conversion** - make metrics comparable
+4. **Add dolphins to create full marine community metrics** 
+5. **Comparative modeling in notebook 6** - fish-only vs marine community
+6. **Dashboard updates** - only if comparative results are compelling
 
 ---
 
