@@ -313,7 +313,7 @@ def _(df_master, fish_species):
     print(f"High activity (90th): {df_community['high_activity_90th'].mean():.1%}")
     print(f"Any activity: {df_community['any_activity'].mean():.1%}")
     print(f"Multi-species active: {df_community['multi_species_active'].mean():.1%}")
-    return (df_community,)
+    return df_community, total_activity_75th, total_activity_90th
 
 
 @app.cell(hide_code=True)
@@ -558,6 +558,111 @@ def _(
     return (feature_importance_results,)
 
 
+@app.cell
+def _(DATA_ROOT, pd):
+    # Load all processed datasets
+    print("Loading processed datasets...")
+
+    # Load reduced acoustic indices from Notebook 3
+    df_indices = pd.read_parquet(DATA_ROOT / "processed/03_reduced_acoustic_indices.parquet")
+
+    # Load aligned detections
+    df_detections = pd.read_parquet(DATA_ROOT / "processed/02_detections_aligned_2021.parquet")
+
+    # Load environmental data
+    df_env = pd.read_parquet(DATA_ROOT / "processed/02_environmental_aligned_2021.parquet")
+
+    # Load temporal features
+    df_temporal = pd.read_parquet(DATA_ROOT / "processed/02_temporal_features_2021.parquet")
+
+    # Load detection metadata to identify fish species
+    df_det_metadata = pd.read_parquet(DATA_ROOT / "processed/metadata/01_detection_columns.parquet")
+    return df_det_metadata, df_detections, df_env, df_indices, df_temporal
+
+
+@app.cell
+def _(df_community, fish_species):
+    # 1. Total fish activity (sum across all species)
+    df_community['total_fish_activity'] = df_community[fish_species].sum(axis=1)
+
+    # 2. Number of active species (how many species detected)
+    df_community['num_active_species'] = (df_community[fish_species] > 0).sum(axis=1)
+
+    # 3. Maximum species activity (highest calling intensity across species)
+    df_community['max_species_activity'] = df_community[fish_species].max(axis=1)
+
+    # 4. Activity diversity (simplified - coefficient of variation)
+    df_community['activity_diversity'] = df_community[fish_species].std(axis=1) / (df_community[fish_species].mean(axis=1) + 0.01)
+    return
+
+
+@app.cell
+def _(df_community, total_activity_75th, total_activity_90th):
+    # 5. High vs low total activity (75th percentile threshold)
+    df_community['high_activity_75th'] = (df_community['total_fish_activity'] >= total_activity_75th).astype(int)
+
+    # 6. Very high activity (90th percentile threshold)
+    df_community['high_activity_90th'] = (df_community['total_fish_activity'] >= total_activity_90th).astype(int)
+
+    # 7. Any biological activity vs none
+    df_community['any_activity'] = (df_community['total_fish_activity'] > 0).astype(int)
+
+    # 8. Multiple species active vs single/none
+    df_community['multi_species_active'] = (df_community['num_active_species'] >= 2).astype(int)
+    return
+
+
+@app.cell
+def _(
+    DecisionTreeClassifier,
+    LogisticRegression,
+    RandomForestClassifier,
+    X_scaled,
+    accuracy_score,
+    df_modeling,
+    f1_score,
+    target_cols,
+    train_test_split,
+):
+    # Model configurations with biological screening in mind
+    models = {
+        'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
+        'Decision Tree': DecisionTreeClassifier(max_depth=8, min_samples_leaf=10, random_state=42),
+        'Random Forest': RandomForestClassifier(n_estimators=100, max_depth=8, min_samples_leaf=5, random_state=42)
+    }
+
+    # Train models for each target
+    model_results = {}
+
+    for target_name in target_cols:
+        print(f"\nTraining models for: {target_name}")
+        y_target = df_modeling[target_name]
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_scaled, y_target, test_size=0.3, random_state=42, stratify=y_target
+        )
+
+        target_results = {}
+        for model_name, model in models.items():
+            # Train model
+            model.fit(X_train, y_train)
+
+            # Predictions and metrics
+            y_pred = model.predict(X_test)
+            y_prob = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else y_pred
+            accuracy = accuracy_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred, average='binary', zero_division=0)
+
+            target_results[model_name] = {
+                'accuracy': accuracy,
+                'f1': f1,
+                'y_test': y_test,
+                'y_pred': y_pred,
+                'y_prob': y_prob
+            }
+    return (model_results,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -656,21 +761,25 @@ def _(mo):
     ### Key Metrics for Biological Applications
 
     **1. Detection Rate (Recall)**
+
     - **Definition**: Percentage of actual biological activity periods that the model correctly identifies
     - **Why it matters**: Missing biological activity = lost scientific data
     - **Target**: >80% for practical screening applications
 
     **2. Screening Precision**
+
     - **Definition**: When the model flags a period as "high activity," how often is it actually active?
     - **Why it matters**: False alarms waste manual effort
     - **Target**: >70% to maintain efficiency gains
 
     **3. Effort Reduction**
+
     - **Definition**: Percentage of data that can be skipped without manual analysis
     - **Why it matters**: This is the primary value proposition - saving time and money
     - **Target**: >50% reduction to justify deployment costs
 
     **4. F1 Score**
+
     - **Definition**: Harmonic mean of precision and recall (balances both)
     - **Why it matters**: Single metric for comparing models
     - **Target**: >0.7 for good performance, >0.8 for excellent
@@ -678,6 +787,7 @@ def _(mo):
     ## Real-World Translation
 
     A screening system with 80% detection rate, 75% precision, and 60% effort reduction means:
+
     - Analyze only 40% of your data manually
     - Catch 80% of all biological activity
     - When you do analyze a flagged period, it's biologically interesting 75% of the time
