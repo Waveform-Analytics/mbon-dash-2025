@@ -22,6 +22,74 @@ Dolphins were filtered out early in the analysis (around notebooks 2-3), but the
 5. **Comparative modeling in notebook 6** - fish-only vs marine community
 6. **Dashboard updates** - only if comparative results are compelling
 
+## Dolphin Intensity Conversion Methodology
+**Objective**: Convert dolphin counts to fish-comparable 0-3 intensity scale using data-driven thresholds
+
+### Step-by-step Conversion:
+1. **Combine dolphin types**: `total_dolphin_activity = echolocation_count + whistle_count + burst_pulse_count`
+2. **Analyze distribution**: Examine distribution of combined dolphin counts across all data
+3. **Set data-driven thresholds**:
+   - **0 (Absent)**: `total_dolphin_activity == 0`
+   - **1 (Low)**: Lower quartile of non-zero values (e.g., 25th percentile)
+   - **2 (Medium)**: Middle range (25th-75th percentile)
+   - **3 (High)**: Upper quartile (75th+ percentile)
+4. **Validate against fish intensity distribution**: Ensure similar proportions in each category
+
+### Implementation Approach:
+```python
+def determine_dolphin_thresholds(dolphin_counts):
+    """Determine data-driven thresholds for dolphin intensity conversion
+    
+    Args:
+        dolphin_counts: Array of total dolphin activity counts
+        
+    Returns:
+        dict: Threshold values for intensity levels
+    """
+    non_zero_counts = dolphin_counts[dolphin_counts > 0]
+    
+    if len(non_zero_counts) == 0:
+        return {'low': 1, 'medium': 2, 'high': 3}  # fallback
+    
+    # Use percentiles of non-zero data
+    low_threshold = np.percentile(non_zero_counts, 33)   # 33rd percentile
+    high_threshold = np.percentile(non_zero_counts, 67)  # 67th percentile
+    
+    return {
+        'low': int(np.ceil(low_threshold)),
+        'high': int(np.ceil(high_threshold))
+    }
+
+def create_dolphin_intensity(bde_count, bdbp_count, bdw_count, thresholds):
+    """Convert bottlenose dolphin counts to 0-3 intensity scale
+    
+    Args:
+        bde_count: Bottlenose dolphin echolocation count
+        bdbp_count: Bottlenose dolphin burst pulses count  
+        bdw_count: Bottlenose dolphin whistles count
+        thresholds: Dict with 'low' and 'high' threshold values
+        
+    Returns:
+        int: Dolphin intensity (0-3 scale matching fish intensity)
+    """
+    total_dolphin = bde_count + bdbp_count + bdw_count
+    
+    if total_dolphin == 0:
+        return 0  # Absent
+    elif total_dolphin < thresholds['high']:
+        if total_dolphin < thresholds['low']:
+            return 1  # Low activity
+        else:
+            return 2  # Medium activity
+    else:
+        return 3  # High activity
+```
+
+**Validation Steps**:
+- Compare dolphin vs fish intensity distributions
+- Ensure reasonable biological interpretation
+- Document threshold values and rationale
+
 ---
 
 ## Phase 1: Identify Current State & Dolphin Exclusion Point
@@ -46,21 +114,26 @@ Dolphins were filtered out early in the analysis (around notebooks 2-3), but the
 - [ ] **Actions**:
   - Remove or modify fish-only filters
   - Include dolphin detections alongside fish
+  - **Combine dolphin types**: Create `total_dolphin_activity = bde + bdbp + bdw`
+  - **Analyze dolphin count distribution**: Examine combined dolphin counts across all data
+  - **Determine data-driven thresholds**: Use percentiles to set intensity conversion thresholds
+  - **Convert to dolphin intensity**: Apply 0-3 scale matching fish intensity approach
+  - **Validate conversion**: Compare fish vs dolphin intensity distributions
   - Ensure proper species classification (fish vs dolphin)
-  - Validate that detection counts include both taxa
-  - Keep existing variable names but expand their scope
-- [ ] **Test**: Compare detection counts before/after modification
-- [ ] **Commit**: "Reintegrate dolphins in detection processing"
+- [ ] **Test**: Compare detection counts before/after modification, validate threshold logic
+- [ ] **Commit**: "Reintegrate dolphins with data-driven intensity conversion"
 
 ### Step 2.2: Update Community Metrics (likely Notebook 3) 
 - [ ] **Notebook**: `python/scripts/notebooks/03_community_metrics.py`
 - [ ] **Actions**:
-  - Modify community activity calculations to include dolphins
-  - Update species diversity metrics to include dolphin presence
-  - Adjust activity thresholds considering dolphin contributions
-  - Ensure community patterns include marine mammal activity
-- [ ] **Test**: Review updated community metrics distributions
-- [ ] **Commit**: "Update community metrics to include dolphins"
+  - **Load dolphin intensity data**: Use converted 0-3 scale from Step 2.1
+  - **Update community activity**: `total_community_activity = fish_intensity + dolphin_intensity`
+  - **Update species diversity**: Include dolphin as additional "species" in diversity calculations
+  - **Create marine community metrics**: New variables combining fish + dolphin intensity
+  - **Preserve existing fish-only metrics**: Keep original fish analysis intact
+  - **Compare distributions**: Fish-only vs marine community activity patterns
+- [ ] **Test**: Review updated community metrics distributions, validate combined metrics
+- [ ] **Commit**: "Update community metrics to include dolphin intensity"
 
 ---
 
