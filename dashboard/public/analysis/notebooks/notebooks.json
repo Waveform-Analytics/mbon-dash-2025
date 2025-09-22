@@ -7,7 +7,7 @@
     "description": "Load all data streams and perform initial quality assessment",
     "filename": "01_data_prep.html",
     "order": 1,
-    "lastModified": "2025-09-19T16:35:54.992Z",
+    "lastModified": "2025-09-22T15:37:53.569Z",
     "fullMarkdown": "# Notebook 1: Data Loading and Initial Exploration\n\n    **Purpose**: Load all data streams and perform initial quality assessment\n    **Key Outputs**: Raw data summaries, temporal coverage plots, missing data visualization\n\n    This notebook performs the foundational data loading and quality assessment for the MBON acoustic analysis pipeline. We load and examine all primary data streams including acoustic indices, manual fish detections, environmental measurements, and vessel presence data to understand data quality, temporal coverage, and basic patterns before proceeding to temporal alignment and analysis.\n\n    ## 1. Load Acoustic Indices Data\n\n    Acoustic indices are mathematical summaries of soundscape recordings that capture different aspects of ecosystem acoustic activity. The FullBW (full bandwidth) version includes indices computed across the entire frequency range of the hydrophones. These metrics help quantify biodiversity, ecosystem health, and acoustic complexity without requiring species-specific identification."
   },
   {
@@ -18,7 +18,7 @@
     "description": "Align all data to consistent 2-hour temporal resolution matching manual detections",
     "filename": "02_temporal_aggregation.html",
     "order": 2,
-    "lastModified": "2025-09-19T16:35:57.422Z",
+    "lastModified": "2025-09-22T15:37:56.025Z",
     "fullMarkdown": "# Notebook 2: Temporal Alignment and Aggregation\n\n    **Purpose**: Align all data to consistent 2-hour temporal resolution matching manual detections\n    **Key Outputs**: Temporally aligned dataset ready for analysis\n\n    This notebook addresses the fundamental challenge of temporal misalignment across multiple data streams with different collection frequencies. By aggregating everything to a common 2-hour resolution and engineering relevant features, we create analysis-ready datasets that preserve ecological information while enabling modeling.\n\n    ## 1. Load Processed Data from Notebook 1\n\n    Loading the cleaned and standardized data streams from each station. Notebook 1 performed quality control,\n    standardized column names, and converted timestamps to consistent formats. Here we systematically load:\n\n    - **Acoustic indices** (50-60 indices per station): Hourly summaries of soundscape characteristics\n    - **Detection data** (2-hour intervals): Manual annotations of fish calling activity by species  \n    - **Temperature data** (20-min intervals): Water temperature from autonomous sensors\n    - **Depth data** (hourly): Water depth measurements for tidal pattern analysis\n    - **SPL data** (hourly): Sound pressure levels in multiple frequency bands\n\n    **Expected Outcome**: Five data dictionaries organized by data type and station, ready for temporal alignment."
   },
   {
@@ -29,7 +29,7 @@
     "description": "Interactive marimo notebook: Acoustic Index Reduction",
     "filename": "03_acoustic_index_reduction.html",
     "order": 3,
-    "lastModified": "2025-09-19T16:36:01.955Z",
+    "lastModified": "2025-09-22T15:38:00.510Z",
     "fullMarkdown": "## Data Loading\n\n    Loading the temporally aligned dataset from Notebook 2, which contains:\n\n    - **Acoustic indices** aggregated to 2-hour resolution (originally calculated hourly)\n    - **Environmental variables** (temperature, depth/pressure) aligned to the same temporal grid\n    - **SPL data** aligned to 2-hour intervals for comparison with index-based approaches\n    - **Vessel detection data** to assess anthropogenic noise impacts\n    - **Temporal variables** (hour, day of year, season, etc.) for downstream modeling\n\n    This 2-hour resolution matches the manual fish detection intervals, creating a consistent analytical framework. The dataset should contain ~13,000 observations (3 stations × 365 days × 12 two-hour periods per day) with 50-60 acoustic index columns plus supporting variables.\n\n    **Expected Data Quality Issues:**\n    - Some missing data due to instrument failures or maintenance\n    - Potential outliers during extreme weather events\n    - Varying data availability across stations and time periods"
   },
   {
@@ -40,7 +40,7 @@
     "description": "Interactive marimo notebook: Fish And Indices Patterns",
     "filename": "04_fish_and_indices_patterns.html",
     "order": 4,
-    "lastModified": "2025-09-19T16:36:06.574Z",
+    "lastModified": "2025-09-22T15:38:05.309Z",
     "fullMarkdown": "## Index-Manual Detection Concordance Analysis\n\n    Now we analyze whether acoustic indices capture the same temporal patterns as manual detections. This is the **critical validation** for using indices as proxies.\n\n    **Key Questions:**\n\n    1. Do acoustic indices show the same **diel patterns** as fish calling?\n    2. Do indices identify the same **seasonal peaks** (spawning periods)?\n    3. Can indices distinguish between **high/low activity periods**?\n    4. What would we conclude about fish activity using **indices alone**?\n\n    **Approach:**\n\n    - Calculate temporal patterns for selected acoustic indices\n    - Compare index patterns with manual detection patterns\n    - Assess pattern concordance using correlation and visual inspection"
   },
   {
@@ -51,8 +51,19 @@
     "description": "Interactive marimo notebook: Vessel Analysis",
     "filename": "05_vessel_analysis.html",
     "order": 5,
-    "lastModified": "2025-09-19T16:36:16.257Z",
+    "lastModified": "2025-09-22T15:38:15.305Z",
     "fullMarkdown": "## Data Loading\n\n    Loading the aligned datasets from Notebook 2 and the reduced indices from Notebook 3:\n    - Acoustic indices (reduced set of ~18 indices)\n    - Manual fish detections (including vessel presence/absence)\n    - Environmental variables (temperature, depth, SPL)\n    - Temporal features (hour, season, diel period)"
+  },
+  {
+    "slug": "06_01_community_pattern_detection_enhanced",
+    "title": "01 Community Pattern Detection Enhanced",
+    "purpose": "Interactive marimo notebook: 01 Community Pattern Detection Enhanced",
+    "keyOutputs": "Analysis results and visualizations",
+    "description": "Interactive marimo notebook: 01 Community Pattern Detection Enhanced",
+    "filename": "06_01_community_pattern_detection_enhanced.html",
+    "order": 6,
+    "lastModified": "2025-09-22T15:38:45.690Z",
+    "fullMarkdown": "## Data Loading and Preparation\n\n    Loading all processed datasets and preparing them for enhanced community-level analysis."
   },
   {
     "slug": "06_community_pattern_detection",
@@ -62,7 +73,7 @@
     "description": "Interactive marimo notebook: Community Pattern Detection",
     "filename": "06_community_pattern_detection.html",
     "order": 6,
-    "lastModified": "2025-09-19T16:36:53.812Z",
+    "lastModified": "2025-09-22T15:38:47.513Z",
     "fullMarkdown": "## Data Loading and Preparation\n\n    Loading all processed datasets and preparing them for community-level analysis."
   },
   {
@@ -73,8 +84,19 @@
     "description": "Interactive marimo notebook: Continuous Monitoring Validation",
     "filename": "07_continuous_monitoring_validation.html",
     "order": 7,
-    "lastModified": "2025-09-19T16:37:37.984Z",
+    "lastModified": "2025-09-22T15:39:32.939Z",
     "fullMarkdown": "## Data Loading and Preparation\n\n    Loading results from previous notebooks and preparing for continuous monitoring validation."
+  },
+  {
+    "slug": "08_dolphin_intensity_conversion",
+    "title": "Dolphin Intensity Conversion",
+    "purpose": "Interactive marimo notebook: Dolphin Intensity Conversion",
+    "keyOutputs": "Analysis results and visualizations",
+    "description": "Interactive marimo notebook: Dolphin Intensity Conversion",
+    "filename": "08_dolphin_intensity_conversion.html",
+    "order": 8,
+    "lastModified": "2025-09-22T15:39:34.995Z",
+    "fullMarkdown": "# Dolphin Intensity Conversion & Marine Community Metrics\n\n    **Phase 2 of Dolphin Reintegration Plan**\n\n    After auditing the pipeline, we discovered dolphins were never filtered out - they've been flowing through all along! The real issue is metric incompatibility:\n\n    - **Fish**: 0-3 intensity scale (absent, one, multiple, chorus)  \n    - **Dolphins**: Raw counts (unbounded integers for echolocation, whistles, burst pulses)\n\n    This notebook implements the **hybrid approach**:\n    1. **Verify dolphin data** exists in processed files\n    2. **Analyze dolphin count distributions** to set data-driven thresholds\n    3. **Convert dolphin counts to 0-3 intensity scale** matching fish metrics\n    4. **Create marine community metrics** combining fish + dolphin intensity\n    5. **Compare distributions** to validate the conversion approach"
   },
   {
     "slug": "10_view_generation",
@@ -84,7 +106,7 @@
     "description": "Interactive marimo notebook: View Generation",
     "filename": "10_view_generation.html",
     "order": 10,
-    "lastModified": "2025-09-19T16:37:40.551Z",
+    "lastModified": "2025-09-22T15:39:37.470Z",
     "fullMarkdown": "## Station map\n\n    The site has a Mapbox station map and requires the station coordinates. These can be extracted from a parquet formatted metadata file located in the data/processed/metadata folder."
   }
 ]

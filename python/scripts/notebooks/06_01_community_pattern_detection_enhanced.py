@@ -302,17 +302,21 @@ def _(mo):
     ## Methodological Comparison
 
     ### Approach 1: Mutual Information (Original Method)
+
     **What it does**: Measures how much information one variable provides about another, capturing both linear and non-linear relationships.
 
     **Biological relevance**: 
+
     - Can detect threshold effects (e.g., fish only call when certain acoustic conditions are met)
     - Captures complex interaction patterns between indices and biology
     - Good for discovering unexpected acoustic-biological relationships
 
     ### Approach 2: Boruta + Random Forest (Transue et al. 2023)
+
     **What it does**: Uses an ensemble of decision trees to systematically identify all statistically relevant features.
 
     **Biological relevance**:
+
     - Established methodology in marine bioacoustics research
     - Handles feature interactions naturally through tree-based decisions
     - Provides consistent, interpretable feature rankings
@@ -324,7 +328,7 @@ def _(mo):
 
     **Methodological robustness**: Shows our findings aren't dependent on a single analytical approach.
 
-    **Best of both worlds**: Combines novel discovery potential (MI) with established field methodology (Boruta).
+    **Best of both worlds**: Combines novel discovery potential (MI) with established methodology (Boruta).
     """
     )
     return
@@ -606,18 +610,21 @@ def _(mo):
     ## Model Selection Strategy
 
     **Primary Focus: Random Forest** (following Transue et al.)
+
     - Proven methodology for marine bioacoustic data
     - Handles temporal autocorrelation naturally
     - Provides interpretable feature importance
     - Robust to outliers and missing data
 
     **Comparative Models** (for validation):
+
     - Logistic Regression: Linear baseline
     - Decision Tree: Simple interpretable rules
 
     ## Enhanced Validation Framework
 
     Following Transue et al. (2023):
+
     - **Out-of-bag error estimation** (built into Random Forest)
     - **Stratified cross-validation** for robust performance estimates  
     - **Feature importance ranking** with statistical significance

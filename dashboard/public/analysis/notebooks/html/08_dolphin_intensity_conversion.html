@@ -5,15 +5,15 @@
     <link rel="icon" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/favicon.ico" />
     <!-- Preload is necessary because we show these images when we disconnect from the server,
     but at that point we cannot load these images from the server -->
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/gradient-yHQUC_QB.png" as="image" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/noise-60BoTA8O.png" as="image" />
+    
+    
     <!-- Preload the fonts -->
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/Lora-VariableFont_wght-B2ootaw-.ttf" as="font" crossorigin="anonymous" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/PTSans-Regular-CxL0S8W7.ttf" as="font" crossorigin="anonymous" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/PTSans-Bold-D9fedIX3.ttf" as="font" crossorigin="anonymous" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/FiraMono-Regular-BTCkDNvf.ttf" as="font" crossorigin="anonymous" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/FiraMono-Medium-DU3aDxX5.ttf" as="font" crossorigin="anonymous" />
-    <link rel="preload" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@marimo-team/frontend@0.16.0/dist/assets/FiraMono-Bold-CLVRCuM9.ttf" as="font" crossorigin="anonymous" />
+    
+    
+    
+    
+    
+    
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
@@ -66,7 +66,17 @@
     window.__MARIMO_STATIC__ = {};
     window.__MARIMO_STATIC__.files = {};
 </script>
-</head>
+
+    <style id="mbon-code-collapse">
+      /* Hide all code editors by default; marimo's own UI can override this */
+      .marimo-cell-code,
+      [data-testid="code-editor"],
+      .cm-editor,
+      .marimo-cell-editor {
+        display: none;
+      }
+    </style>
+  </head>
   <body>
     <div id="root"></div>
     <!-- This is a portal for the data editor to render in -->

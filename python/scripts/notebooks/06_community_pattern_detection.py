@@ -164,7 +164,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(DATA_ROOT, pd):
     # Load all processed datasets
     print("Loading processed datasets...")
@@ -208,7 +208,7 @@ def _(DATA_ROOT, pd):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_det_metadata, df_detections, df_env, df_indices, df_temporal):
     # Get fish species columns
     fish_species = df_det_metadata[
@@ -271,8 +271,8 @@ def _(mo):
     return
 
 
-@app.cell
-def _(
+@app.cell(hide_code=True)
+def model_prep(
     df_env,
     df_indices,
     df_marine_community,
@@ -364,7 +364,7 @@ def _(
 
         # First, get marine species columns from marine community data
         marine_species_cols = [col for col in df_marine_community.columns 
-                             if col not in ['datetime', 'station', 'year', 'total_fish_intensity',
+                             if col not in ['datetime', 'station', 'total_fish_intensity',
                                           'num_active_fish_species', 'max_fish_intensity',
                                           'dolphin_count', 'dolphin_intensity', 'total_marine_intensity',
                                           'num_active_marine_species', 'max_marine_intensity']]
@@ -376,24 +376,24 @@ def _(
 
         # Create marine master dataset
         df_marine_master = df_indices.merge(
-            df_marine_community[['datetime', 'station', 'year'] + marine_fish_species + 
+            df_marine_community[['datetime', 'station'] + marine_fish_species + 
                                ['dolphin_intensity', 'total_marine_intensity', 
                                 'num_active_marine_species', 'max_marine_intensity']],
-            on=['datetime', 'station', 'year'],
+            on=['datetime', 'station'],
             how='left'
         )
 
         # Merge with environmental and temporal data (same as fish-only)
         df_marine_master = df_marine_master.merge(
-            df_env[['datetime', 'station', 'year', 'Water temp (°C)', 'Water depth (m)',
+            df_env[['datetime', 'station', 'Water temp (°C)', 'Water depth (m)',
                     'Broadband (1-40000 Hz)', 'Low (50-1200 Hz)', 'High (7000-40000 Hz)']],
-            on=['datetime', 'station', 'year'],
+            on=['datetime', 'station'],
             how='left'
         )
 
         df_marine_master = df_marine_master.merge(
-            df_temporal[['datetime', 'station', 'year', 'hour', 'month', 'season', 'time_period']],
-            on=['datetime', 'station', 'year'],
+            df_temporal[['datetime', 'station', 'hour', 'month', 'season', 'time_period']],
+            on=['datetime', 'station'],
             how='left'
         )
 
@@ -537,7 +537,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     DecisionTreeClassifier,
     LogisticRegression,
@@ -734,16 +734,16 @@ def _(
         all_scalers['marine'] = scaler_marine
 
         # Train marine models
-        for target_name in marine_target_cols:
-            print(f"\nTraining marine models for: {target_name}")
-            y_target = df_marine_modeling[target_name]
+        for marine_target_name in marine_target_cols:
+            print(f"\nTraining marine models for: {marine_target_name}")
+            y_target = df_marine_modeling[marine_target_name]
 
             # Check class balance
             class_balance = y_target.value_counts(normalize=True)
             print(f"Class balance: {class_balance.to_dict()}")
 
             if y_target.std() == 0:  # Skip if no variance
-                print(f"Skipping {target_name} - no variance in target")
+                print(f"Skipping {marine_target_name} - no variance in target")
                 continue
 
             # Split data
@@ -792,7 +792,7 @@ def _(
 
                 print(f"  {model_name}: F1={f1:.3f}, Precision={precision:.3f}, Recall={recall:.3f}")
 
-            marine_model_results[target_name] = target_results
+            marine_model_results[marine_target_name] = target_results
 
         all_model_results['marine'] = marine_model_results
 
@@ -839,7 +839,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     X_fish_scaled,
     X_marine_scaled,
@@ -870,17 +870,17 @@ def _(
     if 'fish' in all_model_results and X_fish_scaled is not None:
         _df_fish_modeling = all_modeling_datasets['fish']
 
-        for target_name in fish_target_cols:
-            if target_name not in all_model_results['fish']:
+        for fish_target_name in fish_target_cols:
+            if fish_target_name not in all_model_results['fish']:
                 continue
 
-            _y_target = _df_fish_modeling[target_name]
+            _y_target = _df_fish_modeling[fish_target_name]
 
             # Mutual information feature importance
             mi_scores = mutual_info_classif(X_fish_scaled, _y_target, random_state=42)
 
             # Random Forest feature importance (if available)
-            rf_model = all_model_results['fish'][target_name].get('Random Forest', {}).get('model')
+            rf_model = all_model_results['fish'][fish_target_name].get('Random Forest', {}).get('model')
             rf_importance = rf_model.feature_importances_ if rf_model else np.zeros(len(modeling_cols))
 
             # Create feature importance dataframe
@@ -889,12 +889,12 @@ def _(
                 'mutual_info': mi_scores,
                 'rf_importance': rf_importance,
                 'community_type': 'fish',
-                'target': target_name
+                'target': fish_target_name
             }).sort_values('mutual_info', ascending=False)
 
-            fish_feature_importance[target_name] = importance_df
+            fish_feature_importance[fish_target_name] = importance_df
 
-            print(f"\nTop 5 features for FISH {target_name}:")
+            print(f"\nTop 5 features for FISH {fish_target_name}:")
             print(importance_df[['feature', 'mutual_info', 'rf_importance']].head())
 
         all_feature_importance_results['fish'] = fish_feature_importance
@@ -986,7 +986,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(all_model_results, pd):
     # Comparative model performance analysis
     print("COMPARATIVE MODEL PERFORMANCE ANALYSIS")
@@ -1049,15 +1049,15 @@ def _(all_model_results, pd):
                 print(marine_high_activity[['model', 'f1', 'precision', 'recall']].round(3))
 
                 # Calculate improvement
-                fish_mean_f1 = fish_high_activity['f1'].mean()
-                marine_mean_f1 = marine_high_activity['f1'].mean()
+                fish_activity_f1 = fish_high_activity['f1'].mean()
+                marine_activity_f1 = marine_high_activity['f1'].mean()
 
-                improvement = ((marine_mean_f1 - fish_mean_f1) / fish_mean_f1) * 100
+                activity_improvement = ((marine_activity_f1 - fish_activity_f1) / fish_activity_f1) * 100
 
                 print(f"\nOverall F1 Score Comparison:")
-                print(f"Fish-only community: {fish_mean_f1:.3f}")
-                print(f"Marine community: {marine_mean_f1:.3f}")
-                print(f"Improvement with dolphins: {improvement:+.1f}%")
+                print(f"Fish-only community: {fish_activity_f1:.3f}")
+                print(f"Marine community: {marine_activity_f1:.3f}")
+                print(f"Improvement with dolphins: {activity_improvement:+.1f}%")
 
             # Dolphin-specific analysis
             dolphin_results = performance_df[
@@ -1127,14 +1127,14 @@ def _(df_community, df_marine, modeling_cols, pd, spearmanr):
     fish_diel_correlations = {}
     fish_seasonal_correlations = {}
 
-    for idx in index_cols_subset:
+    for fish_temporal_idx in index_cols_subset:
         # Diel correlations
-        diel_corr, diel_p = spearmanr(fish_diel_patterns['total_fish_activity'], fish_diel_patterns[idx])
-        fish_diel_correlations[idx] = {'correlation': diel_corr, 'p_value': diel_p}
+        fish_diel_corr_early, fish_diel_p_early = spearmanr(fish_diel_patterns['total_fish_activity'], fish_diel_patterns[fish_temporal_idx])
+        fish_diel_correlations[fish_temporal_idx] = {'correlation': fish_diel_corr_early, 'p_value': fish_diel_p_early}
 
         # Seasonal correlations
-        seasonal_corr, seasonal_p = spearmanr(fish_seasonal_patterns['total_fish_activity'], fish_seasonal_patterns[idx])
-        fish_seasonal_correlations[idx] = {'correlation': seasonal_corr, 'p_value': seasonal_p}
+        fish_seasonal_corr_early, fish_seasonal_p_early = spearmanr(fish_seasonal_patterns['total_fish_activity'], fish_seasonal_patterns[fish_temporal_idx])
+        fish_seasonal_correlations[fish_temporal_idx] = {'correlation': fish_seasonal_corr_early, 'p_value': fish_seasonal_p_early}
 
     # Convert to dataframes
     fish_diel_corr_df = pd.DataFrame(fish_diel_correlations).T.sort_values('correlation', key=abs, ascending=False)
@@ -1181,14 +1181,14 @@ def _(df_community, df_marine, modeling_cols, pd, spearmanr):
         marine_diel_correlations = {}
         marine_seasonal_correlations = {}
 
-        for idx in index_cols_subset:
+        for marine_idx in index_cols_subset:
             # Diel correlations
-            diel_corr, diel_p = spearmanr(marine_diel_patterns['total_marine_activity'], marine_diel_patterns[idx])
-            marine_diel_correlations[idx] = {'correlation': diel_corr, 'p_value': diel_p}
+            marine_diel_corr, marine_diel_p = spearmanr(marine_diel_patterns['total_marine_activity'], marine_diel_patterns[marine_idx])
+            marine_diel_correlations[marine_idx] = {'correlation': marine_diel_corr, 'p_value': marine_diel_p}
 
             # Seasonal correlations
-            seasonal_corr, seasonal_p = spearmanr(marine_seasonal_patterns['total_marine_activity'], marine_seasonal_patterns[idx])
-            marine_seasonal_correlations[idx] = {'correlation': seasonal_corr, 'p_value': seasonal_p}
+            marine_seasonal_corr, marine_seasonal_p = spearmanr(marine_seasonal_patterns['total_marine_activity'], marine_seasonal_patterns[marine_idx])
+            marine_seasonal_correlations[marine_idx] = {'correlation': marine_seasonal_corr, 'p_value': marine_seasonal_p}
 
         # Convert to dataframes
         marine_diel_corr_df = pd.DataFrame(marine_diel_correlations).T.sort_values('correlation', key=abs, ascending=False)
@@ -1279,19 +1279,19 @@ def _(
             fish_results = performance_df[performance_df['community_type'] == 'fish']
             marine_results = performance_df[performance_df['community_type'] == 'marine']
 
-            fish_mean_f1 = fish_results['f1'].mean()
-            marine_mean_f1 = marine_results['f1'].mean()
+            fish_overall_f1 = fish_results['f1'].mean()
+            marine_overall_f1 = marine_results['f1'].mean()
 
-            if marine_mean_f1 > fish_mean_f1:
-                improvement = ((marine_mean_f1 - fish_mean_f1) / fish_mean_f1) * 100
+            if marine_overall_f1 > fish_overall_f1:
+                overall_improvement = ((marine_overall_f1 - fish_overall_f1) / fish_overall_f1) * 100
                 recommendations.append(
-                    f"✅ Marine community models show {improvement:.1f}% average improvement over fish-only models"
+                    f"✅ Marine community models show {overall_improvement:.1f}% average improvement over fish-only models"
                 )
                 recommendations.append(
                     "Recommendation: Include dolphin data in biological screening models for enhanced performance"
                 )
             else:
-                decline = ((fish_mean_f1 - marine_mean_f1) / fish_mean_f1) * 100
+                decline = ((fish_overall_f1 - marine_overall_f1) / fish_overall_f1) * 100
                 recommendations.append(
                     f"⚠️ Marine community models show {decline:.1f}% average decline vs fish-only models"
                 )
@@ -1361,8 +1361,8 @@ def _(
     print("="*50)
 
     if len(recommendations) > 0:
-        for i, rec in enumerate(recommendations, 1):
-            print(f"{i}. {rec}")
+        for rec_i, rec in enumerate(recommendations, 1):
+            print(f"{rec_i}. {rec}")
 
     # 5. Next Steps
     print("\n5. RECOMMENDED NEXT STEPS")
@@ -1380,8 +1380,8 @@ def _(
         next_steps.append("Evaluate dolphin detection performance in different environmental conditions")
         next_steps.append("Investigate seasonal patterns in marine community interactions")
 
-    for i, step in enumerate(next_steps, 1):
-        print(f"{i}. {step}")
+    for step_i, step in enumerate(next_steps, 1):
+        print(f"{step_i}. {step}")
 
     print(f"\n" + "="*80)
     print("COMPARATIVE ANALYSIS COMPLETE ✅")
@@ -1427,14 +1427,14 @@ def _(df_community, index_cols, pd, spearmanr):
     seasonal_correlations = {}
 
     # Diel correlations
-    for idx in index_cols[:10]:
-        diel_corr, diel_p = spearmanr(diel_patterns['total_fish_activity'], diel_patterns[idx])
-        diel_correlations[idx] = {'correlation': diel_corr, 'p_value': diel_p}
+    for fish_idx in index_cols[:10]:
+        fish_diel_corr, fish_diel_p = spearmanr(diel_patterns['total_fish_activity'], diel_patterns[fish_idx])
+        diel_correlations[fish_idx] = {'correlation': fish_diel_corr, 'p_value': fish_diel_p}
 
     # Seasonal correlations
-    for idx in index_cols[:10]:
-        seasonal_corr, seasonal_p = spearmanr(seasonal_patterns['total_fish_activity'], seasonal_patterns[idx])
-        seasonal_correlations[idx] = {'correlation': seasonal_corr, 'p_value': seasonal_p}
+    for fish_idx in index_cols[:10]:
+        fish_seasonal_corr, fish_seasonal_p = spearmanr(seasonal_patterns['total_fish_activity'], seasonal_patterns[fish_idx])
+        seasonal_correlations[fish_idx] = {'correlation': fish_seasonal_corr, 'p_value': fish_seasonal_p}
 
     # Convert to dataframes
     diel_corr_df = pd.DataFrame(diel_correlations).T
@@ -1526,13 +1526,16 @@ def _(mo):
 
 
 @app.cell
-def _(model_results, np):
+def _(all_model_results, np):
     # Biological screening performance evaluation
     print("Evaluating biological screening performance...")
 
     screening_results = {}
 
-    for target_name_screen, target_models in model_results.items():
+    # Use fish-only model results for screening evaluation
+    _fish_model_results = all_model_results.get('fish', {})
+
+    for target_name_screen, target_models in _fish_model_results.items():
         print(f"\nScreening evaluation for: {target_name_screen}")
 
         # Get best performing model (highest F1 score)
@@ -1614,9 +1617,9 @@ def _(mo):
 
 @app.cell
 def _(
+    all_feature_importance_results,
     diel_corr_df,
     diel_patterns,
-    feature_importance_results,
     np,
     plot_dir,
     plt,
@@ -1676,15 +1679,16 @@ def _(
     plt.show()
 
     # 2. Feature Importance Comparison
-    if len(feature_importance_results) > 0:
+    _fish_feature_importance_viz = all_feature_importance_results.get('fish', {})
+    if len(_fish_feature_importance_viz) > 0:
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         axes = axes.ravel()
 
-        for i, (target_name_viz, importance_df_viz) in enumerate(feature_importance_results.items()):
-            if i >= 4:  # Max 4 subplots
+        for viz_i, (target_name_viz, importance_df_viz) in enumerate(_fish_feature_importance_viz.items()):
+            if viz_i >= 4:  # Max 4 subplots
                 break
 
-            ax = axes[i]
+            ax = axes[viz_i]
             top_features = importance_df_viz.head(8)
 
             y_pos = range(len(top_features))
@@ -1711,9 +1715,9 @@ def _(
     x_pos = np.arange(len(target_names))
     width = 0.25
 
-    for i, metric in enumerate(metrics):
+    for perf_i, metric in enumerate(metrics):
         values = [screening_results[target][metric] for target in target_names]
-        plt.bar(x_pos + i*width, values, width, alpha=0.7, label=metric.replace('_', ' ').title())
+        plt.bar(x_pos + perf_i*width, values, width, alpha=0.7, label=metric.replace('_', ' ').title())
 
     plt.xlabel('Target Classification')
     plt.ylabel('Score')
@@ -1727,9 +1731,9 @@ def _(
     plt.subplot(1, 2, 2)
     efficiency_metrics = ['effort_reduction', 'detection_rate', 'screening_precision']
 
-    for i, metric in enumerate(efficiency_metrics):
+    for metric_i, metric in enumerate(efficiency_metrics):
         values = [screening_results[target][metric] for target in target_names]
-        plt.bar(x_pos + i*width, values, width, alpha=0.7, label=metric.replace('_', ' ').title())
+        plt.bar(x_pos + metric_i*width, values, width, alpha=0.7, label=metric.replace('_', ' ').title())
 
     plt.xlabel('Target Classification')
     plt.ylabel('Rate')
@@ -1768,11 +1772,11 @@ def _():
 @app.cell(hide_code=True)
 def _(
     DATA_ROOT,
+    all_feature_importance_results,
+    all_model_results,
     df_community,
     diel_corr_df,
-    feature_importance_results,
     json,
-    model_results,
     pickle,
     screening_results,
     seasonal_corr_df,
@@ -1785,10 +1789,11 @@ def _(
 
     # Save model results
     with open(DATA_ROOT / "processed/06_community_models.pkl", 'wb') as f:
-        pickle.dump(model_results, f)
+        pickle.dump(all_model_results, f)
 
     # Save feature importance
-    for target_name_save, importance_df_save in feature_importance_results.items():
+    _fish_feature_importance_save = all_feature_importance_results.get('fish', {})
+    for target_name_save, importance_df_save in _fish_feature_importance_save.items():
         filename = f"06_feature_importance_{target_name_save}.parquet"
         importance_df_save.to_parquet(DATA_ROOT / "processed" / filename)
 
