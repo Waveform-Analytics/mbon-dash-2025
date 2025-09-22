@@ -602,7 +602,15 @@ def _(mo):
 
     - **Rolling means only** (to avoid too many features): Capture recent acoustic environment trends
 
-    → These engineered features help models understand not just current conditions, but recent environmental history that influences animal behavior.
+    **Biological activity features (NEW):**
+
+    - **Community-level lag variables**: Was there any fish activity 2-4 hours ago? How many species were active?
+    - **Species-specific lags**: Were key species (top 3 most active) calling recently?
+    - **Activity rolling means**: Recent biological activity trends over 6-12 hour windows
+
+    → These biological lag features capture **ecological persistence** - biological events like spawning aggregations or dawn choruses that persist across multiple time periods. This enables temporal modeling where past biological activity helps predict current activity.
+
+    → These engineered features help models understand not just current conditions, but recent environmental AND biological history that influences animal behavior.
     """
     )
     return
@@ -669,6 +677,48 @@ def _(STATIONS, combined_data):
                     # Create rolling means for indices
                     df_lag[f'{idx_col}_mean_6h'] = df_lag[idx_col].rolling(window=3, min_periods=1).mean()
                     df_lag[f'{idx_col}_mean_12h'] = df_lag[idx_col].rolling(window=6, min_periods=1).mean()
+
+            # Biological activity lag variables
+            # Define known fish species for activity metrics
+            fish_cols = [
+                'Silver perch', 'Oyster toadfish boat whistle', 'Oyster toadfish grunt',
+                'Black drum', 'Spotted seatrout', 'Red drum', 'Atlantic croaker'
+            ]
+
+            # Filter to species columns that exist in this dataframe
+            available_fish_cols = [col for col in fish_cols if col in df_lag.columns]
+
+            if len(available_fish_cols) > 0:
+                # Calculate community-level metrics
+                df_lag['total_fish_activity'] = df_lag[available_fish_cols].sum(axis=1)
+                df_lag['any_activity'] = (df_lag['total_fish_activity'] > 0).astype(int)
+                df_lag['num_active_species'] = (df_lag[available_fish_cols] > 0).sum(axis=1)
+
+                # Create lag variables for community metrics
+                df_lag['total_fish_activity_lag1'] = df_lag['total_fish_activity'].shift(1)
+                df_lag['total_fish_activity_lag2'] = df_lag['total_fish_activity'].shift(2)
+                df_lag['any_activity_lag1'] = df_lag['any_activity'].shift(1)
+                df_lag['any_activity_lag2'] = df_lag['any_activity'].shift(2)
+                df_lag['num_active_species_lag1'] = df_lag['num_active_species'].shift(1)
+                df_lag['num_active_species_lag2'] = df_lag['num_active_species'].shift(2)
+
+                # Create rolling means for biological activity
+                df_lag['total_fish_activity_mean_6h'] = df_lag['total_fish_activity'].rolling(window=3, min_periods=1).mean()
+                df_lag['total_fish_activity_mean_12h'] = df_lag['total_fish_activity'].rolling(window=6, min_periods=1).mean()
+
+                # Create lag variables for top 3 most active fish species
+                if len(available_fish_cols) >= 3:
+                    # Find top 3 most active species
+                    species_activity = {col: df_lag[col].sum() for col in available_fish_cols}
+                    top_species = sorted(species_activity.items(), key=lambda x: x[1], reverse=True)[:3]
+                    top_species_names = [species[0] for species in top_species]
+
+                    for species in top_species_names:
+                        # Skip species with no activity
+                        if df_lag[species].sum() > 0:
+                            df_lag[f'{species}_lag1'] = df_lag[species].shift(1)
+                            df_lag[f'{species}_lag2'] = df_lag[species].shift(2)
+                            df_lag[f'{species}_mean_6h'] = df_lag[species].rolling(window=3, min_periods=1).mean()
 
             enhanced_data[station_lag] = df_lag
 
@@ -1026,6 +1076,10 @@ def _(mo):
     - Contains: Temperature, depth, SPL + lag variables + rolling means
     - Use for: Environmental driver analysis, feature selection
 
+    **`02_biological_activity_features_2021.parquet` (NEW)** - Biological activity with lag/rolling features
+    - Contains: Community activity metrics + biological lag variables + species-specific lags
+    - Use for: Temporal modeling, biological persistence analysis, target variable engineering
+
     **`02_temporal_features_2021.parquet`** - Pure temporal features
     - Contains: Hour, day, month, season, cyclic encodings
     - Use for: Temporal pattern analysis, seasonality studies
@@ -1139,6 +1193,35 @@ def _(OUTPUT_DIR, YEAR, enhanced_data, pd):
             except Exception as e:
                 print(f"✗ Error saving environmental data: {e}")
 
+        # Save biological activity features (NEW)
+        biological_activity_cols = [
+            'total_fish_activity', 'any_activity', 'num_active_species',
+            'total_fish_activity_lag1', 'total_fish_activity_lag2',
+            'any_activity_lag1', 'any_activity_lag2',
+            'num_active_species_lag1', 'num_active_species_lag2',
+            'total_fish_activity_mean_6h', 'total_fish_activity_mean_12h'
+        ]
+
+        # Add species-specific lag features
+        bio_lag_cols = [col for col in all_stations_df.columns if any(
+            pattern in col for pattern in ['_lag1', '_lag2', '_mean_6h'] 
+        ) and any(fish in col for fish in ['Silver perch', 'Black drum', 'Red drum', 'Atlantic croaker', 'Spotted seatrout', 'Oyster toadfish'])]
+
+        biological_activity_cols.extend(bio_lag_cols)
+        available_biological = [col for col in biological_activity_cols if col in all_stations_df.columns]
+
+        if available_biological:
+            try:
+                bio_df = all_stations_df[core_ids + available_biological].copy()
+                bio_path = OUTPUT_DIR / f"02_biological_activity_features_{YEAR}.parquet"
+                bio_df.to_parquet(bio_path, index=False)
+                saved_files_final.append(str(bio_path))
+                print(f"✓ Saved biological activity features: {bio_path}")
+                print(f"  Shape: {bio_df.shape} ({len(available_biological)} features)")
+                print(f"  Includes: community metrics + lag variables + species-specific lags")
+            except Exception as e:
+                print(f"✗ Error saving biological activity features: {e}")
+
         # Test: Save temporal features
         temporal_cols_aligned = ['hour', 'day_of_year', 'month', 'weekday', 'week_of_year', 
                         'season', 'time_period', 'hour_sin', 'hour_cos', 'day_sin', 'day_cos']
@@ -1179,16 +1262,19 @@ def _(mo):
     - **Categorical time periods**: season, time_period (Night/Morning/Afternoon/Evening) (ecologically meaningful groupings)
     - **Cyclic encodings**: hour_sin/cos, day_sin/cos (preserve circular nature of time for machine learning)
 
-    ✅ **Engineered Advanced Features for Delayed Ecological Responses:**
-    - **Lag variables**: temperature, depth, and SPL at t-1, t-2, t-3 (capture delayed animal responses to environmental change)
+    ✓ **Engineered Advanced Features for Delayed Ecological Responses:**
+    - **Environmental lag variables**: temperature, depth, and SPL at t-1, t-2, t-3 (capture delayed animal responses to environmental change)
+    - **Biological lag variables (NEW)**: fish activity, species counts at t-1, t-2 (capture ecological persistence and temporal dependence)
     - **Change rates**: 2h and 4h differences (detect rapid environmental transitions that trigger behavior)
     - **Rolling means**: 6h, 12h, 24h windows (capture environmental context and trends beyond momentary conditions)
     - **Selected acoustic index rolling means**: recent acoustic environment trends (context for current conditions)
+    - **Species-specific lags (NEW)**: top active species lag variables for temporal species modeling
 
-    ✅ **Output Files - Organized by Data Type:**
+    ✓ **Output Files - Organized by Data Type:**
     - **`02_acoustic_indices_aligned_2021.parquet`**: ~50-60 acoustic indices ready for correlation analysis and dimensionality reduction
     - **`02_detections_aligned_2021.parquet`**: Fish calling intensities with temporal features for response pattern analysis
     - **`02_environmental_aligned_2021.parquet`**: Environmental drivers with lag/rolling features for predictor analysis
+    - **`02_biological_activity_features_2021.parquet` (NEW)**: Community activity metrics + lag variables for temporal modeling
     - **`02_temporal_features_2021.parquet`**: Pure temporal features for seasonality and diel pattern analysis
 
     **Data quality achieved:** All files share consistent temporal identifiers (datetime, station, year) enabling clean joins while maintaining clear data provenance and supporting modular analysis approaches.
