@@ -179,12 +179,19 @@ class CleanDataLoader:
         return numeric_cols
     
     def get_species_names(self, detections_df: pd.DataFrame) -> List[str]:
-        """Extract species/detection column names."""
+        """Extract species/detection column names (only numeric)."""
         exclude_cols = ['datetime', 'station', 'Date', 'Time', 'Deployment ID', 'File']
-        species_cols = [col for col in detections_df.columns 
-                       if col not in exclude_cols]
+        potential_species_cols = [col for col in detections_df.columns 
+                                 if col not in exclude_cols]
         
-        print(f"Found {len(species_cols)} species/detection columns")
+        # Only keep numeric columns
+        species_cols = []
+        for col in potential_species_cols:
+            if detections_df[col].dtype in ['float64', 'int64', 'float32', 'int32']:
+                species_cols.append(col)
+        
+        print(f"Found {len(species_cols)} numeric species/detection columns")
+        print(f"   Columns: {species_cols}")
         return species_cols
 
 
