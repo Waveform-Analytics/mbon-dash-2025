@@ -8,46 +8,54 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-        # Notebook 6.04: Temporal Community Pattern Detection
+    # Notebook 6.04: Temporal Community Pattern Detection
 
-        **Purpose**: Compare temporal vs non-temporal modeling approaches for community pattern detection using biological lag features
+    **Purpose**: Compare temporal vs non-temporal modeling approaches for community pattern detection using biological lag features
 
-        **Key Innovation**: This is the first analysis to systematically incorporate **biological temporal dependence** into marine acoustic monitoring models.
+    **Key Innovation**: 
+    This is the first analysis to systematically incorporate **biological temporal dependence** into marine acoustic monitoring models.
 
-        ## Scientific Motivation
+    ## Scientific Motivation
 
-        Traditional marine acoustic monitoring treats each time period independently - predicting biological activity using only current acoustic indices and environmental conditions. However, **biological systems have memory**:
+    Traditional marine acoustic monitoring treats each time period independently - predicting biological activity using only current acoustic indices and environmental conditions. However, **biological systems have memory**:
 
-        - **Spawning aggregations** persist for hours to days
-        - **Dawn choruses** follow predictable temporal sequences  
-        - **Community interactions** create biological momentum
-        - **Quiet periods** tend to continue (ecological inertia)
+    - **Spawning aggregations** persist for hours to days
+    - **Dawn choruses** follow predictable temporal sequences  
+    - **Community interactions** create biological momentum
+    - **Quiet periods** tend to continue (ecological inertia)
 
-        ## Research Questions
+    ## Research Questions
 
-        1. **Performance gain**: How much does adding biological temporal dependence improve prediction accuracy?
-        2. **Feature importance**: Are biological lag features (past activity) more predictive than acoustic indices?
-        3. **Temporal patterns**: What time scales of biological persistence are most important (2h vs 4h vs 6h)?
-        4. **Model validation**: How do temporal cross-validation results compare to standard cross-validation?
+    1. **Performance gain**: How much does adding biological temporal dependence improve prediction accuracy?
+    2. **Feature importance**: Are biological lag features (past activity) more predictive than acoustic indices?
+    3. **Temporal patterns**: What time scales of biological persistence are most important (2h vs 4h vs 6h)?
+    4. **Model validation**: How do temporal cross-validation results compare to standard cross-validation?
 
-        ## Methodological Innovation
+    ## Methodological Innovation
 
-        **Traditional approach (Notebook 6)**: `activity[t] = f(indices[t], environment[t], temporal_features[t])`
+    **Traditional approach (Notebook 6)**: `activity[t] = f(indices[t], environment[t], temporal_features[t])`
 
-        **Temporal approach (this notebook)**: `activity[t] = f(indices[t], environment[t], temporal_features[t], activity[t-1], activity[t-2], ...)` 
+    **Temporal approach (this notebook)**: `activity[t] = f(indices[t], environment[t], temporal_features[t], activity[t-1], activity[t-2], ...)` 
 
-        By including **past biological activity** as predictors, we capture the ecological persistence that makes biological systems predictable over short time scales.
+    By including **past biological activity** as predictors, we capture the ecological persistence that makes biological systems predictable over short time scales.
 
-        ## Expected Impact
+    ## Expected Impact
 
-        If temporal modeling shows significant improvements, it would suggest that:
-        - **Ecological memory** is a key component of predictable biological patterns
-        - **Continuous monitoring** provides value beyond just current conditions  
-        - **Early warning systems** could leverage biological momentum to predict upcoming activity
-        - **Resource allocation** for manual detection could be optimized using temporal trends
-        """
+    If temporal modeling shows significant improvements, it would suggest that:
+
+    - **Ecological memory** is a key component of predictable biological patterns
+    - **Continuous monitoring** provides value beyond just current conditions  
+    - **Early warning systems** could leverage biological momentum to predict upcoming activity
+    - **Resource allocation** for manual detection could be optimized using temporal trends
+    """
     )
     return
+
+
+@app.cell
+def _():
+    import marimo as mo
+    return (mo,)
 
 
 @app.cell(hide_code=True)
@@ -118,10 +126,10 @@ def _():
 def _(mo):
     mo.md(
         r"""
-        ## Data Loading and Preparation
+    ## Data Loading and Preparation
 
-        Loading all enhanced datasets from Notebook 2, including the new biological activity lag features.
-        """
+    Loading all enhanced datasets from Notebook 2, including the new biological activity lag features.
+    """
     )
     return
 
@@ -239,12 +247,16 @@ def _(
     # Identify feature groups for analysis
     index_cols = [col for col in df_indices.columns if col not in ['datetime', 'station', 'year']]
 
+    # Get target variables (biological activity metrics we want to predict)
     if df_biological is not None:
-        biological_feature_cols = [col for col in biological_cols if 'lag' in col or 'mean_' in col]
         biological_target_cols = ['total_fish_activity', 'any_activity', 'num_active_species']
     else:
-        biological_feature_cols = []
         biological_target_cols = ['total_fish_activity', 'any_activity', 'num_active_species']
+
+    # PROPER temporal features: acoustic indices + environmental lags (NOT biological lags!)
+    # We can't use biological detection lags as features since we won't have them in real deployment
+    acoustic_lag_features = [col for col in df_modeling.columns if any(x in col for x in ['ACI', 'ADI', 'AEI', 'BI', 'H']) and ('lag' in col or 'mean_' in col)]
+    biological_feature_cols = acoustic_lag_features  # Rename for consistency with existing code
 
     env_feature_cols = [col for col in env_cols if 'lag' in col or 'mean_' in col or 'change' in col]
     basic_env_cols = [col for col in env_cols if col not in env_feature_cols]
@@ -255,7 +267,6 @@ def _(
     print(f"Environmental lag features: {len(env_feature_cols)}")
     print(f"Basic environmental: {len(basic_env_cols)}")
     print(f"Temporal features: {len(temporal_cols)}")
-
     return (
         biological_feature_cols,
         df_modeling,
@@ -269,10 +280,10 @@ def _(
 def _(mo):
     mo.md(
         r"""
-        ## Temporal vs Non-Temporal Feature Analysis
+    ## Temporal vs Non-Temporal Feature Analysis
 
-        First, let's explore how biological lag features correlate with current activity and compare their predictive power to acoustic indices.
-        """
+    First, let's explore how biological lag features correlate with current activity and compare their predictive power to acoustic indices.
+    """
     )
     return
 
@@ -281,99 +292,122 @@ def _(mo):
 def _(
     biological_feature_cols,
     df_modeling,
+    env_feature_cols,
     index_cols,
     mutual_info_classif,
     pd,
 ):
-    # Analyze biological lag features vs acoustic indices
-    print("Analyzing biological lag features vs acoustic indices...")
-    print("="*60)
+    # Analyze temporal features (acoustic/environmental lags) vs current acoustic indices
+    print("Analyzing temporal features (acoustic/environmental lags) vs current acoustic indices...")
+    print("="*80)
 
     # Ensure we have the target variable
     if 'any_activity' in df_modeling.columns:
-        target = 'any_activity'
+        _target_analysis = 'any_activity'
 
         # Prepare feature groups for comparison
-        acoustic_features = [col for col in index_cols if col in df_modeling.columns]
-        biological_features = [col for col in biological_feature_cols if col in df_modeling.columns]
+        _current_acoustic_features = [col for col in index_cols if col in df_modeling.columns]
+        _temporal_features_analysis = [col for col in biological_feature_cols if col in df_modeling.columns]
 
-        # Create comparison dataset (drop rows with missing values)
-        comparison_cols = acoustic_features + biological_features + [target]
-        df_comparison = df_modeling[comparison_cols].dropna()
+        # Also include environmental lag features as temporal features
+        _env_temporal_features = [col for col in env_feature_cols if col in df_modeling.columns]
+        _all_temporal_features = _temporal_features_analysis + _env_temporal_features
+
+        # Create comparison dataset (handle missing values intelligently)
+        _comparison_cols = _current_acoustic_features + _all_temporal_features + [_target_analysis]
+        df_comparison = df_modeling[_comparison_cols].copy()
+        # Only drop rows where target is missing, fill other NaNs with 0 (reasonable for lag features)
+        df_comparison = df_comparison.dropna(subset=[_target_analysis])
+        df_comparison = df_comparison.fillna(0)  # Lag features with NaN become 0 (no previous activity)
 
         print(f"Comparison dataset: {df_comparison.shape[0]:,} samples")
-        print(f"Target distribution: {df_comparison[target].value_counts().to_dict()}")
+        print(f"Target distribution: {df_comparison[_target_analysis].value_counts().to_dict()}")
+        print(f"Current acoustic features: {len(_current_acoustic_features)}")
+        print(f"Temporal lag features: {len(_all_temporal_features)} (acoustic: {len(_temporal_features_analysis)}, environmental: {len(_env_temporal_features)})")
 
-        if len(df_comparison) > 0 and len(biological_features) > 0:
+        if len(df_comparison) > 0 and len(_all_temporal_features) > 0:
             # Calculate mutual information for each feature group
-            X_acoustic = df_comparison[acoustic_features]
-            X_biological = df_comparison[biological_features]
-            y = df_comparison[target]
+            _X_current = df_comparison[_current_acoustic_features]
+            _X_temporal = df_comparison[_all_temporal_features]
+            _y_analysis = df_comparison[_target_analysis]
 
             # Mutual information analysis
-            mi_acoustic = mutual_info_classif(X_acoustic, y, random_state=42)
-            mi_biological = mutual_info_classif(X_biological, y, random_state=42)
+            _mi_current = mutual_info_classif(_X_current, _y_analysis, random_state=42)
+            _mi_temporal = mutual_info_classif(_X_temporal, _y_analysis, random_state=42)
 
             # Create feature importance comparison
-            feature_importance = []
+            _feature_importance = []
 
-            # Add acoustic indices
-            for i, feature in enumerate(acoustic_features):
-                feature_importance.append({
-                    'feature': feature,
-                    'type': 'acoustic_index',
-                    'mi_score': mi_acoustic[i]
+            # Add current acoustic indices
+            for _idx, _feature in enumerate(_current_acoustic_features):
+                _feature_importance.append({
+                    'feature': _feature,
+                    'type': 'current_acoustic',
+                    'mi_score': _mi_current[_idx]
                 })
 
-            # Add biological lag features
-            for i, feature in enumerate(biological_features):
-                feature_importance.append({
-                    'feature': feature,
-                    'type': 'biological_lag',
-                    'mi_score': mi_biological[i]
+            # Add temporal lag features (acoustic + environmental)
+            for _idx, _feature in enumerate(_all_temporal_features):
+                # Determine if it's acoustic or environmental temporal feature
+                if any(x in _feature for x in ['ACI', 'ADI', 'AEI', 'BI', 'H']):
+                    _feature_type = 'acoustic_temporal'
+                else:
+                    _feature_type = 'environmental_temporal'
+
+                _feature_importance.append({
+                    'feature': _feature,
+                    'type': _feature_type,
+                    'mi_score': _mi_temporal[_idx]
                 })
 
             # Convert to dataframe and sort
-            importance_df = pd.DataFrame(feature_importance)
+            importance_df = pd.DataFrame(_feature_importance)
             importance_df = importance_df.sort_values('mi_score', ascending=False)
 
             print(f"\n🏆 TOP 10 MOST PREDICTIVE FEATURES:")
             print("-" * 50)
-            for i, row in importance_df.head(10).iterrows():
-                feature_type = "🎵 Acoustic" if row['type'] == 'acoustic_index' else "🕰️ Biological Lag"
-                print(f"  {row.name+1:2d}. {feature_type:15} | {row['feature'][:35]:35} | MI: {row['mi_score']:.3f}")
+            for _row_idx, _row in importance_df.head(10).iterrows():
+                if _row['type'] == 'current_acoustic':
+                    _feature_type = "🎵 Current Acoustic"
+                elif _row['type'] == 'acoustic_temporal':
+                    _feature_type = "🕰️ Acoustic Temporal"
+                elif _row['type'] == 'environmental_temporal':
+                    _feature_type = "🌡️ Environmental Temporal"
+                else:
+                    _feature_type = _row['type']
+                print(f"  {_row.name+1:2d}. {_feature_type:20} | {_row['feature'][:30]:30} | MI: {_row['mi_score']:.3f}")
 
             # Summary statistics
-            acoustic_mi_stats = {
-                'mean': mi_acoustic.mean(),
-                'max': mi_acoustic.max(), 
-                'top_5_mean': mi_acoustic[mi_acoustic.argsort()[-5:]].mean()
+            _current_mi_stats = {
+                'mean': _mi_current.mean(),
+                'max': _mi_current.max(), 
+                'top_5_mean': _mi_current[_mi_current.argsort()[-5:]].mean() if len(_mi_current) >= 5 else _mi_current.mean()
             }
 
-            biological_mi_stats = {
-                'mean': mi_biological.mean(),
-                'max': mi_biological.max(),
-                'top_5_mean': mi_biological[mi_biological.argsort()[-5:]].mean()
+            _temporal_mi_stats = {
+                'mean': _mi_temporal.mean(),
+                'max': _mi_temporal.max(),
+                'top_5_mean': _mi_temporal[_mi_temporal.argsort()[-5:]].mean() if len(_mi_temporal) >= 5 else _mi_temporal.mean()
             }
 
             print(f"\n📊 FEATURE GROUP COMPARISON:")
-            print("-" * 40)
-            print(f"Acoustic indices     - Mean MI: {acoustic_mi_stats['mean']:.3f}, Max: {acoustic_mi_stats['max']:.3f}, Top-5: {acoustic_mi_stats['top_5_mean']:.3f}")
-            print(f"Biological lag       - Mean MI: {biological_mi_stats['mean']:.3f}, Max: {biological_mi_stats['max']:.3f}, Top-5: {biological_mi_stats['top_5_mean']:.3f}")
+            print("-" * 50)
+            print(f"Current acoustic indices - Mean MI: {_current_mi_stats['mean']:.3f}, Max: {_current_mi_stats['max']:.3f}, Top-5: {_current_mi_stats['top_5_mean']:.3f}")
+            print(f"Temporal lag features    - Mean MI: {_temporal_mi_stats['mean']:.3f}, Max: {_temporal_mi_stats['max']:.3f}, Top-5: {_temporal_mi_stats['top_5_mean']:.3f}")
 
             # Determine winner
-            bio_advantage = biological_mi_stats['top_5_mean'] > acoustic_mi_stats['top_5_mean']
-            winner = "🕰️ BIOLOGICAL LAG" if bio_advantage else "🎵 ACOUSTIC INDICES"
-            advantage = abs(biological_mi_stats['top_5_mean'] - acoustic_mi_stats['top_5_mean'])
+            _temporal_advantage = _temporal_mi_stats['top_5_mean'] > _current_mi_stats['top_5_mean']
+            _winner = "🕰️ TEMPORAL FEATURES" if _temporal_advantage else "🎵 CURRENT ACOUSTIC"
+            _advantage = abs(_temporal_mi_stats['top_5_mean'] - _current_mi_stats['top_5_mean'])
 
-            print(f"\n🏆 PREDICTIVE POWER WINNER: {winner}")
-            print(f"   Advantage: {advantage:.3f} MI units")
+            print(f"\n🏆 PREDICTIVE POWER WINNER: {_winner}")
+            print(f"   Advantage: {_advantage:.3f} MI units")
 
             feature_analysis_results = {
                 'importance_df': importance_df,
-                'acoustic_stats': acoustic_mi_stats,
-                'biological_stats': biological_mi_stats,
-                'biological_advantage': bio_advantage
+                'current_acoustic_stats': _current_mi_stats,
+                'temporal_stats': _temporal_mi_stats,
+                'temporal_advantage': _temporal_advantage
             }
 
         else:
@@ -390,15 +424,15 @@ def _(
 def _(mo):
     mo.md(
         r"""
-        ## Model Comparison: Temporal vs Non-Temporal
+    ## Model Comparison: Temporal vs Non-Temporal
 
-        Now we'll compare model performance using three different feature sets:
-        1. **Non-temporal**: Acoustic indices + environmental + basic temporal features (traditional approach)
-        2. **Temporal**: Non-temporal + biological lag features (our innovation) 
-        3. **Temporal-only**: Only biological lag features (to test biological memory alone)
+    Now we'll compare model performance using three different feature sets:
+    1. **Non-temporal**: Acoustic indices + environmental + basic temporal features (traditional approach)
+    2. **Temporal**: Non-temporal + biological lag features (our innovation) 
+    3. **Temporal-only**: Only biological lag features (to test biological memory alone)
 
-        We'll use **TimeSeriesSplit** for temporal validation and compare to standard cross-validation.
-        """
+    We'll use **TimeSeriesSplit** for temporal validation and compare to standard cross-validation.
+    """
     )
     return
 
@@ -422,55 +456,66 @@ def _(
     print("="*70)
 
     # Define target variable
-    target = 'any_activity'
+    _target_modeling = 'any_activity'
 
-    if target in df_modeling.columns:
+    if _target_modeling in df_modeling.columns:
         # Define feature sets for comparison
-        acoustic_features = [col for col in index_cols if col in df_modeling.columns]
-        biological_lag_features = [col for col in biological_feature_cols if col in df_modeling.columns]
-        env_lag_features = [col for col in env_feature_cols if col in df_modeling.columns] 
-        basic_temporal = [col for col in temporal_cols if col in df_modeling.columns]
+        _acoustic_features_modeling = [col for col in index_cols if col in df_modeling.columns]
+        _acoustic_lag_features = [col for col in biological_feature_cols if col in df_modeling.columns]  # These are actually acoustic lags now
+        _env_lag_features = [col for col in env_feature_cols if col in df_modeling.columns] 
+        _basic_temporal = [col for col in temporal_cols if col in df_modeling.columns]
+
+        # Combine all temporal features
+        _all_lag_features = _acoustic_lag_features + _env_lag_features
+
+        # Get numeric temporal features only (exclude categorical ones like 'season')
+        _numeric_temporal = [col for col in _basic_temporal if col in ['hour', 'month', 'weekday', 'hour_sin', 'hour_cos', 'day_sin', 'day_cos']]
 
         # Feature set definitions
-        feature_sets = {
+        _feature_sets = {
             'non_temporal': {
-                'features': acoustic_features + ['hour', 'month'] + [col for col in df_modeling.columns if col in ['Water temp (°C)', 'Water depth (m)']],
+                'features': _acoustic_features_modeling + _numeric_temporal + [col for col in df_modeling.columns if col in ['Water temp (°C)', 'Water depth (m)']],
                 'description': 'Traditional: Acoustic + Environmental + Basic Temporal',
                 'color': 'steelblue'
             },
             'temporal': {
-                'features': acoustic_features + biological_lag_features + env_lag_features + basic_temporal,
-                'description': 'Enhanced: Traditional + Biological Lag Features', 
+                'features': _acoustic_features_modeling + _all_lag_features + _numeric_temporal,
+                'description': 'Enhanced: Traditional + Temporal Lag Features', 
                 'color': 'forestgreen'
             },
-            'biological_only': {
-                'features': biological_lag_features + ['hour', 'month'],
-                'description': 'Biological Memory: Only Lag Features + Time',
+            'temporal_only': {
+                'features': _all_lag_features + _numeric_temporal,
+                'description': 'Temporal Memory: Only Lag Features + Time',
                 'color': 'coral'
             }
         }
 
         # Filter to available features
-        for name, config in feature_sets.items():
-            available_features = [f for f in config['features'] if f in df_modeling.columns]
-            config['features'] = available_features
-            print(f"{name:15}: {len(available_features):2d} features - {config['description']}")
+        for _name, _config in _feature_sets.items():
+            _available_features = [f for f in _config['features'] if f in df_modeling.columns]
+            _config['features'] = _available_features
+            print(f"{_name:15}: {len(_available_features):2d} features - {_config['description']}")
 
-        # Prepare modeling data
-        all_features = list(set().union(*[config['features'] for config in feature_sets.values()]))
-        modeling_data = df_modeling[all_features + [target, 'datetime', 'station']].dropna()
+        # Prepare modeling data (handle missing values intelligently)
+        _all_features = list(set().union(*[_config['features'] for _config in _feature_sets.values()]))
+        modeling_data = df_modeling[_all_features + [_target_modeling, 'datetime', 'station']].copy()
+        # Only drop rows where target is missing
+        modeling_data = modeling_data.dropna(subset=[_target_modeling])
+        # Fill NaNs only in numeric columns with 0
+        _numeric_cols = modeling_data.select_dtypes(include=['int64', 'float64']).columns
+        modeling_data[_numeric_cols] = modeling_data[_numeric_cols].fillna(0)
 
         print(f"\nModeling dataset: {modeling_data.shape[0]:,} samples after removing missing values")
-        print(f"Target distribution: {modeling_data[target].value_counts().to_dict()}")
+        print(f"Target distribution: {modeling_data[_target_modeling].value_counts().to_dict()}")
 
         # Cross-validation configurations
-        cv_methods = {
+        _cv_methods = {
             'standard_cv': StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
             'temporal_cv': TimeSeriesSplit(n_splits=5)
         }
 
         # Model configurations
-        models = {
+        _models = {
             'logistic': LogisticRegression(random_state=42, max_iter=1000),
             'random_forest': RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42)
         }
@@ -481,44 +526,44 @@ def _(
         print(f"\n🎯 RUNNING COMPREHENSIVE MODEL COMPARISON")
         print("="*50)
 
-        for model_name, model in models.items():
-            print(f"\n📊 {model_name.upper()} RESULTS:")
+        for _model_name, _model in _models.items():
+            print(f"\n📊 {_model_name.upper()} RESULTS:")
             print("-" * 30)
 
-            model_results = {}
+            _model_results = {}
 
-            for cv_name, cv_splitter in cv_methods.items():
-                cv_results = {}
+            for _cv_name, _cv_splitter in _cv_methods.items():
+                _cv_results = {}
 
-                for set_name, set_config in feature_sets.items():
-                    if len(set_config['features']) > 0:
+                for _set_name, _set_config in _feature_sets.items():
+                    if len(_set_config['features']) > 0:
                         # Prepare data
-                        X = modeling_data[set_config['features']]
-                        y = modeling_data[target]
+                        _X = modeling_data[_set_config['features']]
+                        _y = modeling_data[_target_modeling]
 
                         # Scale features
-                        scaler = StandardScaler()
-                        X_scaled = scaler.fit_transform(X)
+                        _scaler = StandardScaler()
+                        _X_scaled = _scaler.fit_transform(_X)
 
                         # Cross-validation
-                        cv_scores = cross_val_score(model, X_scaled, y, cv=cv_splitter, scoring='f1')
+                        _cv_scores = cross_val_score(_model, _X_scaled, _y, cv=_cv_splitter, scoring='f1')
 
-                        cv_results[set_name] = {
-                            'scores': cv_scores,
-                            'mean': cv_scores.mean(),
-                            'std': cv_scores.std(),
-                            'n_features': len(set_config['features'])
+                        _cv_results[_set_name] = {
+                            'scores': _cv_scores,
+                            'mean': _cv_scores.mean(),
+                            'std': _cv_scores.std(),
+                            'n_features': len(_set_config['features'])
                         }
 
-                        cv_type = "Standard CV" if cv_name == 'standard_cv' else "Temporal CV"
-                        print(f"  {cv_type:12} | {set_config['description'][:35]:35} | F1: {cv_scores.mean():.3f}±{cv_scores.std():.3f}")
+                        _cv_type = "Standard CV" if _cv_name == 'standard_cv' else "Temporal CV"
+                        print(f"  {_cv_type:12} | {_set_config['description'][:35]:35} | F1: {_cv_scores.mean():.3f}±{_cv_scores.std():.3f}")
 
-                model_results[cv_name] = cv_results
+                _model_results[_cv_name] = _cv_results
 
-            model_comparison_results[model_name] = model_results
+            model_comparison_results[_model_name] = _model_results
 
     else:
-        print(f"❌ Target variable '{target}' not found in modeling data")
+        print(f"❌ Target variable '{_target_modeling}' not found in modeling data")
         model_comparison_results = None
         modeling_data = None
     return (model_comparison_results,)
@@ -535,75 +580,75 @@ def _(model_comparison_results, np, plot_dir, plt):
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 
         # Colors for feature sets
-        colors = {
+        _colors = {
             'non_temporal': 'steelblue',
             'temporal': 'forestgreen', 
+            'temporal_only': 'coral',
             'biological_only': 'coral'
         }
 
-        set_labels = {
+        _set_labels = {
             'non_temporal': 'Traditional\n(Acoustic + Env)',
-            'temporal': 'Enhanced\n(+ Bio Lags)',
-            'biological_only': 'Bio Memory\n(Lags Only)'
+            'temporal': 'Enhanced\n(+ Temporal Lags)',
+            'temporal_only': 'Temporal Only\n(Lags Only)'
         }
 
-        for model_idx, (model_name, model_results) in enumerate(model_comparison_results.items()):
-            ax = axes[model_idx]
+        for _model_idx, (_model_name_viz, _model_results_viz) in enumerate(model_comparison_results.items()):
+            ax = axes[_model_idx]
 
             # Data for plotting
-            standard_means = []
-            temporal_means = []
-            standard_stds = []
-            temporal_stds = []
-            labels = []
-            bar_colors = []
+            _standard_means = []
+            _temporal_means = []
+            _standard_stds = []
+            _temporal_stds = []
+            _labels = []
+            _bar_colors = []
 
-            for set_name in ['non_temporal', 'temporal', 'biological_only']:
-                if (set_name in model_results.get('standard_cv', {}) and 
-                    set_name in model_results.get('temporal_cv', {})):
+            for _set_name_viz in ['non_temporal', 'temporal', 'temporal_only']:
+                if (_set_name_viz in _model_results_viz.get('standard_cv', {}) and 
+                    _set_name_viz in _model_results_viz.get('temporal_cv', {})):
 
-                    standard_result = model_results['standard_cv'][set_name]
-                    temporal_result = model_results['temporal_cv'][set_name]
+                    _standard_result = _model_results_viz['standard_cv'][_set_name_viz]
+                    _temporal_result = _model_results_viz['temporal_cv'][_set_name_viz]
 
-                    standard_means.append(standard_result['mean'])
-                    temporal_means.append(temporal_result['mean'])
-                    standard_stds.append(standard_result['std'])
-                    temporal_stds.append(temporal_result['std'])
-                    labels.append(set_labels[set_name])
-                    bar_colors.append(colors[set_name])
+                    _standard_means.append(_standard_result['mean'])
+                    _temporal_means.append(_temporal_result['mean'])
+                    _standard_stds.append(_standard_result['std'])
+                    _temporal_stds.append(_temporal_result['std'])
+                    _labels.append(_set_labels[_set_name_viz])
+                    _bar_colors.append(_colors[_set_name_viz])
 
-            if labels:
-                x = np.arange(len(labels))
-                width = 0.35
+            if _labels:
+                _x = np.arange(len(_labels))
+                _width = 0.35
 
-                bars1 = ax.bar(x - width/2, standard_means, width, yerr=standard_stds,
-                              label='Standard CV', alpha=0.8, color=bar_colors, 
+                _bars1 = ax.bar(_x - _width/2, _standard_means, _width, yerr=_standard_stds,
+                              label='Standard CV', alpha=0.8, color=_bar_colors, 
                               edgecolor='black', linewidth=0.5)
-                bars2 = ax.bar(x + width/2, temporal_means, width, yerr=temporal_stds,
-                              label='Temporal CV', alpha=0.6, color=bar_colors,
+                _bars2 = ax.bar(_x + _width/2, _temporal_means, _width, yerr=_temporal_stds,
+                              label='Temporal CV', alpha=0.6, color=_bar_colors,
                               edgecolor='black', linewidth=0.5, hatch='///')
 
                 ax.set_xlabel('Feature Set')
                 ax.set_ylabel('F1 Score')
-                ax.set_title(f'{model_name.title().replace("_", " ")} Performance')
-                ax.set_xticks(x)
-                ax.set_xticklabels(labels, rotation=0, ha='center')
+                ax.set_title(f'{_model_name_viz.title().replace("_", " ")} Performance')
+                ax.set_xticks(_x)
+                ax.set_xticklabels(_labels, rotation=0, ha='center')
                 ax.legend()
                 ax.grid(True, alpha=0.3, axis='y')
-                ax.set_ylim(0, max(max(standard_means), max(temporal_means)) * 1.1)
+                ax.set_ylim(0, max(max(_standard_means), max(_temporal_means)) * 1.1)
 
                 # Add value labels on bars
-                for i, (bar1, bar2) in enumerate(zip(bars1, bars2)):
-                    ax.text(bar1.get_x() + bar1.get_width()/2., bar1.get_height() + standard_stds[i] + 0.01,
-                           f'{standard_means[i]:.3f}', ha='center', va='bottom', fontsize=8, weight='bold')
-                    ax.text(bar2.get_x() + bar2.get_width()/2., bar2.get_height() + temporal_stds[i] + 0.01,
-                           f'{temporal_means[i]:.3f}', ha='center', va='bottom', fontsize=8, weight='bold')
+                for _bar_idx, (_bar1, _bar2) in enumerate(zip(_bars1, _bars2)):
+                    ax.text(_bar1.get_x() + _bar1.get_width()/2., _bar1.get_height() + _standard_stds[_bar_idx] + 0.01,
+                           f'{_standard_means[_bar_idx]:.3f}', ha='center', va='bottom', fontsize=8, weight='bold')
+                    ax.text(_bar2.get_x() + _bar2.get_width()/2., _bar2.get_height() + _temporal_stds[_bar_idx] + 0.01,
+                           f'{_temporal_means[_bar_idx]:.3f}', ha='center', va='bottom', fontsize=8, weight='bold')
 
         plt.tight_layout()
         plt.savefig(plot_dir / '06_04_temporal_vs_nontemporal_comparison.png', 
                    dpi=150, bbox_inches='tight')
         plt.show()
-
     return
 
 
@@ -614,124 +659,123 @@ def _(data_dir, json, model_comparison_results):
         print("\n🎯 TEMPORAL MODELING ANALYSIS & RECOMMENDATIONS")
         print("="*60)
 
-        analysis_results = {}
+        _analysis_results = {}
 
-        for model_name, model_results in model_comparison_results.items():
-            print(f"\n📊 {model_name.upper()} ANALYSIS:")
+        for _model_name_analysis, _model_results_analysis in model_comparison_results.items():
+            print(f"\n📊 {_model_name_analysis.upper()} ANALYSIS:")
             print("-" * 25)
 
             # Extract results for comparison
-            if ('standard_cv' in model_results and 'temporal_cv' in model_results):
-                standard_results = model_results['standard_cv']
-                temporal_results = model_results['temporal_cv']
+            if ('standard_cv' in _model_results_analysis and 'temporal_cv' in _model_results_analysis):
+                _standard_results = _model_results_analysis['standard_cv']
+                _temporal_results = _model_results_analysis['temporal_cv']
 
-                model_analysis = {}
+                _model_analysis = {}
 
                 # Compare traditional vs enhanced approach
-                if 'non_temporal' in standard_results and 'temporal' in standard_results:
-                    traditional_f1 = standard_results['non_temporal']['mean']
-                    enhanced_f1 = standard_results['temporal']['mean']
-                    improvement = enhanced_f1 - traditional_f1
-                    improvement_pct = (improvement / traditional_f1) * 100
+                if 'non_temporal' in _standard_results and 'temporal' in _standard_results:
+                    _traditional_f1 = _standard_results['non_temporal']['mean']
+                    _enhanced_f1 = _standard_results['temporal']['mean']
+                    _improvement = _enhanced_f1 - _traditional_f1
+                    _improvement_pct = (_improvement / _traditional_f1) * 100
 
-                    print(f"  Traditional approach F1: {traditional_f1:.3f}")
-                    print(f"  Enhanced (+ bio lags) F1: {enhanced_f1:.3f}")
-                    print(f"  Improvement: +{improvement:.3f} ({improvement_pct:+.1f}%)")
+                    print(f"  Traditional approach F1: {_traditional_f1:.3f}")
+                    print(f"  Enhanced (+ bio lags) F1: {_enhanced_f1:.3f}")
+                    print(f"  Improvement: +{_improvement:.3f} ({_improvement_pct:+.1f}%)")
 
-                    model_analysis['improvement'] = {
-                        'absolute': improvement,
-                        'relative_pct': improvement_pct,
-                        'traditional_f1': traditional_f1,
-                        'enhanced_f1': enhanced_f1
+                    _model_analysis['improvement'] = {
+                        'absolute': _improvement,
+                        'relative_pct': _improvement_pct,
+                        'traditional_f1': _traditional_f1,
+                        'enhanced_f1': _enhanced_f1
                     }
 
                 # Compare standard vs temporal CV
-                if 'temporal' in standard_results and 'temporal' in temporal_results:
-                    standard_cv_f1 = standard_results['temporal']['mean']
-                    temporal_cv_f1 = temporal_results['temporal']['mean']
-                    cv_difference = standard_cv_f1 - temporal_cv_f1
+                if 'temporal' in _standard_results and 'temporal' in _temporal_results:
+                    _standard_cv_f1 = _standard_results['temporal']['mean']
+                    _temporal_cv_f1 = _temporal_results['temporal']['mean']
+                    _cv_difference = _standard_cv_f1 - _temporal_cv_f1
 
-                    print(f"  Standard CV F1: {standard_cv_f1:.3f}")
-                    print(f"  Temporal CV F1: {temporal_cv_f1:.3f}")
-                    print(f"  CV Method Difference: {cv_difference:+.3f}")
+                    print(f"  Standard CV F1: {_standard_cv_f1:.3f}")
+                    print(f"  Temporal CV F1: {_temporal_cv_f1:.3f}")
+                    print(f"  CV Method Difference: {_cv_difference:+.3f}")
 
-                    if cv_difference > 0.02:
+                    if _cv_difference > 0.02:
                         print(f"  ⚠️  SIGNIFICANT TEMPORAL LEAKAGE DETECTED!")
                         print(f"     Standard CV likely overestimates performance")
-                    elif cv_difference > 0.005:
+                    elif _cv_difference > 0.005:
                         print(f"  ⚠️  Mild temporal dependence detected")
                     else:
                         print(f"  ✅ Temporal validation consistent with standard CV")
 
-                    model_analysis['cv_comparison'] = {
-                        'standard_cv_f1': standard_cv_f1,
-                        'temporal_cv_f1': temporal_cv_f1,
-                        'leakage_detected': cv_difference > 0.02
+                    _model_analysis['cv_comparison'] = {
+                        'standard_cv_f1': _standard_cv_f1,
+                        'temporal_cv_f1': _temporal_cv_f1,
+                        'leakage_detected': _cv_difference > 0.02
                     }
 
-                # Biological memory test
-                if 'biological_only' in temporal_results:
-                    bio_only_f1 = temporal_results['biological_only']['mean']
-                    print(f"  Biological memory F1: {bio_only_f1:.3f}")
+                # Temporal memory test
+                if 'temporal_only' in _temporal_results:
+                    _temporal_only_f1 = _temporal_results['temporal_only']['mean']
+                    print(f"  Temporal memory F1: {_temporal_only_f1:.3f}")
 
-                    if bio_only_f1 > 0.6:
-                        print(f"  🧠 STRONG biological memory effect!")
-                    elif bio_only_f1 > 0.5:
-                        print(f"  🧠 Moderate biological memory effect")
+                    if _temporal_only_f1 > 0.6:
+                        print(f"  🧠 STRONG temporal memory effect!")
+                    elif _temporal_only_f1 > 0.5:
+                        print(f"  🧠 Moderate temporal memory effect")
                     else:
-                        print(f"  🧠 Weak biological memory effect")
+                        print(f"  🧠 Weak temporal memory effect")
 
-                    model_analysis['biological_memory'] = {
-                        'f1_score': bio_only_f1,
-                        'strength': 'strong' if bio_only_f1 > 0.6 else 'moderate' if bio_only_f1 > 0.5 else 'weak'
+                    _model_analysis['temporal_memory'] = {
+                        'f1_score': _temporal_only_f1,
+                        'strength': 'strong' if _temporal_only_f1 > 0.6 else 'moderate' if _temporal_only_f1 > 0.5 else 'weak'
                     }
 
-                analysis_results[model_name] = model_analysis
+                _analysis_results[_model_name_analysis] = _model_analysis
 
         # Overall recommendations
         print(f"\n🎯 SCIENTIFIC CONCLUSIONS & RECOMMENDATIONS:")
         print("="*50)
 
-        if 'random_forest' in analysis_results:
-            rf_analysis = analysis_results['random_forest']
+        if 'random_forest' in _analysis_results:
+            _rf_analysis = _analysis_results['random_forest']
 
-            if 'improvement' in rf_analysis:
-                improvement_pct = rf_analysis['improvement']['relative_pct']
-                if improvement_pct > 10:
+            if 'improvement' in _rf_analysis:
+                _improvement_pct = _rf_analysis['improvement']['relative_pct']
+                if _improvement_pct > 10:
                     print("✅ STRONG EVIDENCE for temporal modeling:")
-                    print(f"   - Biological lag features improve performance by {improvement_pct:.1f}%")
+                    print(f"   - Biological lag features improve performance by {_improvement_pct:.1f}%")
                     print("   - Ecological memory is a key predictive component")
                     print("   - Continuous monitoring provides significant value beyond current conditions")
-                elif improvement_pct > 5:
+                elif _improvement_pct > 5:
                     print("✅ MODERATE EVIDENCE for temporal modeling:")
-                    print(f"   - Biological lag features provide {improvement_pct:.1f}% improvement")
+                    print(f"   - Biological lag features provide {_improvement_pct:.1f}% improvement")
                     print("   - Worth implementing for operational systems")
                 else:
                     print("⚠️  WEAK EVIDENCE for temporal modeling:")
-                    print(f"   - Only {improvement_pct:.1f}% improvement detected")
+                    print(f"   - Only {_improvement_pct:.1f}% improvement detected")
                     print("   - May not justify added complexity")
 
-            if 'cv_comparison' in rf_analysis and rf_analysis['cv_comparison']['leakage_detected']:
+            if 'cv_comparison' in _rf_analysis and _rf_analysis['cv_comparison']['leakage_detected']:
                 print("\n🚨 TEMPORAL VALIDATION CRITICAL:")
                 print("   - Standard CV significantly overestimates performance")
                 print("   - TimeSeriesSplit essential for honest evaluation")
                 print("   - Temporal dependence confirmed in biological data")
 
-            if 'biological_memory' in rf_analysis:
-                strength = rf_analysis['biological_memory']['strength']
-                f1_bio = rf_analysis['biological_memory']['f1_score']
-                print(f"\n🧠 BIOLOGICAL MEMORY: {strength.upper()}")
-                print(f"   - Past activity alone predicts current activity: F1={f1_bio:.3f}")
-                if strength == 'strong':
-                    print("   - Strong ecological persistence detected")
-                    print("   - Early warning systems highly feasible")
+            if 'temporal_memory' in _rf_analysis:
+                _strength = _rf_analysis['temporal_memory']['strength']
+                _f1_temporal = _rf_analysis['temporal_memory']['f1_score']
+                print(f"\n🧠 TEMPORAL MEMORY: {_strength.upper()}")
+                print(f"   - Past acoustic/environmental patterns predict activity: F1={_f1_temporal:.3f}")
+                if _strength == 'strong':
+                    print("   - Strong temporal persistence detected")
+                    print("   - Predictive monitoring systems highly feasible")
 
         # Save results
         with open(data_dir / "06_04_temporal_modeling_analysis.json", 'w') as f:
-            json.dump(analysis_results, f, indent=2, default=str)
+            json.dump(_analysis_results, f, indent=2, default=str)
 
         print(f"\n💾 Analysis results saved to: {data_dir / '06_04_temporal_modeling_analysis.json'}")
-
     return
 
 
@@ -739,41 +783,41 @@ def _(data_dir, json, model_comparison_results):
 def _(mo):
     mo.md(
         r"""
-        ## Summary and Next Steps
+    ## Summary and Next Steps
 
-        This temporal modeling analysis provides the first systematic evaluation of biological temporal dependence in marine acoustic monitoring.
+    This temporal modeling analysis provides the first systematic evaluation of biological temporal dependence in marine acoustic monitoring.
 
-        ### Key Findings
+    ### Key Findings
 
-        **If temporal modeling shows significant improvement:**
-        - Biological systems have exploitable memory for predictive modeling
-        - Past activity is as important as (or more than) acoustic indices
-        - Continuous monitoring provides value beyond environmental sensing
-        - TimeSeriesSplit reveals temporal leakage in standard validation
+    **If temporal modeling shows significant improvement:**
+    - Biological systems have exploitable memory for predictive modeling
+    - Past activity is as important as (or more than) acoustic indices
+    - Continuous monitoring provides value beyond environmental sensing
+    - TimeSeriesSplit reveals temporal leakage in standard validation
 
-        **If temporal modeling shows limited improvement:**
-        - Marine biological patterns may be primarily driven by environmental conditions
-        - Acoustic indices capture most predictive information
-        - Temporal features provide marginal additional value
-        - Standard validation methods remain appropriate
+    **If temporal modeling shows limited improvement:**
+    - Marine biological patterns may be primarily driven by environmental conditions
+    - Acoustic indices capture most predictive information
+    - Temporal features provide marginal additional value
+    - Standard validation methods remain appropriate
 
-        ### Scientific Impact
+    ### Scientific Impact
 
-        This analysis addresses a fundamental question in ecological monitoring: **How much does biological memory contribute to predictable patterns?**
+    This analysis addresses a fundamental question in ecological monitoring: **How much does biological memory contribute to predictable patterns?**
 
-        The results inform:
-        - **Monitoring system design**: Should we invest in continuous vs snapshot sampling?
-        - **Model architecture**: Do we need temporal models or are static models sufficient?
-        - **Resource allocation**: How much effort should focus on real-time vs historical data?
-        - **Early warning capability**: Can we predict biological events before they happen?
+    The results inform:
+    - **Monitoring system design**: Should we invest in continuous vs snapshot sampling?
+    - **Model architecture**: Do we need temporal models or are static models sufficient?
+    - **Resource allocation**: How much effort should focus on real-time vs historical data?
+    - **Early warning capability**: Can we predict biological events before they happen?
 
-        ### Integration with Existing Notebooks
+    ### Integration with Existing Notebooks
 
-        This temporal modeling framework can be integrated into:
-        - **Notebook 7**: Use temporal validation for continuous monitoring assessment
-        - **Future work**: Apply temporal modeling to specific species prediction
-        - **Operational systems**: Implement biological momentum for adaptive sampling
-        """
+    This temporal modeling framework can be integrated into:
+    - **Notebook 7**: Use temporal validation for continuous monitoring assessment
+    - **Future work**: Apply temporal modeling to specific species prediction
+    - **Operational systems**: Implement biological momentum for adaptive sampling
+    """
     )
     return
 
