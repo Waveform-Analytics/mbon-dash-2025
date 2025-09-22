@@ -1,0 +1,23 @@
+dataset,model,feature,importance,rank,type
+acoustic_with_temporal,RandomForest,BI_roll_24h_mean,0.016817080989453993,5,🕒 temporal
+acoustic_with_temporal,RandomForest,AnthroEnergy_roll_4h_std,0.016809930865732115,6,🕒 temporal
+acoustic_with_temporal,RandomForest,NDSI_roll_12h_mean,0.012450290740277108,9,🕒 temporal
+acoustic_with_temporal,RandomForest,BGNf_roll_4h_min,0.01204481890611254,10,🕒 temporal
+environmental_with_temporal,RandomForest,Water temp (°C)_roll_4h_max,0.016809930865732115,6,🕒 temporal
+environmental_with_temporal,RandomForest,High (7000-40000 Hz)_roll_4h_mean,0.01204481890611254,10,🕒 temporal
+all_raw,RandomForest,Water temp (°C),0.016809930865732115,6,🌡️ environmental
+all_with_temporal,RandomForest,NDSI_roll_24h_mean,0.016817080989453993,5,🕒 temporal
+all_with_temporal,RandomForest,Water temp (°C),0.016809930865732115,6,🌡️ environmental
+all_with_temporal,RandomForest,Water temp (°C)_roll_4h_max,0.013448161020201733,7,🕒 temporal
+all_with_temporal,RandomForest,rBA_roll_12h_mean,0.012450290740277108,9,🕒 temporal
+all_with_temporal,RandomForest,AnthroEnergy_roll_4h_min,0.01204481890611254,10,🕒 temporal
+full_temporal,RandomForest,recent_activity_rate_4h,0.08050586820147297,1,🐟 biological
+full_temporal,RandomForest,recent_activity_rate_12h,0.045284068810346065,2,🐟 biological
+full_temporal,RandomForest,recent_activity_rate_24h,0.03653381801637519,3,🐟 biological
+full_temporal,RandomForest,month_cos,0.018909861988611363,4,📅 cyclical
+full_temporal,RandomForest,NDSI_roll_24h_mean,0.016817080989453993,5,🕒 temporal
+full_temporal,RandomForest,Water temp (°C),0.016809930865732115,6,🌡️ environmental
+full_temporal,RandomForest,Water temp (°C)_roll_4h_max,0.013448161020201733,7,🕒 temporal
+full_temporal,RandomForest,activity_increasing_4h,0.01299350095363324,8,🐟 biological
+full_temporal,RandomForest,rBA_roll_12h_mean,0.012450290740277108,9,🕒 temporal
+full_temporal,RandomForest,AnthroEnergy_roll_4h_min,0.01204481890611254,10,🕒 temporal
