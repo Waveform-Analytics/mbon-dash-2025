@@ -1,0 +1,11 @@
+acoustic_index,selection_method,phase
+AnthroEnergy,mutual_information,phase2
+BGNf,mutual_information,phase2
+LFC,mutual_information,phase2
+rBA,mutual_information,phase2
+NDSI,mutual_information,phase2
+BI,mutual_information,phase2
+ENRf,mutual_information,phase2
+LEQf,mutual_information,phase2
+MED,mutual_information,phase2
+BGNt,mutual_information,phase2
