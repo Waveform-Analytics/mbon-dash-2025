@@ -341,8 +341,6 @@ def _(
     mutual_info_classif,
     np,
     pd,
-    rf_results,
-    rf_row,
 ):
     # Enhanced Feature Selection: Comparative Analysis
     print("ENHANCED FEATURE SELECTION: COMPARATIVE ANALYSIS")
@@ -525,7 +523,7 @@ def _(
                     'rankings': rf_results_df,
                     'confirmed_features': rf_results_df.head(5)['feature'].tolist(),
                     'fallback_used': True,
-                    'best_acoustic_index': rf_results[rf_results['feature_type'] == 'acoustic_index'].iloc[0]['feature']
+                    'best_acoustic_index': rf_results_df[rf_results_df['feature_type'] == 'acoustic_index'].iloc[0]['feature']
                 }
 
         else:
@@ -548,13 +546,12 @@ def _(
             print(f"Top 5 features by Random Forest importance:")
             for i, (_, row) in enumerate(rf_results_df.head().iterrows()):
                 print(f"  {i+1}. {row['feature']} ({row['feature_type']}): {row['rf_importance']:.3f}")
-                print(f"  {_i+1}. {rf_row['feature']} ({rf_row['feature_type']}): {rf_row['rf_importance']:.3f}")
 
             current_target_results['boruta'] = {
                 'rankings': rf_results_df,
                 'confirmed_features': rf_results_df.head(5)['feature'].tolist(),
                 'fallback_used': True,
-                'best_acoustic_index': rf_results[rf_results['feature_type'] == 'acoustic_index'].iloc[0]['feature']
+                'best_acoustic_index': rf_results_df[rf_results_df['feature_type'] == 'acoustic_index'].iloc[0]['feature']
             }
 
         # -------------------------------------------------------------
@@ -846,7 +843,6 @@ def _(
     pd,
     plot_dir,
     plt,
-    target_name,
 ):
     # Enhanced Results Analysis and Visualization
     print("ENHANCED RESULTS ANALYSIS")
@@ -879,7 +875,7 @@ def _(
         ax.set_yticks(y_pos)
         ax.set_yticklabels(mi_features['feature'], fontsize=8)
         ax.set_xlabel('Mutual Information Score')
-        ax.set_title(f'{target_name.replace("_", " ").title()}\nFeature Importance')
+        ax.set_title(f'{target_name_viz.replace("_", " ").title()}\nFeature Importance')
         ax.grid(True, alpha=0.3, axis='x')
         ax.invert_yaxis()
 
@@ -976,7 +972,6 @@ def _(
     np,
     performance_df,
     pickle,
-    target_name,
 ):
     # Comprehensive Results Summary
     print("COMPREHENSIVE RESULTS SUMMARY AND SCIENTIFIC INTERPRETATION")
@@ -1015,7 +1010,7 @@ def _(
         comparison = consensus_results['comparison']
         consensus_rate = comparison['agreement_rate']
 
-        consensus_summary[target_name] = {
+        consensus_summary[summary_target_name] = {
             'agreement_rate': consensus_rate,
             'consensus_features': comparison['consensus_features'],
             'total_unique_features': comparison['total_unique_features']
