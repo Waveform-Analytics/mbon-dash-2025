@@ -50,12 +50,10 @@ Different data streams operated on different schedules:
 
 We developed a temporal alignment system that matched all data sources to consistent 2-hour time windows.
 
-![Figure 1: Data Alignment Process](output/phase1_data/figures/data_alignment_process.png){width=100%}
-*Timeline diagram showing how different data streams get aligned into consistent 2-hour windows.*
 
 ### Feature Engineering: Teaching Computers What to Listen For
 
-Marine biologists don't just listen for individual fish calls - they listen for patterns. We translated this expert knowledge into mathematical features:
+Marine biologists don't just listen for individual fish calls - they listen for patterns. By computing indices, we essentially translated this expert knowledge into mathematical features:
 
 **Acoustic Indices**:
 - **Background noise levels**: How quiet or noisy is the ocean?
@@ -65,33 +63,40 @@ Marine biologists don't just listen for individual fish calls - they listen for 
 
 **Environmental Context**:
 - **Water temperature** and recent changes
+- **Water depth** which captures mainly tidal fluctuations
 - **Seasonal timing**: Day of year and time of day
-- **Ambient sound levels**: Natural vs. human-caused noise
 
 ## The Machine Learning Journey: Systematic Attempts and Instructive Failures
 
 ### Phase 1: Species-Specific Prediction (Notebook 4)
+
 **Hypothesis:** Acoustic indices can predict individual species calling patterns  
+
 **Approach:** Direct prediction of species activity levels (0-3 scale) using acoustic indices  
-**Result:** **Complete failure** - models couldn't reliably predict when individual species would call  
+
+**Result:** **sorry but: Complete failure** - models couldn't reliably predict when individual species would call  
+
 **Lesson:** Individual species patterns are too complex and irregular for generic acoustic indices to capture
 
 ### Phase 2: Vessel Analysis and Signal Cleaning (Notebook 5)
 **Hypothesis:** Removing vessel noise will reveal clearer biological patterns  
 **Approach:** 
+
 - Train models to detect vessel presence using acoustic indices
 - Compare fish-acoustic correlations with/without vessel periods
 
 **Results:** 
+
 - **Vessel detection:** 85.4% accuracy (Logistic Regression) - this actually worked
 - **Signal improvement:** Only 8.1% improvement in biological correlations when vessels removed
 - **Vessel presence:** 20.7% of monitoring periods had vessel activity
 
-**Lesson:** Vessel noise wasn't the primary limiting factor for biological signal detection
+**Lesson:** Vessel noise wasn't the primary limiting factor for biological signal detection which is weird because 
 
 ### Phase 3: Community-Level Detection (Notebooks 6-6.04)
 **Hypothesis:** Community-level patterns are more detectable than species-specific ones  
 **Approach:** Multiple systematic iterations:
+
 - Basic community activity metrics (total activity, # active species)
 - Enhanced feature engineering with environmental variables
 - Systematic feature selection comparison (Mutual Information vs Boruta)
@@ -100,6 +105,7 @@ Marine biologists don't just listen for individual fish calls - they listen for 
 **Results:** Mixed success with critical problems revealed
 
 #### Best Case Performance (Standard Cross-Validation):
+
 - **"Any biological activity" detection:** F1 = 0.84 (Random Forest)
 - **"High activity" detection:** F1 = 0.71 (Decision Tree)  
 - **Multi-species activity:** F1 = 0.58 (Decision Tree)
@@ -109,12 +115,14 @@ Marine biologists don't just listen for individual fish calls - they listen for 
 
 **1. Feature Selection Instability**
 Mutual Information and Boruta (the method used by Transue et al.) selected almost completely different features:
+
 - **Agreement rate:** Only 10-30% overlap in top features across targets
 - **"Any activity" target:** 0% agreement between methods
 - **"High activity" targets:** Only 20% agreement
 - **Single consensus feature:** ACTspFract appeared in both methods for some targets
 
 This disagreement suggested either:
+
 - The biological signal was too weak or unstable
 - Different methods were capturing noise rather than robust signal
 - Complex biological relationships that no single method could capture reliably
@@ -128,12 +136,14 @@ When proper time-series validation replaced random train/test splits, performanc
 - **Real-world performance:** Would be much lower than initially reported
 
 **3. Temperature Dominance Problem**
+
 - Temperature consistently ranked as the top predictor across all models
 - Environmental data alone might be sufficient for most predictions
 - Acoustic indices provided minimal additional value over temperature trends
 - Question emerged: "Do we need acoustic monitoring if temperature predicts biological activity?"
 
 **4. Limited Generalization**
+
 - Models didn't transfer reliably across monitoring stations
 - Seasonal patterns appeared station-specific
 - No evidence of robust, transferable acoustic-biological relationships
@@ -148,7 +158,7 @@ After systematic testing across multiple approaches, algorithms, and validation 
 - **Limited transferability** - models were site and time-specific
 
 ![Figure 2a: Species-Specific Prediction Failures](dashboard/public/views/notebooks/02c_species_prediction_failure.png){width=100%}
-*Scatter plots showing failed attempts to predict individual species calling patterns using acoustic indices. Poor correlations (R < 0.1) demonstrate why this approach was abandoned.*
+*Scatter plots showing failed attempts to predict individual species calling patterns using acoustic indices. Poor correlations (R < 0.1) demonstrate why this approach was abandoned.* this seems like a terrible figure, what should we show instead (if anything). 
 
 ![Figure 2b: Feature Selection Disagreement Crisis](dashboard/public/views/notebooks/02a_feature_selection_disagreement.png){width=100%}
 *Mutual Information and Boruta feature selection methods showed 0-30% agreement across biological targets, indicating unstable or weak biological signals in the data.*
@@ -157,7 +167,7 @@ After systematic testing across multiple approaches, algorithms, and validation 
 *When proper time-series validation replaced random cross-validation, performance dropped 6-23%, revealing that models were "cheating" by using future information to predict past events.*
 
 ![Figure 2d: ML Journey Summary](dashboard/public/views/notebooks/02d_ml_journey_summary.png){width=100%}
-*Timeline showing the systematic progression of ML attempts from initial failures through the breakthrough that led to the pattern-based guidance system.*
+*Timeline showing the systematic progression of ML attempts from initial failures through the breakthrough that led to the pattern-based guidance system.* (this seems rather dramatic: "CRISIS"! "REVELATION"!)
 
 **The critical realization**: We were asking the wrong question.
 
@@ -172,27 +182,23 @@ The breakthrough came when we started looking at our acoustic index heat maps al
 Seeing these patterns prompted us to reframe our approach. Instead of "Will fish be calling tomorrow?" we asked "Given that it's May 15th at 6 AM, how likely is it that fish are calling right now, and should we focus our listening time here?"
 
 This led us to systematically visualize our data as **2D probability surfaces** mapping fish activity likelihood across:
+
 - **Day of year** (seasonal patterns)
 - **Time of day** (daily rhythms)
 
 ### The Hidden Patterns Revealed
 
 When we plotted fish detection data this way, remarkably clear patterns emerged:
+
 - **Silver perch**: Sharp seasonal peaks with consistent daily patterns
 - **Oyster toadfish**: Tight spring spawning windows with dawn/dusk activity
 - **Spotted seatrout**: Summer-focused activity with midday peaks
+
+The following heatmaps show how visually similar some indices are to the seasonal timing of fish calls. 
 
 ![Figure 4: Acoustic Index vs Manual Detection Comparison](output/phase6_temporal_correlation/figures/acoustic_vs_manual_detection_comparison_spotted_seatrout_station_14M.png){width=100%}
 *Side-by-side heat maps showing manual detection patterns and acoustic indices. The visual similarity between these patterns was our first hint that there were discoverable temporal patterns in the data.*
 
-### The Hidden Patterns Revealed
-
-When we plotted fish detection data this way, remarkably clear patterns emerged:
-- **Silver perch**: Sharp seasonal peaks with consistent daily patterns
-- **Oyster toadfish**: Tight spring spawning windows with dawn/dusk activity
-- **Spotted seatrout**: Summer-focused activity with midday peaks
-
-These patterns matched known fish biology.
 
 ![Figure 5: Species-Specific 2D Probability Surfaces](output/phase9_detection_guidance/figures/species_probability_surfaces.png){width=100%}
 *Heat maps for each species showing probability of detection across day-of-year vs time-of-day. This systematic approach revealed the clear seasonal and daily patterns that became the foundation of our guidance system.*
@@ -204,6 +210,7 @@ These patterns matched known fish biology.
 We used mutual information to measure how much each acoustic index correlates with fish calling behavior.
 
 **Top Predictive Acoustic Indices:**
+
 - **BGN (Background Noise)**: Quieter periods often coincide with fish calls
 - **NDSI (Normalized Difference Soundscape Index)**: Balance between biological and human sounds
 - **Shannon Diversity**: More diverse soundscapes often contain fish calls
@@ -212,10 +219,12 @@ We used mutual information to measure how much each acoustic index correlates wi
 ### Environmental vs. Acoustic Variables
 
 **Environmental Variables**:
+
 - Water temperature: Mutual information = 0.17
 - Temperature changes over 2-6 hours: Strong secondary predictors
 
 **Acoustic Indices**:
+
 - Best acoustic indices: Mutual information = 0.09-0.12
 - Multiple indices needed to match single temperature measurement
 - But they provide complementary information - not redundant. For example, temperature tells us about biological readiness to call, while acoustic indices tell us about current soundscape conditions that might facilitate or mask calling behavior. When we combined both types of features, model performance improved by 12-15% over using either alone.
@@ -227,7 +236,7 @@ We used mutual information to measure how much each acoustic index correlates wi
 
 ### How It Works
 
-1. **Pattern Learning**: Analyze historical detection data to build species-specific 2D probability surfaces
+1. **Pattern Learning**: Analyze manual detection data to build species-specific 2D probability surfaces
 2. **Environmental Enhancement**: Adjust base probabilities using current conditions
 3. **Priority Ranking**: Rank all time periods by detection probability
 4. **Guided Monitoring**: Focus manual efforts on highest-ranked periods
@@ -237,21 +246,44 @@ We used mutual information to measure how much each acoustic index correlates wi
 **[FIGURE 7: Detection Guidance System Workflow]**
 *Suggested visualization*: Flowchart showing the four-step process from historical pattern learning through guided monitoring, with example data/visualizations at each step.
 
+### Validation Methodology
+
+**Cross-Station Validation Approach**
+
+Given that our data spans only one year (2021), we couldn't use traditional temporal train/test splits. Instead, we used cross-station validation to test model transferability across spatial locations:
+
+**The Three-Station System**:
+- **Station 37M**: Mouth of river
+- **Station 9M**: Furthest up river 
+- **Station 14M**: In between the other two
+
+**Validation Protocol**:
+1. **Train on 2, test on 1**: For each validation round, we trained our models on data from two stations and tested performance on the third station
+2. **All combinations tested**: We ran three validation scenarios:
+   - Train: Stations 37M + 9M → Test: Station 14M
+   - Train: Stations 37M + 14M → Test: Station 9M
+   - Train: Stations 9M + 14M → Test: Station 37M
+3. **Average performance**: Final metrics represent the average across all three cross-station scenarios
+
+This approach tests whether patterns learned at one location can predict biological activity at different locations - a critical requirement for real-world deployment of guidance systems.
+
 ### Performance Results
 
-We tested using cross-station validation (training on two stations, testing on the third):
-
+Using our cross-station validation approach:
 **Silver Perch: Best Performance**
+
 - **86.6% of detections found** by checking only top 20% of time periods
 - **80% reduction in manual effort**
 - Consistent performance across stations
 
 **Oyster Toadfish: Strong Seasonal Patterns**
+
 - **69.2% detection efficiency** at 20% effort
 - **AUC = 0.944**: Nearly perfect discrimination
 - Correctly identified known spawning seasons
 
 **Spotted Seatrout: Good Generalization**
+
 - **67.9% detection efficiency**
 - **AUC = 0.887**: Strong cross-station performance
 - Summer patterns consistent across locations
@@ -262,6 +294,7 @@ We tested using cross-station validation (training on two stations, testing on t
 ### Why Some Species Worked Better
 
 **High Performers** (Silver perch, Oyster toadfish):
+
 - Strong seasonal patterns
 - Consistent daily rhythms
 - Sufficient detection events for pattern learning
@@ -280,13 +313,15 @@ We tested using cross-station validation (training on two stations, testing on t
 ### Time Savings
 
 **Traditional Approach**:
+
 - 3 months of monitoring = 2,160 two-hour periods to check
-- 5 minutes per period = 180 hours of expert time
+- 5 minutes per period = 180 hours of expert time (i really don't know - this is a guess)
 
 **Guided Approach**:
+
 - Check only top 20% of periods = 432 periods
 - Same 5 minutes per period = 36 hours
-- **Time savings: 144 hours (80% reduction)**
+- **Time savings: 144 hours (80% reduction)** - again, just guessing on specific timing
 - **Detection rate: Still capture 70-85% of biological activity**
 
 ![Figure 10: Time Savings Analysis](output/phase9_detection_guidance/figures/time_savings_analysis.png){width=100%}
@@ -338,11 +373,12 @@ Our system addresses a major bottleneck in marine conservation: the gap between 
 ### Next Steps
 
 **Near-term**:
-- Multi-year validation as more data becomes available
-- Species-specific and location-specific threshold optimization
-- Real-time monitoring implementation
+
+- Multi-year validation as indices are computed for 2018 data
+- Compute LTSA/decidecade spectral info so we can check if that helps improve our automated process.
 
 **Long-term**:
+
 - Regional network deployment
 - Climate change monitoring using pattern shifts
 - Integration with automated detection algorithms
