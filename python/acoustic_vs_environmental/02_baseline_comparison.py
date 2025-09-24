@@ -17,6 +17,7 @@ sys.path.append(str(Path(__file__).parent))
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
@@ -374,6 +375,156 @@ def save_phase2_results(insights):
     print(f"💾 Saved summary to: phase2_summary.json")
 
 
+def create_figure_6_feature_importance(mi_results):
+    """
+    FIGURE 6: Create horizontal bar chart showing mutual information scores 
+    comparing acoustic vs environmental features.
+    """
+    print(f"\n🎨 CREATING FIGURE 6: Feature Importance Comparison")
+    print("=" * 50)
+    
+    # Get top features from each type
+    acoustic_features = mi_results[mi_results['feature_type'] == 'acoustic'].nlargest(10, 'mi_score')
+    env_features = mi_results[mi_results['feature_type'] == 'environmental'].nlargest(10, 'mi_score')
+    
+    # Combine for plotting
+    plot_data = pd.concat([env_features, acoustic_features]).sort_values('mi_score', ascending=True)
+    
+    # Create the plot
+    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+    
+    # Color by feature type
+    colors = ['#ff7f0e' if ft == 'acoustic' else '#1f77b4' for ft in plot_data['feature_type']]
+    
+    # Create horizontal bar plot
+    bars = ax.barh(range(len(plot_data)), plot_data['mi_score'], color=colors)
+    
+    # Customize the plot
+    ax.set_yticks(range(len(plot_data)))
+    ax.set_yticklabels([f[:30] + '...' if len(f) > 33 else f for f in plot_data['feature']], fontsize=10)
+    ax.set_xlabel('Mutual Information Score', fontsize=12)
+    ax.set_title('Feature Importance: Mutual Information with Fish Activity\n(Orange = Acoustic, Blue = Environmental)', 
+                fontsize=14, fontweight='bold')
+    ax.grid(axis='x', alpha=0.3)
+    
+    # Add value labels on bars
+    for i, (bar, score) in enumerate(zip(bars, plot_data['mi_score'])):
+        ax.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height()/2, 
+               f'{score:.3f}', va='center', fontsize=9)
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [Patch(facecolor='#1f77b4', label='Environmental Features'),
+                      Patch(facecolor='#ff7f0e', label='Acoustic Indices')]
+    ax.legend(handles=legend_elements, loc='lower right')
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_dir = Path("output/phase2_baseline/figures")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    fig_path = output_dir / "feature_importance_comparison.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved Figure 6: {fig_path}")
+    plt.close()
+    
+    return fig_path
+
+def create_figure_2_model_performance(baseline_results):
+    """
+    FIGURE 2: Create bar chart comparing model performance across different approaches.
+    """
+    print(f"\n🎨 CREATING FIGURE 2: Model Performance Comparison")
+    print("=" * 50)
+    
+    # Prepare data for plotting
+    models = []
+    feature_sets = []
+    f1_scores = []
+    std_scores = []
+    
+    feature_set_labels = {
+        'acoustic_selected': 'Top Acoustic Indices',
+        'environmental_only': 'Environmental Only', 
+        'combined_raw': 'Combined Features'
+    }
+    
+    for model_name, model_results in baseline_results.items():
+        for set_name, results in model_results.items():
+            if set_name in feature_set_labels:
+                models.append(model_name)
+                feature_sets.append(feature_set_labels[set_name])
+                f1_scores.append(results['mean_f1'])
+                std_scores.append(results['std_f1'])
+    
+    # Create DataFrame for easier plotting
+    plot_df = pd.DataFrame({
+        'Model': models,
+        'Feature_Set': feature_sets,
+        'F1_Score': f1_scores,
+        'F1_Std': std_scores
+    })
+    
+    # Create the plot
+    fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+    
+    # Group by feature set for side-by-side bars
+    unique_sets = plot_df['Feature_Set'].unique()
+    unique_models = plot_df['Model'].unique()
+    
+    x = np.arange(len(unique_sets))
+    width = 0.35
+    
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+    
+    for i, model in enumerate(unique_models):
+        model_data = plot_df[plot_df['Model'] == model]
+        # Reorder to match unique_sets order
+        ordered_data = []
+        ordered_std = []
+        for fs in unique_sets:
+            matching = model_data[model_data['Feature_Set'] == fs]
+            if len(matching) > 0:
+                ordered_data.append(matching['F1_Score'].iloc[0])
+                ordered_std.append(matching['F1_Std'].iloc[0])
+            else:
+                ordered_data.append(0)
+                ordered_std.append(0)
+        
+        bars = ax.bar(x + i*width, ordered_data, width, yerr=ordered_std, 
+                     label=model, color=colors[i], alpha=0.8, capsize=5)
+        
+        # Add value labels on bars
+        for bar, score, std in zip(bars, ordered_data, ordered_std):
+            if score > 0:
+                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + std + 0.01,
+                       f'{score:.3f}', ha='center', va='bottom', fontsize=10)
+    
+    # Customize the plot
+    ax.set_xlabel('Feature Set', fontsize=12)
+    ax.set_ylabel('F1 Score', fontsize=12)
+    ax.set_title('Model Performance Comparison\n(Error bars show standard deviation)', 
+                fontsize=14, fontweight='bold')
+    ax.set_xticks(x + width/2)
+    ax.set_xticklabels(unique_sets)
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    ax.set_ylim(0, max(f1_scores) + max(std_scores) + 0.1)
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_dir = Path("output/phase2_baseline/figures")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    fig_path = output_dir / "model_performance_comparison.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved Figure 2: {fig_path}")
+    plt.close()
+    
+    return fig_path
+
 def main():
     """Execute Phase 2: Baseline comparison and index selection."""
     
@@ -399,6 +550,16 @@ def main():
     
     # Generate insights
     insights = generate_phase2_insights(mi_results, baseline_results, selected_indices)
+    
+    # Generate figures for the report
+    print(f"\n📊 GENERATING FIGURES FOR REPORT")
+    print("=" * 40)
+    
+    # Figure 6: Feature Importance Comparison
+    create_figure_6_feature_importance(mi_results)
+    
+    # Figure 2: Model Performance Comparison
+    create_figure_2_model_performance(baseline_results)
     
     # Save results
     save_phase2_results(insights)
