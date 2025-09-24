@@ -409,6 +409,177 @@ def cross_station_validation(df, species, acoustic_features, env_features):
     
     return results
 
+def create_figure_10_time_savings(species_results, figs_dir):
+    """
+    FIGURE 10: Create before/after visualization showing traditional vs guided monitoring approach.
+    """
+    print(f"\n🎨 CREATING FIGURE 10: Time Savings Analysis")
+    print("=" * 50)
+    
+    # Calculate time savings data
+    species_data = []
+    
+    for species, results in species_results.items():
+        if 'validation_results' in results:
+            # Get average detection efficiency and time savings across stations
+            detection_effs = []
+            time_savings = []
+            total_periods = []
+            
+            for station_result in results['validation_results'].values():
+                if 'efficiency_results' in station_result:
+                    # Get 20% threshold results
+                    eff_20 = station_result['efficiency_results'].get(0.2, {}).get('detection_efficiency', 0)
+                    savings_20 = station_result['efficiency_results'].get(0.2, {}).get('time_savings', 0)
+                    periods = station_result.get('total_periods', 0)
+                    
+                    detection_effs.append(eff_20)
+                    time_savings.append(savings_20)
+                    total_periods.append(periods)
+            
+            if detection_effs:
+                avg_detection_eff = np.mean(detection_effs)
+                avg_time_savings = np.mean(time_savings)
+                avg_periods = np.mean(total_periods)
+                
+                species_data.append({
+                    'species': species,
+                    'detection_efficiency': avg_detection_eff,
+                    'time_savings': avg_time_savings,
+                    'periods_to_check_traditional': avg_periods,
+                    'periods_to_check_guided': avg_periods * (1 - avg_time_savings),
+                    'hours_traditional': avg_periods * 5 / 60,  # 5 min per period
+                    'hours_guided': avg_periods * (1 - avg_time_savings) * 5 / 60
+                })
+    
+    if not species_data:
+        print("⚠️ No data available for time savings analysis")
+        return
+    
+    # Create the visualization
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Plot 1: Traditional vs Guided Monitoring Effort
+    species_names = [d['species'].replace(' ', '\n') for d in species_data]
+    traditional_hours = [d['hours_traditional'] for d in species_data]
+    guided_hours = [d['hours_guided'] for d in species_data]
+    
+    x = np.arange(len(species_names))
+    width = 0.35
+    
+    bars1 = ax1.bar(x - width/2, traditional_hours, width, label='Traditional Approach', 
+                   color='#ff7f7f', alpha=0.8)
+    bars2 = ax1.bar(x + width/2, guided_hours, width, label='Guided Approach', 
+                   color='#7fbf7f', alpha=0.8)
+    
+    ax1.set_xlabel('Species')
+    ax1.set_ylabel('Expert Time Required (hours)')
+    ax1.set_title('Monitoring Effort Comparison\n(3 months of data)')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(species_names)
+    ax1.legend()
+    ax1.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels on bars
+    for bar in bars1:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                f'{height:.0f}h', ha='center', va='bottom', fontsize=9)
+    
+    for bar in bars2:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                f'{height:.0f}h', ha='center', va='bottom', fontsize=9)
+    
+    # Plot 2: Detection Efficiency vs Time Savings
+    detection_effs = [d['detection_efficiency'] * 100 for d in species_data]
+    time_savings_pct = [d['time_savings'] * 100 for d in species_data]
+    
+    scatter = ax2.scatter(time_savings_pct, detection_effs, 
+                         s=100, alpha=0.7, c=range(len(species_data)), cmap='viridis')
+    
+    # Add species labels
+    for i, d in enumerate(species_data):
+        ax2.annotate(d['species'][:12] + ('...' if len(d['species']) > 12 else ''), 
+                    (time_savings_pct[i], detection_effs[i]),
+                    xytext=(5, 5), textcoords='offset points', fontsize=9, alpha=0.8)
+    
+    ax2.set_xlabel('Time Savings (%)')
+    ax2.set_ylabel('Detection Efficiency (%)')
+    ax2.set_title('Efficiency vs Time Savings Trade-off\n(Top 20% effort threshold)')
+    ax2.grid(True, alpha=0.3)
+    
+    # Add reference lines
+    ax2.axhline(y=70, color='red', linestyle='--', alpha=0.5, label='70% efficiency target')
+    ax2.axvline(x=80, color='red', linestyle='--', alpha=0.5, label='80% time savings target')
+    ax2.legend()
+    
+    plt.suptitle('Figure 10: Time Savings Analysis - Traditional vs Guided Monitoring', 
+                fontsize=16, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    
+    # Save figure
+    fig_path = figs_dir / "time_savings_analysis.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved Figure 10: {fig_path}")
+    plt.close()
+    
+    # Also create a summary impact visualization
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    
+    # Calculate total impact across all species
+    total_traditional = sum(traditional_hours)
+    total_guided = sum(guided_hours)
+    total_savings = total_traditional - total_guided
+    avg_detection_eff = np.mean([d['detection_efficiency'] for d in species_data])
+    
+    # Create summary bars
+    categories = ['Total Expert\nTime Required']
+    traditional_vals = [total_traditional]
+    guided_vals = [total_guided]
+    
+    x = np.arange(len(categories))
+    width = 0.35
+    
+    bars1 = ax.bar(x - width/2, traditional_vals, width, label='Traditional Approach', 
+                  color='#ff7f7f', alpha=0.8)
+    bars2 = ax.bar(x + width/2, guided_vals, width, label='Guided Approach', 
+                  color='#7fbf7f', alpha=0.8)
+    
+    ax.set_ylabel('Hours')
+    ax.set_title(f'Overall Impact: {total_savings:.0f} Hours Saved ({total_savings/total_traditional:.0%} reduction)\n'
+                f'Average Detection Efficiency: {avg_detection_eff:.1%}')
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories)
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels
+    for bar, val in zip(bars1, traditional_vals):
+        ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + bar.get_height()*0.01,
+               f'{val:.0f}h', ha='center', va='bottom', fontweight='bold')
+    
+    for bar, val in zip(bars2, guided_vals):
+        ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + bar.get_height()*0.01,
+               f'{val:.0f}h', ha='center', va='bottom', fontweight='bold')
+    
+    # Add savings annotation
+    ax.annotate(f'SAVINGS:\n{total_savings:.0f} hours', xy=(0, max(traditional_vals)/2), 
+               xytext=(0.5, max(traditional_vals)*0.8),
+               ha='center', va='center', fontsize=14, fontweight='bold',
+               bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7),
+               arrowprops=dict(arrowstyle='->', color='black', lw=2))
+    
+    plt.tight_layout()
+    
+    # Save summary figure
+    summary_fig_path = figs_dir / "time_savings_summary.png"
+    plt.savefig(summary_fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved time savings summary: {summary_fig_path}")
+    plt.close()
+    
+    return fig_path, summary_fig_path
+
 def generate_visualizations(df, species_results, output_dir):
     """Generate visualization plots for the analysis."""
     
@@ -513,6 +684,9 @@ def generate_visualizations(df, species_results, output_dir):
         plt.tight_layout()
         plt.savefig(figs_dir / 'cross_station_validation.png', dpi=300, bbox_inches='tight')
         plt.close()
+    
+    # 3. FIGURE 10: Time Savings Analysis
+    create_figure_10_time_savings(species_results, figs_dir)
     
     print(f"✓ Saved visualizations to {figs_dir}")
 
