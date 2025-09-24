@@ -481,14 +481,16 @@ def create_heatmap_comparison_figure(df, species='Spotted seatrout', acoustic_in
     # Plot species detection heatmap first
     species_heatmap = create_heatmap_data(species, station_df, normalize=True)
     
-    im1 = axes_flat[0].imshow(species_heatmap, aspect='auto', cmap='viridis', origin='lower')
+    # Transpose to match probability surface orientation (day on x-axis, period on y-axis)
+    im1 = axes_flat[0].imshow(species_heatmap.T, aspect='auto', cmap='viridis', origin='lower',
+                             extent=[1, 365, 0, 11])
     axes_flat[0].set_title(f'{species}\n(Manual Detections)', fontsize=12, fontweight='bold')
-    axes_flat[0].set_xlabel('Time of Day (2-hour periods)')
-    axes_flat[0].set_ylabel('Day of Year')
-    axes_flat[0].set_xticks(range(0, 12, 2))
-    axes_flat[0].set_xticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
-    axes_flat[0].set_yticks([0, 91, 182, 273, 364])
-    axes_flat[0].set_yticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+    axes_flat[0].set_xlabel('Day of Year')
+    axes_flat[0].set_ylabel('2-Hour Period (0=midnight-2am)')
+    axes_flat[0].set_xticks([1, 91, 182, 273, 365])
+    axes_flat[0].set_xticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+    axes_flat[0].set_yticks(range(0, 12, 2))
+    axes_flat[0].set_yticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
     plt.colorbar(im1, ax=axes_flat[0], label='Normalized Activity')
     
     # Plot acoustic index heatmaps
@@ -496,14 +498,16 @@ def create_heatmap_comparison_figure(df, species='Spotted seatrout', acoustic_in
         if i < len(axes_flat):
             acoustic_heatmap = create_heatmap_data(acoustic_idx, station_df, normalize=True)
             
-            im = axes_flat[i].imshow(acoustic_heatmap, aspect='auto', cmap='viridis', origin='lower')
+            # Transpose to match probability surface orientation (day on x-axis, period on y-axis)
+            im = axes_flat[i].imshow(acoustic_heatmap.T, aspect='auto', cmap='viridis', origin='lower',
+                                   extent=[1, 365, 0, 11])
             axes_flat[i].set_title(f'{acoustic_idx}\n(Acoustic Index)', fontsize=12)
-            axes_flat[i].set_xlabel('Time of Day (2-hour periods)')
-            axes_flat[i].set_ylabel('Day of Year')
-            axes_flat[i].set_xticks(range(0, 12, 2))
-            axes_flat[i].set_xticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
-            axes_flat[i].set_yticks([0, 91, 182, 273, 364])
-            axes_flat[i].set_yticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+            axes_flat[i].set_xlabel('Day of Year')
+            axes_flat[i].set_ylabel('2-Hour Period (0=midnight-2am)')
+            axes_flat[i].set_xticks([1, 91, 182, 273, 365])
+            axes_flat[i].set_xticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+            axes_flat[i].set_yticks(range(0, 12, 2))
+            axes_flat[i].set_yticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
             plt.colorbar(im, ax=axes_flat[i], label='Normalized Value')
     
     # Hide unused subplots

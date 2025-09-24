@@ -1,0 +1,85 @@
+name: Deploy Marine Acoustic Discovery Report
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'python/acoustic_vs_environmental/Marine_Acoustic_Discovery_Report_v2.qmd'
+      - 'python/acoustic_vs_environmental/output/**'
+      - 'dashboard/public/views/notebooks/**'
+      - 'python/scripts/notebooks/generate_ml_report_figures.py'
+      - '.github/workflows/deploy-report.yml'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Setup Quarto
+      uses: quarto-dev/quarto-actions/setup@v2
+      with:
+        version: "1.4.550"
+    
+    - name: Create Python environment and install dependencies
+      run: |
+        cd python
+        uv sync --dev
+    
+    - name: Generate ML report figures
+      run: |
+        cd python
+        uv run python scripts/notebooks/generate_ml_report_figures.py
+    
+    - name: Build and deploy report
+      run: |
+        cd python/acoustic_vs_environmental
+        uv run python prepare_github_pages.py
+    
+    - name: Commit and push docs folder
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Add the docs folder
+        git add docs/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Auto-update GitHub Pages deployment [skip ci]"
+          git push
+        fi
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./docs
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
