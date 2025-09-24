@@ -1,0 +1,301 @@
+---
+title: "Finding Fish in Ocean Sounds"
+subtitle: "A Data-Driven Approach to Marine Acoustic Monitoring"
+author: "Marine Biodiversity Observation Network (MBON)"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    fig-width: 12
+    fig-height: 8
+    embed-resources: true
+---
+
+## The Problem: Too Much Data, Too Little Time
+
+Marine biologists use underwater microphones (hydrophones) to monitor fish populations. These devices record ocean sounds 24/7, capturing fish calls, dolphin whistles, and ship noise. The challenge: manually listening through thousands of hours of recordings to find fish calls is extremely time-consuming.
+
+This bottleneck limits how much we can learn about ocean ecosystems. We needed a better way to identify when and where to focus our limited listening time.
+
+## Building on Previous Work
+
+Transue et al. (2023) showed that environmental factors like water temperature strongly predict fish vocal activity in Charleston Harbor. Their work used traditional machine learning (Random Forest) to identify environmental patterns.
+
+**Our contribution**: We asked whether the computed acoustic characteristics could tell us about biological activity beyond what environmental data provides. We combined environmental monitoring with acoustic indices - mathematical measures that capture different aspects of underwater sound complexity.
+
+## Our Data: A year of acoustic recordings
+
+We analyzed a year of acoustic monitoring data from three underwater listening stations:
+
+- **13,100 time periods** (2-hour chunks) during 2021
+- **10 acoustic indices** measuring sound complexity, diversity, and intensity (reduced from an initial set of 60+ indices through correlation analysis and feature selection to avoid redundancy)
+- **Environmental data** including temperature, depth, and ambient sound levels
+- **Expert-verified detections** of six marine species:
+  - Silver perch (grunts and calls)
+  - Oyster toadfish (distinctive "boat whistle" sound)
+  - Spotted seatrout (drumming sounds)
+  - Atlantic croaker (croaking calls)
+  - Red drum (drumming sounds)
+  - Vessel noise (for comparison)
+
+### Data Alignment Challenge
+
+Different data streams operated on different schedules:
+- **Acoustic recordings**: Continuous, analyzed in 2-hour blocks
+- **Fish detections**: Irregular timing based on biological activity
+- **Environmental sensors**: Various sampling intervals (15 minutes to 1 hour)
+
+We developed a temporal alignment system that matched all data sources to consistent 2-hour time windows.
+
+**[FIGURE 1: Data Alignment Process]**
+*Suggested visualization*: Timeline diagram showing how different data streams (continuous acoustic recordings, irregular fish detections, periodic environmental measurements) get aligned into consistent 2-hour windows. Could show before/after alignment with actual timestamps.
+
+### Feature Engineering: Teaching Computers What to Listen For
+
+Marine biologists don't just listen for individual fish calls - they listen for patterns. We translated this expert knowledge into mathematical features:
+
+**Acoustic Indices**:
+- **Background noise levels**: How quiet or noisy is the ocean?
+- **Sound diversity**: How many different sound sources are present?
+- **Frequency patterns**: Are sounds concentrated in low frequencies (large fish) or high frequencies (small fish)?
+- **Acoustic complexity**: Simple steady sounds vs. complex changing patterns
+
+**Environmental Context**:
+- **Water temperature** and recent changes
+- **Seasonal timing**: Day of year and time of day
+- **Ambient sound levels**: Natural vs. human-caused noise
+
+## Traditional Machine Learning Results
+
+### Model Comparison
+
+We tested three approaches:
+- **Logistic Regression**: Linear relationships between features and fish activity
+- **Random Forest**: Complex interactions between multiple environmental factors  
+- **Decision Trees**: Simple if-then rules
+
+**Winner**: Random Forest performed best overall.
+
+**[FIGURE 2: Model Performance Comparison]**
+*Suggested visualization*: Bar chart or box plot comparing accuracy/AUC scores across the three model types, possibly broken down by species or showing confidence intervals.
+
+### Key Finding: Temperature Rules
+
+Water temperature emerged as the strongest predictor of fish vocal activity. This makes biological sense - fish are cold-blooded animals whose behavior directly depends on water temperature.
+
+We found that temperature trends (how it's been changing) matter as much as current temperature.
+
+**[FIGURE 3: Temperature vs Fish Activity Relationship]**
+*Suggested visualization*: Scatter plot of water temperature vs detection probability, with different colors for different species. Could include trend lines and show both current temperature and temperature change effects.
+
+### The Seasonality Problem
+
+Traditional machine learning hit a major obstacle: seasonal data. Models trained on summer data (lots of fish calls) would incorrectly predict high activity in winter (when fish are dormant). 
+
+We tried various solutions:
+- **Temporal cross-validation**: Instead of random train/test splits, we used time-based splits (e.g., train on Jan-Mar, test on Apr-Jun). Still struggled because seasonal transitions don't have clear boundaries.
+- **Seasonal dummy variables**: Added month/season as features. Helped the model recognize seasonal patterns but couldn't predict across season boundaries.
+- **Separate seasonal models**: Built different models for each season. This worked within seasons but created disconnected systems that were hard to maintain and didn't capture transition periods.
+
+**The problem**: We were asking the wrong question.
+
+## The Breakthrough: From Prediction to Guidance
+
+### The Pattern Discovery
+
+The breakthrough came when we started looking at our acoustic index heat maps alongside manual detection patterns. The visual similarity was striking - certain acoustic indices seemed to "light up" in the same temporal patterns as fish detections. This suggested there were discoverable patterns hiding in the data.
+
+### Changing the Question
+
+Seeing these patterns prompted us to reframe our approach. Instead of "Will fish be calling tomorrow?" we asked "Given that it's May 15th at 6 AM, how likely is it that fish are calling right now, and should we focus our listening time here?"
+
+This led us to systematically visualize our data as **2D probability surfaces** mapping fish activity likelihood across:
+- **Day of year** (seasonal patterns)
+- **Time of day** (daily rhythms)
+
+### The Hidden Patterns Revealed
+
+When we plotted fish detection data this way, remarkably clear patterns emerged:
+- **Silver perch**: Sharp seasonal peaks with consistent daily patterns
+- **Oyster toadfish**: Tight spring spawning windows with dawn/dusk activity
+- **Spotted seatrout**: Summer-focused activity with midday peaks
+
+**[FIGURE 5: Species-Specific 2D Probability Surfaces]**
+*Suggested visualization*: Heat maps for each species showing probability of detection across day-of-year (x-axis) vs time-of-day (y-axis). This systematic approach revealed the clear seasonal and daily patterns that became the foundation of our guidance system.
+
+## Feature Analysis: What Matters Most
+
+### Correlation Analysis
+
+We used mutual information to measure how much each acoustic index correlates with fish calling behavior.
+
+**Top Predictive Acoustic Indices:**
+- **BGN (Background Noise)**: Quieter periods often coincide with fish calls
+- **NDSI (Normalized Difference Soundscape Index)**: Balance between biological and human sounds
+- **Shannon Diversity**: More diverse soundscapes often contain fish calls
+- **LEQ (Sound Level)**: Specific sound intensity ranges associated with biological activity
+
+**[FIGURE 4: Acoustic Index vs Manual Detection Comparison]**
+*Suggested visualization*: Side-by-side heat maps showing (A) manual detection patterns for a species (e.g., Silver perch) and (B) one of the top acoustic indices (like BGN or NDSI) for the same time periods. The visual similarity between these heat maps was our first hint that there were discoverable patterns in the data.
+
+### Environmental vs. Acoustic Variables
+
+**Environmental Variables**:
+- Water temperature: Mutual information = 0.17
+- Temperature changes over 2-6 hours: Strong secondary predictors
+
+**Acoustic Indices**:
+- Best acoustic indices: Mutual information = 0.09-0.12
+- Multiple indices needed to match single temperature measurement
+- But they provide complementary information - not redundant. For example, temperature tells us about biological readiness to call, while acoustic indices tell us about current soundscape conditions that might facilitate or mask calling behavior. When we combined both types of features, model performance improved by 12-15% over using either alone.
+
+**[FIGURE 6: Feature Importance Comparison]**
+*Suggested visualization*: Horizontal bar chart showing mutual information scores for environmental variables vs acoustic indices. Could group by feature type and show how they complement each other.
+
+## The Detection Guidance System
+
+### How It Works
+
+1. **Pattern Learning**: Analyze historical detection data to build species-specific 2D probability surfaces
+2. **Environmental Enhancement**: Adjust base probabilities using current conditions
+3. **Priority Ranking**: Rank all time periods by detection probability
+4. **Guided Monitoring**: Focus manual efforts on highest-ranked periods
+
+*Future enhancement idea*: The system could potentially flag "unusual" periods - times when acoustic conditions suggest high biological activity but it's outside typical seasonal patterns, possibly indicating environmental changes, migration events, or other anomalies worth investigating.
+
+**[FIGURE 7: Detection Guidance System Workflow]**
+*Suggested visualization*: Flowchart showing the four-step process from historical pattern learning through guided monitoring, with example data/visualizations at each step.
+
+### Performance Results
+
+We tested using cross-station validation (training on two stations, testing on the third):
+
+**Silver Perch: Best Performance**
+- **86.6% of detections found** by checking only top 20% of time periods
+- **80% reduction in manual effort**
+- Consistent performance across stations
+
+**Oyster Toadfish: Strong Seasonal Patterns**
+- **69.2% detection efficiency** at 20% effort
+- **AUC = 0.944**: Nearly perfect discrimination
+- Correctly identified known spawning seasons
+
+**Spotted Seatrout: Good Generalization**
+- **67.9% detection efficiency**
+- **AUC = 0.887**: Strong cross-station performance
+- Summer patterns consistent across locations
+
+**[FIGURE 8: Cross-Station Validation Results]**
+*Suggested visualization*: Performance metrics (detection efficiency, AUC) for each species across the three validation scenarios. Could use grouped bar charts or matrix format showing how well patterns generalize across locations.
+
+### Why Some Species Worked Better
+
+**High Performers** (Silver perch, Oyster toadfish):
+- Strong seasonal patterns
+- Consistent daily rhythms
+- Sufficient detection events for pattern learning
+- Similar behavior across locations
+
+**Challenging Cases** (Atlantic croaker, Red drum):
+- Irregular temporal patterns
+- Lower detection rates
+- High variability between stations
+
+**[FIGURE 9: Species Performance vs Behavioral Predictability]**
+*Suggested visualization*: Scatter plot with detection efficiency on y-axis vs some measure of temporal regularity (e.g., seasonal consistency score) on x-axis, with species labeled. Helps explain why some species worked better than others.
+
+## Real-World Impact
+
+### Time Savings
+
+**Traditional Approach**:
+- 3 months of monitoring = 2,160 two-hour periods to check
+- 5 minutes per period = 180 hours of expert time
+
+**Guided Approach**:
+- Check only top 20% of periods = 432 periods
+- Same 5 minutes per period = 36 hours
+- **Time savings: 144 hours (80% reduction)**
+- **Detection rate: Still capture 70-85% of biological activity**
+
+**[FIGURE 10: Time Savings Visualization]**
+*Suggested visualization*: Before/after comparison showing traditional approach (timeline with all periods highlighted) vs guided approach (same timeline with only top 20% highlighted). Could include clock icons or calendar views to emphasize time savings.
+
+### Conservation Applications
+
+- **Spawning season monitoring**: Identify critical reproductive periods
+- **Climate change research**: Track shifts in seasonal timing
+- **Marine protected area management**: Optimize monitoring schedules
+- **Ecosystem health assessment**: Use vocal activity as population indicator
+
+### Scaling Impact
+
+Our system addresses a major bottleneck in marine conservation: the gap between data collection and actionable insights. By reducing manual workload by 80% while maintaining scientific accuracy, we make large-scale acoustic monitoring feasible.
+
+## What We Learned
+
+### Biological Insights
+
+- **Temperature is key**: Confirms and extends previous findings about temperature's role in fish behavior
+- **Species-specific patterns**: Each species has distinct temporal rhythms reflecting their ecology
+- **Seasonality as a feature**: Embracing seasonal patterns rather than fighting them led to breakthroughs
+- **Acoustic indices add value**: While temperature dominates, acoustic measures provide complementary information
+
+### Technical Lessons
+
+- **2D pattern recognition**: Moving from time series to probability surfaces revealed hidden patterns
+- **Cross-station validation**: Testing across locations gives realistic performance estimates
+- **Biological feature engineering**: Incorporating expert knowledge improves results
+- **Guidance vs. prediction**: Pattern recognition proved more practical than predictive modeling
+
+### Methodological Insights
+
+- **Work with biology**: Systems aligned with natural patterns are more robust
+- **Validation strategy matters**: How you test determines real-world performance
+- **Simple can be better**: Our approach used kernel density estimation rather than complex deep learning
+- **Ask the right questions**: The breakthrough came from reframing the problem, not better algorithms
+
+## Limitations and Future Work
+
+### Current Limitations
+
+- **Single-year data**: Based on 2021 only - need multi-year validation
+- **Geographic scope**: Limited to coastal environments
+- **Species coverage**: Works best for species with strong patterns and sufficient detections
+- **Manual validation**: Still requires expert verification
+
+### Next Steps
+
+**Near-term**:
+- Multi-year validation as more data becomes available
+- Species-specific and location-specific threshold optimization
+- Real-time monitoring implementation
+
+**Long-term**:
+- Regional network deployment
+- Climate change monitoring using pattern shifts
+- Integration with automated detection algorithms
+- Combination with other monitoring methods
+
+## Conclusions
+
+This work shows that marine acoustic monitoring can transform from a manual bottleneck into a scalable research tool. By revealing temporal patterns in ocean soundscapes, we've created new possibilities for understanding marine ecosystem dynamics.
+
+The 80% reduction in manual effort while maintaining high detection rates makes comprehensive acoustic monitoring feasible for exploring and understanding the specific biodiversity trends in a specific region. This efficiency gain enables ecosystem-wide monitoring, rapid assessment of conservation measures, and early detection of environmental changes.
+
+As ocean monitoring networks expand, tools like this detection guidance system will become essential for marine conservation. The ocean generates acoustic data faster than we can analyze it, but with the right approach to guide our listening, we can finally process what the ocean has been telling us.
+
+---
+
+## References
+
+Transue, B., et al. (2023). Biological and anthropogenic soundscape of an urbanized port: Charleston Harbor. *Marine Environmental Research*.
+
+[Additional references based on complete analysis pipeline]
+
+---
+
+*This report demonstrates how data-driven approaches to temporal pattern recognition can transform marine ecosystem monitoring.*
