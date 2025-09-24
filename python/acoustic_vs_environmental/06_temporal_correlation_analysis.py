@@ -37,6 +37,11 @@ def load_aligned_data():
     df = pd.read_csv(data_path)
     df['datetime'] = pd.to_datetime(df['datetime'])
     
+    # Convert all non-datetime/station columns to numeric, handling mixed types
+    for col in df.columns:
+        if col not in ['datetime', 'station']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
     # Sort by station and datetime for proper time series analysis
     df = df.sort_values(['station', 'datetime']).reset_index(drop=True)
     
@@ -282,9 +287,11 @@ def lag_correlation_analysis(df, species_list, acoustic_list, station='9M', max_
         # Show top lag correlations
         if best_lags:
             best_lags_df = pd.DataFrame(best_lags)
-            top_lags = best_lags_df.nlargest(3, lambda x: abs(x))['best_lag_r']
+            # Sort by absolute correlation value
+            best_lags_df['abs_correlation'] = best_lags_df['best_lag_r'].abs()
+            top_lags_df = best_lags_df.nlargest(3, 'abs_correlation')
             
-            for _, row in best_lags_df.nlargest(3, lambda x: abs(x['best_lag_r'])).iterrows():
+            for _, row in top_lags_df.iterrows():
                 lag_hours = row['best_lag'] * 2
                 significance = "***" if row['best_lag_p'] < 0.001 else "**" if row['best_lag_p'] < 0.01 else "*" if row['best_lag_p'] < 0.05 else ""
                 print(f"   {row['acoustic_index'][:25]:25} | lag={row['best_lag']:2d} ({lag_hours:2d}h) | r={row['best_lag_r']:+.3f} {significance}")
@@ -374,6 +381,269 @@ def comprehensive_correlation_summary(temporal_corr, circadian_corr, lag_corr):
     
     return summary_df
 
+def create_heatmap_comparison_figure(df, species='Spotted seatrout', acoustic_indices=None, station='9M'):
+    """
+    FIGURE 4: Create side-by-side heat maps comparing acoustic indices with manual detections.
+    This visualization led to the breakthrough - showing acoustic indices 'light up' in 
+    the same temporal patterns as fish detections.
+    """
+    print(f"\n🎨 CREATING FIGURE 4: Acoustic Index vs Manual Detection Comparison")
+    print("=" * 70)
+    
+    # Filter to specific station and species
+    station_df = df[df['station'] == station].copy()
+    
+    if species not in station_df.columns:
+        print(f"⚠️ Species '{species}' not found in data")
+        return
+    
+    # Add temporal features if not already present
+    if 'day_of_year' not in station_df.columns:
+        station_df['day_of_year'] = station_df['datetime'].dt.dayofyear
+    if 'period_of_day' not in station_df.columns:
+        station_df['period_of_day'] = station_df['datetime'].dt.hour // 2
+    
+    # If no acoustic indices specified, use top correlated ones from earlier analysis
+    if acoustic_indices is None:
+        # Get acoustic columns
+        exclude_cols = [
+            'datetime', 'station', 'day_of_year', 'period_of_day',
+            'Water temp (°C)', 'Water depth (m)', 'Low (50-1200 Hz)', 'High (7000-40000 Hz)', 
+            'Broadband (1-40000 Hz)', 'Spotted seatrout', 'Atlantic croaker', 'Vessel',
+            'Oyster toadfish boat whistle', 'Red drum', 'Silver perch', 'Black drum',
+            'total_fish_activity', 'any_activity', 'high_activity', 'num_active_species'
+        ]
+        
+        potential_acoustic = [col for col in station_df.columns if col not in exclude_cols]
+        potential_acoustic = [col for col in potential_acoustic if station_df[col].dtype in ['float64', 'int64']]
+        
+        # Calculate correlations to find best acoustic indices
+        correlations = []
+        species_data = pd.to_numeric(station_df[species], errors='coerce').fillna(0)
+        
+        for acoustic in potential_acoustic:
+            acoustic_data = pd.to_numeric(station_df[acoustic], errors='coerce')
+            acoustic_data = acoustic_data.fillna(acoustic_data.mean())
+            
+            if acoustic_data.std() > 0:
+                corr, p_val = pearsonr(acoustic_data, species_data)
+                correlations.append({'index': acoustic, 'correlation': abs(corr), 'p_value': p_val})
+        
+        # Take top 4 correlated indices
+        correlations = sorted(correlations, key=lambda x: x['correlation'], reverse=True)
+        acoustic_indices = [item['index'] for item in correlations[:4]]
+        
+        print(f"   Selected top correlated acoustic indices for {species}:")
+        for i, item in enumerate(correlations[:4], 1):
+            print(f"   {i}. {item['index']} (r = {item['correlation']:.3f})")
+    
+    # Create heat map data
+    def create_heatmap_data(data_column, station_df, normalize=True):
+        # Create 2D grid: day_of_year (rows) vs period_of_day (columns)
+        heatmap_data = np.zeros((365, 12))  # 365 days, 12 periods per day
+        counts = np.zeros((365, 12))  # For averaging
+        
+        for _, row in station_df.iterrows():
+            day = int(row['day_of_year']) - 1  # 0-indexed
+            period = int(row['period_of_day'])  # Already 0-11
+            
+            if 0 <= day < 365 and 0 <= period < 12:
+                value = pd.to_numeric(row[data_column], errors='coerce')
+                if not np.isnan(value):
+                    heatmap_data[day, period] += value
+                    counts[day, period] += 1
+        
+        # Average where we have multiple observations
+        mask = counts > 0
+        heatmap_data[mask] = heatmap_data[mask] / counts[mask]
+        
+        if normalize:
+            # Normalize to 0-1 range for better comparison
+            data_min, data_max = heatmap_data.min(), heatmap_data.max()
+            if data_max > data_min:
+                heatmap_data = (heatmap_data - data_min) / (data_max - data_min)
+        
+        return heatmap_data
+    
+    # Create the comparison figure
+    n_plots = len(acoustic_indices) + 1  # +1 for species detection
+    n_cols = min(3, n_plots)
+    n_rows = (n_plots + n_cols - 1) // n_cols
+    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
+    if n_plots == 1:
+        axes = [axes]
+    elif n_rows == 1:
+        axes = axes.reshape(1, -1)
+    
+    axes_flat = axes.flatten()
+    
+    # Plot species detection heatmap first
+    species_heatmap = create_heatmap_data(species, station_df, normalize=True)
+    
+    im1 = axes_flat[0].imshow(species_heatmap, aspect='auto', cmap='viridis', origin='lower')
+    axes_flat[0].set_title(f'{species}\n(Manual Detections)', fontsize=12, fontweight='bold')
+    axes_flat[0].set_xlabel('Time of Day (2-hour periods)')
+    axes_flat[0].set_ylabel('Day of Year')
+    axes_flat[0].set_xticks(range(0, 12, 2))
+    axes_flat[0].set_xticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
+    axes_flat[0].set_yticks([0, 91, 182, 273, 364])
+    axes_flat[0].set_yticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+    plt.colorbar(im1, ax=axes_flat[0], label='Normalized Activity')
+    
+    # Plot acoustic index heatmaps
+    for i, acoustic_idx in enumerate(acoustic_indices, 1):
+        if i < len(axes_flat):
+            acoustic_heatmap = create_heatmap_data(acoustic_idx, station_df, normalize=True)
+            
+            im = axes_flat[i].imshow(acoustic_heatmap, aspect='auto', cmap='viridis', origin='lower')
+            axes_flat[i].set_title(f'{acoustic_idx}\n(Acoustic Index)', fontsize=12)
+            axes_flat[i].set_xlabel('Time of Day (2-hour periods)')
+            axes_flat[i].set_ylabel('Day of Year')
+            axes_flat[i].set_xticks(range(0, 12, 2))
+            axes_flat[i].set_xticklabels([f'{h:02d}:00' for h in range(0, 24, 4)])
+            axes_flat[i].set_yticks([0, 91, 182, 273, 364])
+            axes_flat[i].set_yticklabels(['Jan 1', 'Apr 1', 'Jul 1', 'Oct 1', 'Dec 31'])
+            plt.colorbar(im, ax=axes_flat[i], label='Normalized Value')
+    
+    # Hide unused subplots
+    for j in range(len(acoustic_indices) + 1, len(axes_flat)):
+        axes_flat[j].set_visible(False)
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_dir = Path("output/phase6_temporal_correlation/figures")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    fig_path = output_dir / f"acoustic_vs_manual_detection_comparison_{species.replace(' ', '_').lower()}_station_{station}.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved Figure 4: {fig_path}")
+    
+    # Also create a summary correlation plot
+    fig2, ax = plt.subplots(1, 1, figsize=(10, 6))
+    
+    correlations_for_plot = []
+    for acoustic_idx in acoustic_indices:
+        acoustic_data = pd.to_numeric(station_df[acoustic_idx], errors='coerce').fillna(station_df[acoustic_idx].mean())
+        species_data = pd.to_numeric(station_df[species], errors='coerce').fillna(0)
+        
+        if acoustic_data.std() > 0:
+            corr, p_val = pearsonr(acoustic_data, species_data)
+            correlations_for_plot.append({
+                'index': acoustic_idx.replace('_', ' '),
+                'correlation': corr,
+                'p_value': p_val
+            })
+    
+    if correlations_for_plot:
+        corr_df = pd.DataFrame(correlations_for_plot)
+        
+        # Create bar plot
+        bars = ax.bar(range(len(corr_df)), corr_df['correlation'], 
+                     color=['green' if r > 0 else 'red' for r in corr_df['correlation']])
+        
+        ax.set_xlabel('Acoustic Index')
+        ax.set_ylabel('Pearson Correlation with Manual Detections')
+        ax.set_title(f'Acoustic Index Correlations with {species} Detections\nStation {station}')
+        ax.set_xticks(range(len(corr_df)))
+        ax.set_xticklabels([idx[:20] + '...' if len(idx) > 23 else idx 
+                           for idx in corr_df['index']], rotation=45, ha='right')
+        ax.grid(True, alpha=0.3)
+        ax.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
+        
+        # Add significance stars
+        for i, (bar, p_val) in enumerate(zip(bars, corr_df['p_value'])):
+            height = bar.get_height()
+            significance = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else ""
+            if significance:
+                ax.text(bar.get_x() + bar.get_width()/2., height + (0.01 if height > 0 else -0.03), 
+                       significance, ha='center', va='bottom' if height > 0 else 'top')
+    
+    plt.tight_layout()
+    fig2_path = output_dir / f"acoustic_correlations_{species.replace(' ', '_').lower()}_station_{station}.png"
+    plt.savefig(fig2_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved correlation plot: {fig2_path}")
+    
+    plt.show()
+    
+    return species_heatmap, [create_heatmap_data(idx, station_df, normalize=True) for idx in acoustic_indices]
+
+def create_temperature_activity_figure(df):
+    """
+    FIGURE 3: Create scatter plot showing temperature vs fish activity relationship.
+    """
+    print(f"\n🎨 CREATING FIGURE 3: Temperature vs Fish Activity Relationship")
+    print("=" * 60)
+    
+    # Species to analyze
+    species_to_plot = ['Spotted seatrout', 'Silver perch', 'Oyster toadfish boat whistle', 'Atlantic croaker']
+    available_species = [s for s in species_to_plot if s in df.columns]
+    
+    if 'Water temp (°C)' not in df.columns:
+        print("⚠️ Water temperature data not available")
+        return
+    
+    # Create the plot
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    axes_flat = axes.flatten()
+    
+    colors = plt.cm.Set1(np.linspace(0, 1, len(available_species)))
+    
+    for i, species in enumerate(available_species[:4]):
+        ax = axes_flat[i]
+        
+        # Get data
+        temp_data = pd.to_numeric(df['Water temp (°C)'], errors='coerce')
+        species_data = pd.to_numeric(df[species], errors='coerce').fillna(0)
+        
+        # Remove NaN temperature values
+        valid_mask = ~np.isnan(temp_data)
+        temp_clean = temp_data[valid_mask]
+        species_clean = species_data[valid_mask]
+        
+        # Create scatter plot
+        ax.scatter(temp_clean, species_clean, alpha=0.6, c=colors[i], s=30)
+        
+        # Add trend line
+        if len(temp_clean) > 10:
+            z = np.polyfit(temp_clean, species_clean, 1)
+            p = np.poly1d(z)
+            temp_range = np.linspace(temp_clean.min(), temp_clean.max(), 100)
+            ax.plot(temp_range, p(temp_range), color='red', linestyle='--', linewidth=2)
+            
+            # Calculate correlation
+            corr, p_val = pearsonr(temp_clean, species_clean)
+            significance = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else ""
+            
+            ax.text(0.05, 0.95, f'r = {corr:.3f}{significance}', transform=ax.transAxes, 
+                   bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                   verticalalignment='top')
+        
+        ax.set_xlabel('Water Temperature (°C)')
+        ax.set_ylabel(f'{species} Detections')
+        ax.set_title(species)
+        ax.grid(True, alpha=0.3)
+    
+    # Hide unused subplot if we have fewer than 4 species
+    for j in range(len(available_species), 4):
+        axes_flat[j].set_visible(False)
+    
+    plt.suptitle('Temperature vs Fish Detection Activity', fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    
+    # Save figure
+    output_dir = Path("output/phase6_temporal_correlation/figures")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    fig_path = output_dir / "temperature_vs_fish_activity.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Saved Figure 3: {fig_path}")
+    
+    plt.show()
+    
+    return fig_path
+
 def main():
     print("🔄 PHASE 6: TEMPORAL CORRELATION ANALYSIS")
     print("=" * 70)
@@ -416,6 +686,24 @@ def main():
     
     # Comprehensive summary
     summary_df = comprehensive_correlation_summary(combined_temporal, combined_circadian, combined_lag)
+    
+    # Generate key figures for the report
+    print(f"\n📊 GENERATING FIGURES FOR REPORT")
+    print("=" * 40)
+    
+    # Figure 3: Temperature vs Fish Activity
+    create_temperature_activity_figure(df)
+    
+    # Figure 4: Acoustic Index vs Manual Detection Comparison
+    # Try different species and stations to find good examples
+    for species in ['Spotted seatrout', 'Silver perch']:
+        if species in df.columns:
+            for station in df['station'].unique():
+                species_count = df[df['station'] == station][species].sum()
+                if species_count > 50:  # Only create plots for species with sufficient data
+                    print(f"   Creating comparison for {species} at station {station} ({species_count} detections)")
+                    create_heatmap_comparison_figure(df, species=species, station=station)
+                    break  # Only create one plot per species
     
     # Save results
     output_dir = Path("output")
