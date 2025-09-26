@@ -521,8 +521,8 @@ DATA SOURCES LOADED:
         missing_pct = df_analysis.isnull().sum() / len(df_analysis) * 100
         missing_pct = missing_pct.sort_values(ascending=False)
         
-        # Create heatmap data using filtered analysis columns
-        heatmap_data = df_analysis[missing_pct.index].isnull().T
+        # Create heatmap data using filtered analysis columns (1=present, 0=missing)
+        heatmap_data = df_analysis[missing_pct.index].notnull().T
         
         # Plot heatmap (sample if too many rows)
         if len(heatmap_data.columns) > 1000:
@@ -530,7 +530,9 @@ DATA SOURCES LOADED:
             step = len(heatmap_data.columns) // 1000
             heatmap_data = heatmap_data.iloc[:, ::step]
         
-        sns.heatmap(heatmap_data, cbar=True, cmap='RdYlBu_r', ax=ax)
+        # Use proper binary colormap for data presence (1=present, 0=missing)
+        sns.heatmap(heatmap_data, cbar=True, cmap='RdYlGn', ax=ax, 
+                   cbar_kws={'label': 'Data Availability (1=Present, 0=Missing)'}, vmin=0, vmax=1)
         ax.set_title(f'Missing Data Pattern - {YEAR}\n(Analytical Variables Only)', fontweight='bold')
         ax.set_xlabel('Time Points (sampled)')
         ax.set_ylabel('Analytical Variables')
