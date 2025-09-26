@@ -512,12 +512,17 @@ DATA SOURCES LOADED:
     if len(combined_df) > 0 and len(combined_df.columns) > 5:
         fig, ax = plt.subplots(figsize=(12, 8))
         
-        # Calculate missing data percentage for each column
-        missing_pct = combined_df.isnull().sum() / len(combined_df) * 100
+        # Filter out redundant metadata columns for cleaner visualization
+        exclude_cols = ['Time', 'Date', 'Date ', 'Deployment ID', 'File']
+        analysis_cols = [col for col in combined_df.columns if col not in exclude_cols]
+        df_analysis = combined_df[analysis_cols]
+        
+        # Calculate missing data percentage for analytical columns only
+        missing_pct = df_analysis.isnull().sum() / len(df_analysis) * 100
         missing_pct = missing_pct.sort_values(ascending=False)
         
-        # Create heatmap data
-        heatmap_data = combined_df[missing_pct.index].isnull().T
+        # Create heatmap data using filtered analysis columns
+        heatmap_data = df_analysis[missing_pct.index].isnull().T
         
         # Plot heatmap (sample if too many rows)
         if len(heatmap_data.columns) > 1000:
@@ -526,9 +531,9 @@ DATA SOURCES LOADED:
             heatmap_data = heatmap_data.iloc[:, ::step]
         
         sns.heatmap(heatmap_data, cbar=True, cmap='RdYlBu_r', ax=ax)
-        ax.set_title(f'Missing Data Pattern - {YEAR}', fontweight='bold')
+        ax.set_title(f'Missing Data Pattern - {YEAR}\n(Analytical Variables Only)', fontweight='bold')
         ax.set_xlabel('Time Points (sampled)')
-        ax.set_ylabel('Variables')
+        ax.set_ylabel('Analytical Variables')
         
         # Add missing percentage annotations
         for i, (var, pct) in enumerate(missing_pct.items()):
