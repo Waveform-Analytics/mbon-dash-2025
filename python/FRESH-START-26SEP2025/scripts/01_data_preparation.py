@@ -220,10 +220,9 @@ def load_spl_data():
     spl_data = {}
     spl_info = {}
     
-    # SPL data may be in different formats/locations - check multiple possibilities
     for station in STATIONS:
         # Check processed SPL data first
-        spl_file = DATA_ROOT / "processed" / f"01_spl_{station}_{YEAR}.parquet"
+        spl_file = DATA_ROOT / "processed" / "deprecated" / f"01_spl_{station}_{YEAR}.parquet"
         
         if spl_file.exists():
             try:
@@ -239,21 +238,21 @@ def load_spl_data():
                 print(f"✗ {station}: Error loading processed SPL - {e}")
         else:
             # Check raw SPL data
-            spl_raw_file = DATA_DIR / str(YEAR) / "spl" / f"{station}_SPL_{YEAR}.csv"
+            spl_raw_file = DATA_DIR / str(YEAR) / "rms_spl" / f"Master_rmsSPL_{station}_1h_{YEAR}.xlsx"
             if spl_raw_file.exists():
                 try:
-                    df_spl = pd.read_csv(spl_raw_file)
+                    df_spl = pd.read_excel(spl_raw_file, sheet_name="Data")
                     spl_data[station] = df_spl
                     spl_info[station] = {
                         'rows': len(df_spl),
                         'columns': len(df_spl.columns), 
-                        'file_type': 'csv_raw'
+                        'file_type': 'xlsx_raw'
                     }
-                    print(f"✓ {station}: {len(df_spl)} rows from raw CSV")
+                    print(f"✓ {station}: {len(df_spl)} rows from raw Excel")
                 except Exception as e:
                     print(f"✗ {station}: Error loading raw SPL - {e}")
             else:
-                print(f"⚠️ {station}: SPL data not found in processed or raw directories")
+                print(f"⚠️ {station}: SPL data not found")
     
     print(f"SPL data loaded for {len(spl_data)}/{len(STATIONS)} stations")
     print()
@@ -289,9 +288,6 @@ def create_temporal_alignment(indices_data, detection_data, temp_data, depth_dat
                 print(f"  ⚠️ Warning: No Date column found for {station}")
                 continue
                 
-            # Add station identifier
-            base_df['station'] = station
-            
             # Convert Time column to string to avoid Parquet serialization issues  
             if 'Time' in base_df.columns:
                 base_df['Time'] = base_df['Time'].astype(str)
@@ -300,12 +296,15 @@ def create_temporal_alignment(indices_data, detection_data, temp_data, depth_dat
             # but keep species detection columns as numeric
             object_cols = base_df.select_dtypes(include=['object']).columns
             for col in object_cols:
-                if col not in ['Date', 'Date ', 'datetime']:  # Skip date/datetime columns
+                if col not in ['Date', 'Date ', 'datetime', 'station']:  # Skip date/datetime/station columns
                     # Try to convert to numeric first, if it fails then convert to string
                     try:
                         base_df[col] = pd.to_numeric(base_df[col], errors='coerce')
                     except:
                         base_df[col] = base_df[col].astype(str)
+            
+            # Add station identifier AFTER data type conversion to prevent it from being converted
+            base_df['station'] = station
             
             # Start with detection data as base
             station_df = base_df.copy()
