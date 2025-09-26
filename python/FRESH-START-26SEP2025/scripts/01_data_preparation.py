@@ -32,19 +32,20 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def find_project_root():
-    """Find project root by looking for the data folder"""
+    """Find main project root (mbon-dash-2025) by looking for data/raw folder structure"""
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    # Go up from FRESH-START-26SEP2025/scripts to find main project root
     project_root = current_dir
-    while not (project_root / "data").exists() and project_root != project_root.parent:
+    while not (project_root / "data" / "raw").exists() and project_root != project_root.parent:
         project_root = project_root.parent
     return project_root
 
-# Set up paths using standard pattern
+# Set up paths: input and output both use main project data folder
 PROJECT_ROOT = find_project_root()
-DATA_ROOT = PROJECT_ROOT / "data"
-DATA_DIR = DATA_ROOT / "raw"
-OUTPUT_DIR = Path(__file__).parent.parent / "data" / "processed"
-FIGURE_DIR = Path(__file__).parent.parent / "figures"
+DATA_ROOT = PROJECT_ROOT / "data"  # Main project data folder
+DATA_DIR = DATA_ROOT / "raw"  # Main project raw data
+OUTPUT_DIR = DATA_ROOT / "processed"  # Main project processed folder
+FIGURE_DIR = DATA_ROOT / "processed" / "fresh_start_figures"  # Figures subfolder in processed
 
 # Ensure output directories exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

@@ -40,19 +40,19 @@ from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 def find_project_root():
-    """Find project root by looking for the data folder"""
+    """Find main project root (mbon-dash-2025) by looking for data/raw folder structure"""
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
     project_root = current_dir
-    while not (project_root / "data").exists() and project_root != project_root.parent:
+    while not (project_root / "data" / "raw").exists() and project_root != project_root.parent:
         project_root = project_root.parent
     return project_root
 
 # Set up paths using standard pattern
 PROJECT_ROOT = find_project_root()
 DATA_ROOT = PROJECT_ROOT / "data"
-INPUT_DIR = Path(__file__).parent.parent / "data" / "processed"
-OUTPUT_DIR = Path(__file__).parent.parent / "data" / "processed"
-FIGURE_DIR = Path(__file__).parent.parent / "figures"
+INPUT_DIR = DATA_ROOT / "processed"  # Main project processed folder
+OUTPUT_DIR = DATA_ROOT / "processed"  # Main project processed folder
+FIGURE_DIR = DATA_ROOT / "processed" / "fresh_start_figures"  # Figures subfolder
 
 # Ensure output directories exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
