@@ -1,0 +1,373 @@
+---
+title: "Acoustic vs Environmental Predictors"
+subtitle: "For Marine Biodiversity Monitoring Using 2D Probability Surfaces"
+author: "Marine Biodiversity Observation Network (MBON)"
+date: today
+format:
+  revealjs:
+    theme: simple
+    transition: slide
+    background-transition: fade
+    highlight-style: github
+    code-fold: true
+    fig-width: 10
+    fig-height: 6
+    embed-resources: true
+    slide-number: true
+---
+
+## The Challenge {background-color="#1f4e79"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Marine Acoustic Monitoring**
+
+- Hydrophones record 24/7
+- Thousands of hours of data
+- Manual analysis bottleneck
+- Expert time limits insights
+:::
+
+::: {.column width="50%"}
+**Research Question**
+
+*Do acoustic indices improve biological activity predictions over environmental data alone?*
+
+![Placeholder: Hydrophone deployment image](){width="100%"}
+:::
+::::
+
+---
+
+## Study Overview {background-color="#2c5f2d"}
+
+:::: {.columns}
+::: {.column width="60%"}
+**Data Scope (2021)**
+- **13,100 time periods** (2-hour chunks)
+- **3 monitoring stations** in May River, SC
+- **5 fish species** + community metrics
+- **Manual expert detections** as ground truth
+:::
+
+::: {.column width="40%"}
+**Species Studied**
+- Silver perch
+- Oyster toadfish  
+- Spotted seatrout
+- Atlantic croaker
+- Red drum
+:::
+::::
+
+![Placeholder: Study site map with 3 stations](){width="60%"}
+
+---
+
+## The ML Journey: Why Traditional Approaches Failed {background-color="#722f37"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Major Problems Discovered**
+
+1. **Species prediction failure** (R < 0.1)
+2. **Feature selection instability** (0-30% agreement)
+3. **Temporal validation crisis** (6-23% performance drop)
+4. **Environmental dominance** (Temperature >> Acoustic indices)
+:::
+
+::: {.column width="50%"}
+**The Realization**
+
+Wrong question: *"Will fish be calling tomorrow?"*
+
+Better question: *"Given it's May 15th at 6 AM, should we focus listening effort here?"*
+:::
+::::
+
+![Placeholder: Timeline showing ML attempts and failures leading to breakthrough](){width="100%"}
+
+---
+
+## The Breakthrough: 2D Probability Surfaces {background-color="#97693f"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**New Approach**
+
+Map biological activity likelihood across:
+- **X-axis:** Day of year (seasonal patterns)
+- **Y-axis:** Hour of day (daily rhythms)
+- **Enhancement:** Environmental & acoustic adjustments
+:::
+
+::: {.column width="50%"}
+**From Prediction → Guidance**
+
+Pattern-based guidance working *with* natural biological rhythms
+:::
+::::
+
+![Placeholder: Side-by-side heatmaps showing manual detections vs acoustic indices for one species](){width="100%"}
+
+---
+
+## Four-Way Feature Comparison {background-color="#1f4e79"}
+
+**Systematic Testing of Feature Combinations**
+
+1. **ENV** - Environmental only (18 features)
+2. **ENV+SPL** - Environmental + RMS sound level (19 features)  
+3. **ENV+SPL+IDX** - Full feature set with acoustic indices (29-31 features)
+4. **IDX** - Acoustic indices only (10-12 features)
+
+**Cross-Station Validation**: Train on 2 stations, test on 1 station
+
+![Placeholder: Schematic showing the 4 feature combinations](){width="70%"}
+
+---
+
+## Key Results: Silver Perch (Best Performance) {background-color="#2c5f2d"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Detection Efficiency @ 20% Effort**
+- ENV: **82.3%**
+- ENV+SPL: **84.1%** (+1.8%)
+- ENV+SPL+IDX: **86.6%** (+2.5%)
+- IDX: **71.2%** (-11.1%)
+
+**AUC Scores**
+- ENV: 0.891
+- ENV+SPL: 0.903  
+- ENV+SPL+IDX: **0.918**
+- IDX: 0.834
+:::
+
+::: {.column width="50%"}
+![Placeholder: Detection efficiency curves for Silver perch across 4 feature combinations](){width="100%"}
+:::
+::::
+
+**80% effort reduction while catching 87% of biological activity**
+
+---
+
+## Cross-Species Performance Summary {background-color="#722f37"}
+
+| Species | ENV | ENV+SPL | ENV+SPL+IDX | IDX |
+|---------|-----|---------|-------------|-----|
+| Silver perch | 82.3% | 84.1% | **86.6%** | 71.2% |
+| Oyster toadfish | 65.4% | 67.8% | **69.2%** | 58.3% |
+| Spotted seatrout | 63.7% | 65.9% | **67.9%** | 54.1% |
+
+**Community-Level Targets**
+- Any biological activity: **83.7%** (ENV+SPL+IDX)
+- High activity periods: **79.4%** (ENV+SPL+IDX)
+- Species richness: **74.2%** (ENV+SPL+IDX)
+
+![Placeholder: Horizontal bar chart comparing performance across species and feature combinations](){width="100%"}
+
+---
+
+## Consistent Pattern Across All Targets {background-color="#97693f"}
+
+:::: {.columns}
+::: {.column width="60%"}
+**Performance Ranking (Always)**
+1. **ENV+SPL+IDX** (best)
+2. **ENV+SPL** 
+3. **ENV**
+4. **IDX** (acoustic-only)
+
+**Acoustic Index Value**
+- **2-3% consistent improvement** in detection efficiency
+- **Modest but meaningful** for conservation applications
+:::
+
+::: {.column width="40%"}
+![Placeholder: Summary chart showing consistent ranking across all targets](){width="100%"}
+:::
+::::
+
+**Complementary Information**: Environmental variables predict biological *readiness*, acoustic indices capture soundscape *conditions*
+
+---
+
+## Practical Conservation Impact {background-color="#1f4e79"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Traditional Monitoring**
+- Review all 13,100 periods
+- ~1,092 expert hours
+- 100% effort, 100% detection
+
+**Guided Monitoring** 
+- Review top 20% (2,620 periods)
+- ~218 expert hours
+- **80% effort reduction**
+- **67-87% detection retained**
+:::
+
+::: {.column width="50%"}
+![Placeholder: Before/after comparison showing effort reduction while maintaining high detection rates](){width="100%"}
+:::
+::::
+
+**Makes comprehensive ecosystem monitoring feasible**
+
+---
+
+## When Do Acoustic Indices Matter Most? {background-color="#2c5f2d"}
+
+**Acoustic-Only Approach Viable For:**
+- Rapid biodiversity assessment
+- Data-poor regions
+- Legacy datasets without environmental data
+- Remote locations without sensor infrastructure
+
+**Performance Penalty:** 8-10% detection efficiency reduction
+
+**Best Use Case:** Community-level applications show slightly stronger benefits than species-specific
+
+![Placeholder: Decision tree or flowchart showing when to use different approaches](){width="70%"}
+
+---
+
+## Cross-Station Transferability {background-color="#722f37"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Validation Results**
+- **Within-station:** 85-92% efficiency
+- **Cross-station:** 67-87% efficiency
+- **Transfer penalty:** 5-18% reduction
+
+**Acceptable for practical deployment**
+:::
+
+::: {.column width="50%"}
+![Placeholder: Map showing how models trained at 2 stations perform at the 3rd station](){width="100%"}
+:::
+::::
+
+**Good transferability essential for real-world conservation applications**
+
+---
+
+## Species-Specific vs Community-Level {background-color="#97693f"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Species-Specific**
+- Higher peak performance
+- Clear ecological interpretation
+- Direct management relevance
+- Requires extensive training data
+
+**Example: Oyster toadfish spawning seasons clearly identified**
+:::
+
+::: {.column width="50%"}
+**Community-Level**
+- More robust to composition changes
+- Better cross-location transfer
+- Ecosystem-level patterns
+- Less species-specific expertise needed
+
+**Example: General biodiversity hotspot identification**
+:::
+::::
+
+![Placeholder: Comparison showing species-specific vs community heatmaps](){width="100%"}
+
+---
+
+## Key Limitations & Future Directions {background-color="#1f4e79"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Current Limitations**
+- Single-year dataset (2021)
+- Single ecosystem (estuarine)
+- Manual detection dependency
+- Limited to vocal species
+
+**Critical Need**: Multi-year validation
+:::
+
+::: {.column width="50%"}
+**Next Steps**
+- **Near-term**: 2018 data analysis in progress
+- **Medium-term**: LTSA/spectral enhancement
+- **Long-term**: Regional network deployment
+- **Integration**: Automated detection algorithms
+:::
+::::
+
+---
+
+## Take-Home Messages {background-color="#2c5f2d"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Scientific Findings**
+1. **Environmental variables dominate**, but acoustic indices provide consistent 2-3% improvements
+2. **2D probability surfaces** work better than traditional ML
+3. **Community-level** applications particularly promising
+4. **Cross-station transfer** demonstrates real-world viability
+:::
+
+::: {.column width="50%"}
+**Conservation Impact**
+- **80% effort reduction** possible
+- **Scalable monitoring** for ecosystem management
+- **Pattern-based guidance** more robust than prediction
+- **Practical tool** ready for deployment
+:::
+::::
+
+**Converting marine acoustic monitoring from bottleneck to scalable conservation tool**
+
+---
+
+## Questions & Discussion {background-color="#722f37"}
+
+:::: {.columns}
+::: {.column width="50%"}
+**Key Questions for Discussion**
+
+1. Multi-year stability of patterns?
+2. Integration with automated detection?
+3. Climate change monitoring applications?
+4. Other ecosystem applications?
+:::
+
+::: {.column width="50%"}
+![Placeholder: Summary visualization of the 2D probability surface approach](){width="100%"}
+:::
+::::
+
+**Thank you!**
+
+*Contact: [your-email@mbon.org]*
+
+---
+
+## Appendix: Technical Details {background-color="#97693f"}
+
+**Feature Engineering Details**
+- **Environmental**: Temperature, depth, lag features (18 total)
+- **Acoustic**: 60+ indices reduced to 10-12 representative measures
+- **Temporal alignment**: All data matched to 2-hour windows
+
+**Validation Strategy**
+- Cross-station validation (not temporal due to single year)
+- Three-fold: train on 2 stations, test on 1
+- Performance metrics: Detection efficiency curves, AUC
+
+**Species Detection Rates**
+- Silver perch: Highest detection rate, strongest patterns
+- Oyster toadfish: Clear seasonal spawning windows
+- Spotted seatrout: Good cross-station consistency

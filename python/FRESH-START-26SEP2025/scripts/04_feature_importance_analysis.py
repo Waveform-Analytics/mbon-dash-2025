@@ -133,19 +133,30 @@ def identify_feature_categories(df_metrics, df_aligned, df_indices):
     baseline_features = ['hour_of_day', 'day_of_year', 'month', 'season', 'station']
     baseline_available = [f for f in baseline_features if f in df_metrics.columns]
     
-    # Environmental features
+    # Environmental features (exclude biological detections which should be targets)
     environmental_features = []
     env_patterns = ['temp', 'depth', 'pressure', 'salinity', 'ph', 'oxygen', 'turbidity']
+    biological_patterns = ['dolphin', 'whale', 'fish', 'bird', 'mammal', 'echolocation', 'whistle', 'burst pulse', 'call']
+    
     for pattern in env_patterns:
         matching = [col for col in df_aligned.columns if pattern.lower() in col.lower()]
+        # Filter out any biological detection features that may have matched
+        matching = [col for col in matching if not any(bio_pattern in col.lower() for bio_pattern in biological_patterns)]
         environmental_features.extend(matching)
     
     # SPL features  
     spl_features = []
-    spl_patterns = ['spl', 'level', 'broadband', 'low_freq', 'high_freq']
+    spl_patterns = ['spl_broadband', 'spl_low', 'spl_high', 'broadband', 'low', 'high']
     for pattern in spl_patterns:
         matching_aligned = [col for col in df_aligned.columns if pattern.lower() in col.lower()]
         matching_metrics = [col for col in df_metrics.columns if pattern.lower() in col.lower()]
+        spl_features.extend(matching_aligned + matching_metrics)
+    
+    # Also check for the exact SPL column format from Script 1
+    exact_spl_patterns = ['spl_broadband_1_40000_hz', 'spl_low_50_1200_hz', 'spl_high_7000_40000_hz']
+    for pattern in exact_spl_patterns:
+        matching_aligned = [col for col in df_aligned.columns if pattern in col.lower()]
+        matching_metrics = [col for col in df_metrics.columns if pattern in col.lower()]
         spl_features.extend(matching_aligned + matching_metrics)
     
     # Acoustic index features
@@ -157,11 +168,27 @@ def identify_feature_categories(df_metrics, df_aligned, df_indices):
                                  if col not in exclude_cols and df_indices[col].dtype in ['float64', 'int64']]
     
     # Community target variables (what we want to predict)
+    # Include both predefined community metrics and any biological detection features
     target_features = [
         'total_fish_intensity', 'fish_species_richness', 'total_dolphin_activity',
         'total_biological_activity', 'any_fish_activity', 'fish_activity_75th', 'fish_activity_90th'
     ]
-    target_available = [f for f in target_features if f in df_metrics.columns]
+    
+    # Add any biological detection features from aligned dataset as targets
+    biological_patterns = ['dolphin', 'whale', 'fish', 'bird', 'mammal', 'echolocation', 'whistle', 'burst pulse', 'call']
+    for col in df_aligned.columns:
+        if any(bio_pattern in col.lower() for bio_pattern in biological_patterns):
+            if col not in target_features:
+                target_features.append(col)
+    
+    # Also check community metrics for any additional biological features
+    for col in df_metrics.columns:
+        if any(bio_pattern in col.lower() for bio_pattern in biological_patterns):
+            if col not in target_features:
+                target_features.append(col)
+    
+    # Filter targets to only those available in at least one dataset
+    target_available = [f for f in target_features if f in df_metrics.columns or f in df_aligned.columns]
     
     print(f"Feature categories identified:")
     print(f"  Baseline (temporal): {len(baseline_available)} features")
@@ -234,10 +261,8 @@ def create_analysis_dataset(df_metrics, df_aligned, df_indices, feature_categori
     station_dummies = pd.get_dummies(df_analysis['station'], prefix='station')
     df_analysis = pd.concat([df_analysis, station_dummies], axis=1)
     
-    # Create encoded season features
-    if 'season' in df_analysis.columns:
-        season_dummies = pd.get_dummies(df_analysis['season'], prefix='season')
-        df_analysis = pd.concat([df_analysis, season_dummies], axis=1)
+    # Note: We keep the categorical 'season' column for reference but don't create dummy variables
+    # to avoid redundancy with day_of_year and month features which already capture seasonality
     
     print(f"Final analysis dataset: {df_analysis.shape}")
     print(f"Missing data summary:")
@@ -432,6 +457,181 @@ def calculate_effort_lift_analysis(df_analysis, feature_categories, results_df):
     
     return effort_results
 
+def calculate_individual_feature_importance(df_analysis, target_features, feature_categories):
+    """Calculate mutual information for each individual feature with each target"""
+    print("6. CALCULATING INDIVIDUAL FEATURE IMPORTANCE")
+    print("-" * 50)
+    
+    from sklearn.feature_selection import mutual_info_regression
+    from sklearn.preprocessing import LabelEncoder
+    
+    individual_results = []
+    
+    # All features to test (excluding targets, metadata, and biological detection features)
+    exclude_cols = ['datetime', 'station'] + target_features
+    
+    # Also exclude any biological detection features that aren't already in target_features
+    biological_patterns = ['dolphin', 'whale', 'fish', 'bird', 'mammal', 'echolocation', 'whistle', 'burst pulse', 'call']
+    for col in df_analysis.columns:
+        if col not in exclude_cols and any(bio_pattern in col.lower() for bio_pattern in biological_patterns):
+            exclude_cols.append(col)
+    
+    all_features = [col for col in df_analysis.columns if col not in exclude_cols]
+    
+    print(f"Testing {len(all_features)} individual features against {len(target_features)} targets")
+    
+    for target in target_features:
+        # Skip targets that don't exist in the analysis dataset
+        if target not in df_analysis.columns:
+            continue
+            
+        print(f"\nAnalyzing target: {target}")
+        
+        # Get valid data (no NaN in target or features)
+        valid_data = df_analysis.dropna(subset=[target])
+        y = valid_data[target].values
+        
+        if len(np.unique(y)) < 2:
+            print(f"  ⚠️ Skipping {target}: insufficient variation")
+            continue
+        
+        print(f"  Valid samples: {len(valid_data)}")
+        
+        # Test each feature individually
+        for feature in all_features:
+            try:
+                # Skip if feature doesn't exist
+                if feature not in valid_data.columns:
+                    continue
+                
+                # Get feature data
+                feature_series = valid_data[feature]
+                target_series = valid_data[target]
+                
+                # Create mask for non-NaN values in both feature and target
+                both_valid = feature_series.notna() & target_series.notna()
+                n_valid = both_valid.sum()
+                
+                # Skip if not enough valid samples
+                if n_valid < 50:
+                    continue
+                
+                # Extract valid data
+                X_feature = feature_series[both_valid].values.reshape(-1, 1)
+                y_feature = target_series[both_valid].values
+                
+                # Handle categorical features
+                if feature_series.dtype == 'object':
+                    le = LabelEncoder()
+                    X_feature = le.fit_transform(X_feature.ravel()).reshape(-1, 1)
+                
+                # Calculate mutual information
+                mi_score = mutual_info_regression(X_feature, y_feature, random_state=42)[0]
+                
+                # Determine feature category
+                feature_category = 'Other'
+                if feature in feature_categories['environmental']:
+                    feature_category = 'Environmental'
+                elif feature in feature_categories['spl']:
+                    feature_category = 'SPL'
+                elif feature in feature_categories['acoustic_indices']:
+                    feature_category = 'Acoustic Index'
+                elif feature in feature_categories['baseline']:
+                    feature_category = 'Temporal'
+                
+                individual_results.append({
+                    'target': target,
+                    'feature': feature,
+                    'feature_category': feature_category,
+                    'mi_score': mi_score,
+                    'n_samples': int(n_valid)
+                })
+                
+            except Exception as e:
+                continue  # Skip problematic features
+    
+    results_df = pd.DataFrame(individual_results)
+    print(f"\n✓ Calculated individual MI for {len(results_df)} feature-target pairs")
+    
+    return results_df
+
+def create_individual_importance_plot(individual_results_df, target='fish_species_richness'):
+    """Create horizontal bar chart showing individual feature importance (like your colleagues liked)"""
+    print(f"6a. CREATING INDIVIDUAL FEATURE IMPORTANCE PLOT (Target: {target})")
+    print("-" * 70)
+    
+    if individual_results_df.empty:
+        print("⚠️ No individual results to plot")
+        return None
+    
+    # Filter for specific target and get top features
+    target_data = individual_results_df[individual_results_df['target'] == target].copy()
+    if target_data.empty:
+        print(f"⚠️ No data for target {target}")
+        return None
+    
+    # Sort by MI score and take top 15 features
+    target_data = target_data.sort_values('mi_score', ascending=True).tail(15)
+    
+    # Create color mapping
+    color_map = {
+        'Environmental': '#4472C4',  # Blue
+        'SPL': '#4472C4',           # Blue (group with environmental)
+        'Acoustic Index': '#E07B39', # Orange
+        'Temporal': '#70AD47',       # Green
+        'Other': '#7030A0'          # Purple
+    }
+    
+    colors = [color_map.get(cat, '#7030A0') for cat in target_data['feature_category']]
+    
+    # Create the plot
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    
+    bars = ax.barh(range(len(target_data)), target_data['mi_score'], color=colors)
+    
+    # Format feature names for display
+    feature_labels = []
+    for feature in target_data['feature']:
+        if feature.startswith('spl_'):
+            # Clean up SPL feature names
+            clean_name = feature.replace('spl_', '').replace('_', ' ').title()
+            clean_name = clean_name.replace('1 40000 Hz', '(1-40000 Hz)')
+            clean_name = clean_name.replace('50 1200 Hz', '(50-1200 Hz)')
+            clean_name = clean_name.replace('7000 40000 Hz', '(7000-40000 Hz)')
+            feature_labels.append(clean_name)
+        else:
+            feature_labels.append(feature)
+    
+    ax.set_yticks(range(len(target_data)))
+    ax.set_yticklabels(feature_labels)
+    ax.set_xlabel('Mutual Information Score')
+    ax.set_title(f'Feature Importance: Mutual Information with {target.replace("_", " ").title()}\n(Orange = Acoustic, Blue = Environmental)', 
+                fontweight='bold', pad=20)
+    
+    # Add value labels on bars
+    for i, bar in enumerate(bars):
+        width = bar.get_width()
+        ax.text(width + 0.001, bar.get_y() + bar.get_height()/2.,
+                f'{width:.3f}', ha='left', va='center', fontweight='bold')
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#4472C4', label='Environmental Features'),
+        Patch(facecolor='#E07B39', label='Acoustic Indices')
+    ]
+    ax.legend(handles=legend_elements, loc='lower right')
+    
+    ax.grid(True, alpha=0.3, axis='x')
+    plt.tight_layout()
+    
+    individual_file = FIGURE_DIR / f"04_individual_feature_importance_{target}.png"
+    plt.savefig(individual_file, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"✓ Individual feature importance plot saved: {individual_file}")
+    return individual_file
+
 def create_conditional_importance_plot(results_df):
     """Create bar chart showing conditional MI by feature category"""
     print("6. CREATING CONDITIONAL IMPORTANCE COMPARISON PLOT")
@@ -596,7 +796,7 @@ def create_cross_station_consistency_plot(results_df, df_analysis):
     print(f"✓ Cross-station consistency plot saved: {consistency_file}")
     return consistency_file
 
-def save_analysis_results(results_df, effort_results, feature_categories):
+def save_analysis_results(results_df, effort_results, feature_categories, individual_results_df=None):
     """Save all analysis results to files"""
     print("9. SAVING ANALYSIS RESULTS")
     print("-" * 30)
@@ -606,6 +806,12 @@ def save_analysis_results(results_df, effort_results, feature_categories):
         importance_file = OUTPUT_DIR / "conditional_importance_results.parquet"
         results_df.to_parquet(importance_file, index=False)
         print(f"✓ Conditional importance results saved: {importance_file}")
+    
+    # Save individual feature importance results
+    if individual_results_df is not None and not individual_results_df.empty:
+        individual_file = OUTPUT_DIR / "individual_feature_importance_results.parquet"
+        individual_results_df.to_parquet(individual_file, index=False)
+        print(f"✓ Individual feature importance results saved: {individual_file}")
     
     # Save effort-lift analysis as JSON
     if effort_results:
@@ -649,11 +855,21 @@ def main():
     # Calculate conditional mutual information
     results_df = calculate_conditional_mutual_information(df_analysis, feature_categories)
     
+    # Calculate individual feature importance (new analysis)
+    individual_results_df = calculate_individual_feature_importance(df_analysis, feature_categories['targets'], feature_categories)
+    
     # Calculate effort-lift analysis
     effort_results = calculate_effort_lift_analysis(df_analysis, feature_categories, results_df)
     
     # Create visualizations
     try:
+        # Individual feature importance plots (the horizontal bar charts your colleagues liked)
+        if not individual_results_df.empty:
+            create_individual_importance_plot(individual_results_df, 'fish_species_richness')
+            create_individual_importance_plot(individual_results_df, 'total_fish_intensity')
+            create_individual_importance_plot(individual_results_df, 'total_biological_activity')
+        
+        # Conditional importance plots (the more sophisticated analysis)
         create_conditional_importance_plot(results_df)
         create_effort_lift_curves(effort_results)
         create_cross_station_consistency_plot(results_df, df_analysis)
@@ -661,7 +877,7 @@ def main():
         print(f"⚠️ Some visualizations failed: {e}")
     
     # Save all results
-    save_analysis_results(results_df, effort_results, feature_categories)
+    save_analysis_results(results_df, effort_results, feature_categories, individual_results_df)
     
     # Summary report
     print()
@@ -683,6 +899,19 @@ def main():
         print(f"\nMost predictable community metrics:")
         for i, (target, score) in enumerate(target_performance.head(3).items(), 1):
             print(f"  {i}. {target}: {score:.4f}")
+    
+    # Individual feature importance summary
+    if not individual_results_df.empty:
+        print(f"\nTOP INDIVIDUAL FEATURES (Fish Species Richness):")
+        richness_features = individual_results_df[
+            individual_results_df['target'] == 'fish_species_richness'
+        ].sort_values('mi_score', ascending=False).head(5)
+        
+        for i, (_, row) in enumerate(richness_features.iterrows(), 1):
+            feature_name = row['feature']
+            if feature_name.startswith('spl_'):
+                feature_name = feature_name.replace('spl_', '').replace('_', ' ').title()
+            print(f"  {i}. {feature_name} ({row['feature_category']}): {row['mi_score']:.3f}")
     
     print()
     print("Key outputs:")

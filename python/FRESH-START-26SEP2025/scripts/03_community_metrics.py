@@ -207,8 +207,17 @@ def analyze_vessel_impact(df, df_metrics, vessel_anthro):
         print("⚠️ No vessel detection columns found - skipping vessel impact analysis")
         return {}
     
-    # Get vessel presence indicator
-    vessel_col = vessel_anthro[0]  # Use first vessel column
+    # Get vessel presence indicator - prioritize 'Vessel' column
+    vessel_col = None
+    if 'Vessel' in vessel_anthro:
+        vessel_col = 'Vessel'
+    elif vessel_anthro:
+        vessel_col = vessel_anthro[0]  # Fallback to first available
+    
+    if vessel_col is None:
+        print("⚠️ No suitable vessel column found")
+        return {}
+    
     vessel_present = df[vessel_col] > 0
     
     vessel_impact = {}

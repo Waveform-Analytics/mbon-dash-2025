@@ -54,6 +54,7 @@ FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 # Analysis parameters
 YEAR = 2021
 STATIONS = ['9M', '14M', '37M']
+AGGREGATION_HOURS = 2  # Aggregate to 2-hour intervals
 
 print("="*60)
 print("SCRIPT 1: DATA PREPARATION")
@@ -170,7 +171,7 @@ def load_environmental_data():
         
         if temp_file.exists():
             try:
-                df_temp = pd.read_excel(temp_file)
+                df_temp = pd.read_excel(temp_file, sheet_name="Data")
                 temp_data[station] = df_temp
                 print(f"✓ {station} temperature: {len(df_temp)} rows")
             except Exception as e:
@@ -184,7 +185,7 @@ def load_environmental_data():
         
         if depth_file.exists():
             try:
-                df_depth = pd.read_excel(depth_file)
+                df_depth = pd.read_excel(depth_file, sheet_name="Data")
                 depth_data[station] = df_depth
                 print(f"✓ {station} depth: {len(df_depth)} rows")
             except Exception as e:
@@ -194,7 +195,7 @@ def load_environmental_data():
             depth_file = DATA_DIR / str(YEAR) / "environmental" / f"Master_{station}_Press_{YEAR}.xlsx"
             if depth_file.exists():
                 try:
-                    df_depth = pd.read_excel(depth_file)
+                    df_depth = pd.read_excel(depth_file, sheet_name="Data")
                     depth_data[station] = df_depth
                     print(f"✓ {station} pressure: {len(df_depth)} rows")
                 except Exception as e:
@@ -214,7 +215,7 @@ def load_environmental_data():
     return temp_data, depth_data, env_info
 
 def load_spl_data():
-    """Load SPL (Sound Pressure Level) data"""
+    """Load SPL (Sound Pressure Level) data from raw Excel files"""
     print("4. LOADING SPL DATA") 
     print("-" * 30)
     
@@ -222,38 +223,22 @@ def load_spl_data():
     spl_info = {}
     
     for station in STATIONS:
-        # Check processed SPL data first
-        spl_file = DATA_ROOT / "processed" / "deprecated" / f"01_spl_{station}_{YEAR}.parquet"
-        
-        if spl_file.exists():
+        # Load fresh from raw SPL Excel files (skip any deprecated processed files)
+        spl_raw_file = DATA_DIR / str(YEAR) / "rms_spl" / f"Master_rmsSPL_{station}_1h_{YEAR}.xlsx"
+        if spl_raw_file.exists():
             try:
-                df_spl = pd.read_parquet(spl_file)
+                df_spl = pd.read_excel(spl_raw_file, sheet_name="Data")
                 spl_data[station] = df_spl
                 spl_info[station] = {
                     'rows': len(df_spl),
-                    'columns': len(df_spl.columns),
-                    'file_type': 'parquet_processed'
+                    'columns': len(df_spl.columns), 
+                    'file_type': 'xlsx_raw'
                 }
-                print(f"✓ {station}: {len(df_spl)} rows from processed parquet")
+                print(f"✓ {station}: {len(df_spl)} rows from raw Excel")
             except Exception as e:
-                print(f"✗ {station}: Error loading processed SPL - {e}")
+                print(f"✗ {station}: Error loading raw SPL - {e}")
         else:
-            # Check raw SPL data
-            spl_raw_file = DATA_DIR / str(YEAR) / "rms_spl" / f"Master_rmsSPL_{station}_1h_{YEAR}.xlsx"
-            if spl_raw_file.exists():
-                try:
-                    df_spl = pd.read_excel(spl_raw_file, sheet_name="Data")
-                    spl_data[station] = df_spl
-                    spl_info[station] = {
-                        'rows': len(df_spl),
-                        'columns': len(df_spl.columns), 
-                        'file_type': 'xlsx_raw'
-                    }
-                    print(f"✓ {station}: {len(df_spl)} rows from raw Excel")
-                except Exception as e:
-                    print(f"✗ {station}: Error loading raw SPL - {e}")
-            else:
-                print(f"⚠️ {station}: SPL data not found")
+            print(f"⚠️ {station}: SPL data not found")
     
     print(f"SPL data loaded for {len(spl_data)}/{len(STATIONS)} stations")
     print()
@@ -280,8 +265,10 @@ def create_temporal_alignment(indices_data, detection_data, temp_data, depth_dat
             if date_col in base_df.columns:
                 try:
                     base_df['datetime'] = pd.to_datetime(base_df[date_col], errors='coerce')
+                    # Floor to exact 2-hour boundaries to ensure clean alignment
+                    base_df['datetime'] = base_df['datetime'].dt.floor(f'{AGGREGATION_HOURS}h')
                     valid_datetimes = (~base_df['datetime'].isna()).sum()
-                    print(f"  ✓ Created {valid_datetimes} valid datetimes from {len(base_df)} rows")
+                    print(f"  ✓ Created {valid_datetimes} valid datetimes from {len(base_df)} rows (floored to {AGGREGATION_HOURS}h)")
                 except Exception as e:
                     print(f"  ⚠️ Warning: Could not create datetime for {station}: {e}")
                     continue
@@ -314,26 +301,167 @@ def create_temporal_alignment(indices_data, detection_data, temp_data, depth_dat
             print(f"  ⚠️ Warning: No detection data for {station}")
             continue
         
-        # TODO: Add acoustic indices aggregation (hourly to 2-hourly)
+        # Add acoustic indices aggregation (hourly to 2-hourly)  
         if station in indices_data:
             print(f"  - Adding acoustic indices...")
-            # For now, just note that indices need aggregation
-            # This will be implemented in the actual alignment logic
+            df_idx = indices_data[station].copy()
+            
+            try:
+                # Find datetime column
+                datetime_col = None
+                for col in ['datetime', 'DateTime', 'Date', 'time', 'Time']:
+                    if col in df_idx.columns:
+                        datetime_col = col
+                        break
+                
+                if datetime_col:
+                    df_idx['datetime'] = pd.to_datetime(df_idx[datetime_col])
+                    
+                    # Get numeric columns (indices)
+                    numeric_cols = df_idx.select_dtypes(include=[np.number]).columns.tolist()
+                    
+                    # Create 2-hour windows
+                    df_idx['datetime_2h'] = df_idx['datetime'].dt.floor(f'{AGGREGATION_HOURS}h')
+                    
+                    # Aggregate by taking mean
+                    agg_dict = {col: 'mean' for col in numeric_cols}
+                    df_idx_grouped = df_idx.groupby('datetime_2h').agg(agg_dict).reset_index()
+                    df_idx_grouped.rename(columns={'datetime_2h': 'datetime'}, inplace=True)
+                    
+                    # Align to detection time grid by merging
+                    station_df = station_df.merge(df_idx_grouped, on='datetime', how='left')
+                    
+                    print(f"    ✓ Added {len(numeric_cols)} acoustic indices")
+                else:
+                    print(f"    ⚠️ No datetime column found in acoustic indices")
+            except Exception as e:
+                print(f"    ⚠️ Error processing acoustic indices: {e}")
         
-        # TODO: Add temperature aggregation (20-min to 2-hourly)  
+        # Add temperature aggregation (20-min to 2-hourly)
         if station in temp_data:
             print(f"  - Adding temperature data...")
-            # Temperature needs aggregation from 20-minute to 2-hour intervals
+            df_temp = temp_data[station].copy()
             
-        # TODO: Add depth aggregation (hourly to 2-hourly)
+            try:
+                if 'Date and time' in df_temp.columns and 'Water temp (°C)' in df_temp.columns:
+                    df_temp['datetime'] = pd.to_datetime(df_temp['Date and time'], errors='coerce')
+                    
+                    # Create 2-hour windows
+                    df_temp['datetime_2h'] = df_temp['datetime'].dt.floor(f'{AGGREGATION_HOURS}h')
+                    
+                    # Aggregate by taking mean
+                    df_temp_grouped = df_temp.groupby('datetime_2h').agg({
+                        'Water temp (°C)': 'mean'
+                    }).reset_index()
+                    df_temp_grouped.rename(columns={'datetime_2h': 'datetime'}, inplace=True)
+                    
+                    # Align to detection time grid by merging
+                    station_df = station_df.merge(df_temp_grouped, on='datetime', how='left')
+                    
+                    print(f"    ✓ Added temperature data")
+                else:
+                    print(f"    ⚠️ Expected temperature columns not found")
+            except Exception as e:
+                print(f"    ⚠️ Error processing temperature data: {e}")
+            
+        # Add depth aggregation (hourly to 2-hourly)
         if station in depth_data:
             print(f"  - Adding depth data...")
-            # Depth needs aggregation from hourly to 2-hour intervals
+            df_depth = depth_data[station].copy()
             
-        # TODO: Add SPL aggregation (depends on original resolution)
+            try:
+                if 'Date and time' in df_depth.columns and 'Water depth (m)' in df_depth.columns:
+                    df_depth['datetime'] = pd.to_datetime(df_depth['Date and time'], errors='coerce')
+                    
+                    # Create 2-hour windows
+                    df_depth['datetime_2h'] = df_depth['datetime'].dt.floor(f'{AGGREGATION_HOURS}h')
+                    
+                    # Aggregate by taking mean
+                    df_depth_grouped = df_depth.groupby('datetime_2h').agg({
+                        'Water depth (m)': 'mean'
+                    }).reset_index()
+                    df_depth_grouped.rename(columns={'datetime_2h': 'datetime'}, inplace=True)
+                    
+                    # Align to detection time grid by merging
+                    station_df = station_df.merge(df_depth_grouped, on='datetime', how='left')
+                    
+                    print(f"    ✓ Added depth data")
+                else:
+                    print(f"    ⚠️ Expected depth columns not found")
+            except Exception as e:
+                print(f"    ⚠️ Error processing depth data: {e}")
+            
+        # Add SPL aggregation (hourly to 2-hourly)
         if station in spl_data:
             print(f"  - Adding SPL data...")
-            # SPL aggregation depends on original temporal resolution
+            df_spl = spl_data[station].copy()
+            
+            try:
+                # Use proven SPL datetime handling from marimo notebook
+                if 'Date' in df_spl.columns and 'Time' in df_spl.columns:
+                    # Extract time component from Time column (ignore 1900 date part)
+                    # Time column contains datetime objects from 1900, extract time component
+                    combined_datetimes = []
+                    for date_val, time_val in zip(df_spl['Date'], df_spl['Time']):
+                        if pd.notna(date_val) and pd.notna(time_val):
+                            # Handle different time formats - could be datetime or time object
+                            if hasattr(time_val, 'time'):
+                                # It's a datetime object, extract time part
+                                time_part = time_val.time()
+                            else:
+                                # It's already a time object
+                                time_part = time_val
+                            # Combine with actual date
+                            combined_dt = pd.to_datetime(date_val.date().strftime('%Y-%m-%d') + ' ' + time_part.strftime('%H:%M:%S'))
+                            combined_datetimes.append(combined_dt)
+                        else:
+                            combined_datetimes.append(pd.NaT)
+                    
+                    df_spl['datetime'] = pd.Series(combined_datetimes)
+                    valid_datetimes = (~df_spl['datetime'].isna()).sum()
+                    print(f"    ✓ Created {valid_datetimes} valid SPL datetimes from {len(df_spl)} rows")
+                else:
+                    print(f"    ⚠️ Expected Date and Time columns not found in SPL data")
+                    continue
+                
+                # Define SPL columns to aggregate
+                spl_columns = ['Broadband (1-40000 Hz)', 'Low (50-1200 Hz)', 'High (7000-40000 Hz)']
+                available_spl_cols = [col for col in spl_columns if col in df_spl.columns]
+                
+                if available_spl_cols:
+                    # Aggregate to 2-hour intervals by matching detection timestamps
+                    df_spl_aligned = []
+                    
+                    for _, det_row in station_df.iterrows():
+                        det_datetime = det_row['datetime']
+                        
+                        # Find SPL data within 1 hour of detection time (before and after)
+                        time_window = pd.Timedelta(hours=1)
+                        mask = (df_spl['datetime'] >= det_datetime - time_window) & \
+                               (df_spl['datetime'] <= det_datetime + time_window)
+                        
+                        spl_window = df_spl.loc[mask, available_spl_cols]
+                        
+                        if len(spl_window) > 0:
+                            # Calculate mean SPL values for this time window
+                            spl_means = spl_window.mean()
+                            spl_aligned_row = {f'spl_{col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_")}': spl_means[col] for col in available_spl_cols}
+                        else:
+                            # No SPL data for this time window
+                            spl_aligned_row = {f'spl_{col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_")}': np.nan for col in available_spl_cols}
+                        
+                        df_spl_aligned.append(spl_aligned_row)
+                    
+                    # Add SPL columns to station dataframe
+                    if df_spl_aligned:
+                        spl_df = pd.DataFrame(df_spl_aligned)
+                        station_df = pd.concat([station_df.reset_index(drop=True), spl_df.reset_index(drop=True)], axis=1)
+                        print(f"    ✓ Added {len(available_spl_cols)} SPL columns")
+                else:
+                    print(f"    ⚠️ Expected SPL columns not found in data")
+                    
+            except Exception as e:
+                print(f"    ⚠️ Error processing SPL data: {e}")
         
         aligned_data[station] = station_df
         print(f"  ✓ Station {station}: {len(station_df)} aligned records")
